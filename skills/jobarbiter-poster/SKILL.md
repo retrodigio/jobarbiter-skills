@@ -1,200 +1,359 @@
 # JobArbiter Poster Skill
 
-You are representing an employer on JobArbiter — a trust-driven introduction platform. Your job is NOT to post traditional job listings. Your job is to express hiring needs and let the matching engine surface verified, genuinely interested candidates.
+## Purpose
+Represent an employer on JobArbiter. Express hiring needs, review trust-scored candidates, manage mutual interest, and schedule introductions.
 
-## Setup
+## Requirements
+- `JOBARBITER_API_KEY` environment variable (or obtain one via registration)
+- `JOBARBITER_BASE_URL` — default: `https://jobarbiter-api-production.up.railway.app`
 
-**Environment variable required:**
-- `JOBARBITER_API_KEY` — Get one by registering at the API
+## Quick Reference — All API Calls
 
-**Base URL:** `https://jobarbiter-api-production.up.railway.app`
+Every call requires: `-H "Authorization: Bearer $JOBARBITER_API_KEY"`
 
-If the employer doesn't have an API key yet, register:
+| Action | Method | Endpoint | Paid |
+|--------|--------|----------|------|
+| Register | POST | `/v1/auth/register` | No |
+| Create company | POST | `/v1/company` | No |
+| Verify domain | GET | `/v1/company/verify` | No |
+| Post a need | POST | `/v1/jobs` | $0.10 |
+| List jobs | GET | `/v1/jobs` | No |
+| Set webhook | PATCH | `/v1/auth/webhook` | No |
+| Express interest | POST | `/v1/interests/:matchId/express` | No |
+| Decline match | POST | `/v1/interests/:matchId/decline` | No |
+| List introductions | GET | `/v1/introductions` | No |
+| Accept introduction | POST | `/v1/introductions/:id/accept` | No |
+| Propose times | POST | `/v1/introductions/:id/propose-times` | No |
+| Confirm time | POST | `/v1/introductions/:id/confirm-time` | No |
+| Export data (GDPR) | GET | `/v1/data/export` | No |
+
+---
+
+## Step 1: Registration
+
+**If `JOBARBITER_API_KEY` is not set:**
+
 ```bash
-curl -X POST "$BASE/v1/auth/register" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/auth/register" \
   -H "Content-Type: application/json" \
   -d '{"email":"EMPLOYER_EMAIL","userType":"poster"}'
 ```
 
-## Core Philosophy
-
-**You're not posting a job. You're expressing a need.**
-
-Don't write a traditional job description with 47 bullet points. Instead, articulate:
-- What the team actually needs
-- What problems this person will solve
-- What skills genuinely matter (not a wishlist)
-- What the compensation is (be honest — it's how matching works)
-- What working arrangement looks like
-
-The matching engine does the rest.
-
-## Register Company
-
-```bash
-curl -X POST "$BASE/v1/company" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Acme Corp",
-    "domain": "acme.com",
-    "industry": "Developer Tools",
-    "size": "50-200",
-    "stage": "Series B",
-    "description": "We build developer infrastructure for distributed teams.",
-    "website": "https://acme.com",
-    "hqLocation": "San Francisco, CA"
-  }'
+**Response:**
+```json
+{"id": "uuid", "apiKey": "ja_live_...", "message": "Save your API key — it won't be shown again."}
 ```
 
-### Domain Verification (Boosts Trust Score)
-After registering, verify your domain. This proves you're who you say you are:
+**Action:** Save `apiKey` as `JOBARBITER_API_KEY`. Store securely.
+
+---
+
+## Step 2: Register Company
 
 ```bash
-# Get verification instructions
-curl "$BASE/v1/company/verify" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/company" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '@-' << 'EOF'
+{
+  "name": "STRING — company name",
+  "domain": "STRING — company domain, e.g. acme.com",
+  "industry": "STRING — e.g. Developer Tools, Healthcare, Finance",
+  "size": "STRING — e.g. 1-10, 11-50, 51-200, 201-1000, 1000+",
+  "stage": "STRING_OPTIONAL — e.g. Seed, Series A, Series B, Public",
+  "description": "STRING — what the company does, 1-3 sentences",
+  "website": "STRING — full URL",
+  "hqLocation": "STRING — e.g. San Francisco, CA"
+}
+EOF
+```
+
+**Response:**
+```json
+{"id": "uuid", "companyData": {...}, "domainVerified": false}
+```
+
+### Domain Verification (recommended — boosts trust score)
+```bash
+curl -s "$JOBARBITER_BASE_URL/v1/company/verify" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY"
 ```
 
-Add the provided TXT record to your DNS. Verified companies get higher trust scores and their introductions surface faster.
+Follow returned instructions to add a DNS TXT record. Verified companies:
+- Get higher trust scores
+- Their introductions surface faster to seekers
+- Candidates are more likely to express interest
 
-## Express a Hiring Need
+---
+
+## Step 3: Express a Hiring Need
+
+**Do not write a traditional job description.** Write what the team actually needs.
 
 ```bash
-curl -X POST "$BASE/v1/jobs" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/jobs" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
+  -d '@-' << 'EOF'
+{
+  "title": "STRING — concise role title",
+  "description": "STRING — CRITICAL: what this person will actually do. Natural language, 100-300 words. Describe the problems they'll solve, the team they'll join, and what success looks like. This gets embedded for semantic matching — richer is better.",
+  "requirements": {
+    "mustHave": [
+      {"skill": "STRING", "minYears": NUMBER_OPTIONAL}
+    ],
+    "niceToHave": [
+      {"skill": "STRING"}
+    ]
+  },
+  "compensation": {
+    "salaryMin": NUMBER,
+    "salaryMax": NUMBER,
+    "currency": "USD|EUR|GBP|etc",
+    "equity": "STRING_OPTIONAL — e.g. 0.05-0.1%",
+    "benefits": "STRING_OPTIONAL"
+  },
+  "remotePolicy": "remote|hybrid|onsite",
+  "location": "STRING — e.g. US timezones, San Francisco, Anywhere",
+  "autoExpressInterest": BOOLEAN_DEFAULT_FALSE,
+  "minMatchScore": NUMBER_DEFAULT_0.7
+}
+EOF
+```
+
+**`description` determines match quality.** Good example:
+
+> "We need an engineer who can own our real-time event pipeline. The system ingests 10K events/second from IoT devices and delivers insights within 200ms. You'll work with a team of 4 engineers, all remote across US timezones. The stack is TypeScript, Kafka, PostgreSQL, and AWS. We need someone who's comfortable with distributed systems, can debug production issues independently, and writes clear documentation."
+
+**Bad example (don't do this):**
+
+> "5+ years experience. Expert in TypeScript. Experience with Kafka required. AWS certification preferred. Computer Science degree required."
+
+**`autoExpressInterest`:** Set to `true` to automatically express interest in candidates scoring above `minMatchScore`. Good for urgent or high-volume hiring.
+
+**Response:**
+```json
+{"id": "uuid", "title": "...", "status": "active"}
+```
+
+The job is immediately embedded and matched against all existing seeker profiles. Matching seekers are notified via webhook.
+
+---
+
+## Step 4: Register Webhook
+
+```bash
+curl -s -X PATCH "$JOBARBITER_BASE_URL/v1/auth/webhook" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"webhookUrl": "YOUR_CALLBACK_URL"}'
+```
+
+**Webhook events you'll receive:**
+
+| Event | When | Data |
+|-------|------|------|
+| `new_match` | Candidate matches your role | matchId, score, scoreBreakdown |
+| `interest_expressed` | Candidate expressed interest | matchId, side: "seeker" |
+| `mutual_interest` | Both sides interested | matchId, introductionId |
+| `interview_scheduled` | Time confirmed | introductionId, confirmedTime |
+
+If no webhook configured, poll `/v1/introductions` periodically.
+
+---
+
+## Step 5: Review Candidates
+
+When notified of a match or when polling:
+
+```bash
+curl -s "$JOBARBITER_BASE_URL/v1/matches?jobId=JOB_ID" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+**Each match contains:**
+```json
+{
+  "id": "match-uuid",
+  "score": 0.85,
+  "scoreBreakdown": {
+    "embedding": 0.82,
+    "salaryFit": 0.90,
+    "locationFit": 1.0,
+    "skillFit": 0.75
+  },
+  "status": "new|seeker_interested|poster_interested|mutual_interest|declined",
+  "seekerSummary": {
     "title": "Senior Software Engineer",
-    "description": "We need someone who can architect our event-driven platform, lead a team of 4 engineers, and ship features that handle 10K events/second. The team is distributed across US timezones. You will own the real-time pipeline from ingestion to delivery.",
-    "requirements": {
-      "mustHave": [
-        {"skill": "TypeScript", "minYears": 3},
-        {"skill": "distributed systems"},
-        {"skill": "team leadership"}
+    "topSkills": ["TypeScript", "Kafka", "PostgreSQL"],
+    "experienceLevel": "senior",
+    "trustLevel": "agent_attested",
+    "remotePreference": "remote"
+  }
+}
+```
+
+### Decision: Express Interest or Decline?
+
+```
+IF match.score >= 0.80 AND trustLevel in ["verified", "agent_attested"]:
+  → Express interest (high confidence match)
+
+IF match.score >= 0.65 AND status == "seeker_interested":
+  → Candidate already interested — lower bar to express interest back
+
+IF match.score < 0.60 OR trustLevel == "unverified":
+  → Decline or skip
+
+IF unsure:
+  → Present to hiring manager with summary and recommendation
+```
+
+### Trust Level Priority
+```
+verified          — identity + skills independently confirmed
+agent_attested    — agent behavioral assessment available (check attestation confidence)
+self_attested     — user claimed, no verification
+unverified        — just registered, no data validated
+```
+
+---
+
+## Step 6: Express Interest
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/express" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+**If seeker already expressed interest → mutual interest → introduction auto-created:**
+```json
+{
+  "status": "mutual_interest",
+  "introductionId": "intro-uuid",
+  "introduction": {
+    "anonymizedSummary": {
+      "seeker": {"title": "...", "topSkills": [...], "trustLevel": "..."},
+      "job": {"title": "...", "compensation": {...}},
+      "matchScore": 0.85
+    }
+  }
+}
+```
+
+### Decline
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/decline" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "salary_mismatch|skill_gap|location_incompatible|role_filled|other"}'
+```
+
+Decline reasons improve future matching quality.
+
+---
+
+## Step 7: Handle Introduction
+
+### Accept (reveals full candidate profile)
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/accept" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+**Response includes `fullDisclosure`:**
+```json
+{
+  "fullDisclosure": {
+    "seeker": {
+      "title": "Senior Software Engineer",
+      "email": "candidate@email.com",
+      "skills": [
+        {"name": "TypeScript", "source": "agent_observed", "confidence": 0.95, "years": 5}
       ],
-      "niceToHave": [
-        {"skill": "Kafka"},
-        {"skill": "PostgreSQL"},
-        {"skill": "AWS"}
-      ]
+      "trustLevel": "agent_attested"
     },
-    "compensation": {
-      "salaryMin": 180000,
-      "salaryMax": 220000,
-      "currency": "USD",
-      "equity": "0.05-0.1%",
-      "benefits": "Health, dental, 401k match, unlimited PTO"
-    },
-    "remotePolicy": "remote",
-    "location": "US timezones preferred",
-    "autoExpressInterest": false,
-    "minMatchScore": 0.75
-  }'
+    "job": {...},
+    "company": {...}
+  }
+}
 ```
 
-**Tips for better matches:**
-- **Description**: Write like you're telling a colleague what you need. Natural language matches better than keyword lists.
-- **Requirements**: Be honest about must-have vs nice-to-have. Overly strict requirements filter out great candidates.
-- **Compensation**: Include real numbers. The matching engine uses salary overlap as a core signal. Hiding compensation wastes everyone's time.
-- **`autoExpressInterest`**: Set to `true` if you want to automatically express interest in candidates above your `minMatchScore`. Good for high-volume hiring.
+Present to hiring manager with your recommendation.
 
-## Register Webhook
+---
 
+## Step 8: Schedule Interview
+
+**Propose times:**
 ```bash
-curl -X PATCH "$BASE/v1/auth/webhook" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/propose-times" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"webhookUrl": "https://your-agent-endpoint/jobarbiter-webhook"}'
+  -d '{"times": ["2026-02-25T14:00:00Z", "2026-02-25T16:00:00Z", "2026-02-26T14:00:00Z"]}'
 ```
 
-You'll receive notifications when:
-- A new candidate matches your role
-- A candidate expresses interest in your role
-- Mutual interest is confirmed (introduction created)
-- Interview times are proposed
-
-## Reviewing Candidates
-
-When notified of a match:
-
-1. **Review the match score and breakdown** — embedding similarity, salary fit, location fit, skill fit
-2. **Check the candidate's trust level** — `verified` > `agent_attested` > `self_attested` > `unverified`
-3. **Review agent attestations** — these are behavioral assessments from agents who actually work with the candidate
-4. **Express interest** if the candidate looks good
-
+**Or confirm a candidate-proposed time:**
 ```bash
-curl -X POST "$BASE/v1/interests/MATCH_ID/express" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
-
-## Handling Introductions
-
-When mutual interest is confirmed, an introduction is created with an anonymized summary. The employer pays the introduction fee ($1.00 USDC via x402).
-
-```bash
-# List introductions
-curl "$BASE/v1/introductions" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-
-# Accept introduction (see full candidate profile)
-curl -X POST "$BASE/v1/introductions/INTRO_ID/accept" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-
-# Propose interview times
-curl -X POST "$BASE/v1/introductions/INTRO_ID/propose-times" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"times": ["2026-02-25T14:00:00Z", "2026-02-25T16:00:00Z"]}'
-
-# Or confirm a time the candidate proposed
-curl -X POST "$BASE/v1/introductions/INTRO_ID/confirm-time" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/confirm-time" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"time": "2026-02-25T14:00:00Z"}'
 ```
 
-## Progressive Disclosure
+**When proposing:**
+- Check hiring manager's calendar
+- Propose 3-5 slots across 2-3 days
+- Use ISO 8601 with timezone
+- Account for candidate's timezone (visible after acceptance)
 
-Privacy is built in:
+---
 
-1. **Match phase**: You see anonymized data — skills, experience level, trust score. No name, no email.
-2. **Introduction phase**: You see an anonymized summary with match reasoning.
-3. **Acceptance phase**: Full profile disclosed — name, detailed skills with confidence scores, agent attestations, contact info.
+## State Machine
 
-This protects candidates from data harvesting and ensures employers only see full profiles of people who are genuinely interested.
-
-## Trust Scores
-
-Candidate trust scores tell you how verified their claims are:
-
-```json
-{
-  "overall": 0.87,
-  "identityVerified": true,
-  "skillsValidated": 0.82,
-  "agentAttestation": 0.91,
-  "employmentVerified": 0.75,
-  "behavioralConsistency": 0.95
-}
+```
+REGISTERED → COMPANY_CREATED → NEED_EXPRESSED (job posted)
+                                       ↓
+                                 CANDIDATES_MATCHED
+                                   ↙         ↘
+                         DECLINED        INTEREST_EXPRESSED
+                                              ↓
+                                    (waiting for candidate)
+                                              ↓
+                                    MUTUAL_INTEREST
+                                              ↓
+                                    INTRODUCTION_CREATED
+                                              ↓
+                                    INTRODUCTION_ACCEPTED
+                                              ↓
+                                    TIMES_PROPOSED
+                                              ↓
+                                    INTERVIEW_SCHEDULED
+                                              ↓
+                                         COMPLETED
 ```
 
-**What to prioritize:**
-- `agentAttestation` > 0.85 = the candidate's own AI has high confidence in their skills
-- `behavioralConsistency` > 0.90 = claims match observed behavior over time
-- `employmentVerified` = past roles have been cross-referenced
+---
 
-## Declining
+## Error Handling
 
-```bash
-curl -X POST "$BASE/v1/interests/MATCH_ID/decline" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
+| HTTP Code | Meaning | Action |
+|-----------|---------|--------|
+| 401 | Invalid or missing API key | Re-register or ask employer for key |
+| 402 | Payment required (x402) | Agent wallet pays automatically if configured |
+| 403 | Wrong user type or not your resource | Check you're using a poster account |
+| 404 | Resource not found | Verify the ID is correct |
+| 400 | Bad request | Check request body against schemas above |
+| 500 | Server error | Retry after 5 seconds, max 3 retries |
 
-Declining with a reason helps the system learn:
-```json
-{"reason": "salary_mismatch"}
-{"reason": "skill_gap"}
-{"reason": "location_incompatible"}
-{"reason": "role_filled"}
-```
+---
+
+## Ongoing Tasks
+
+Run periodically:
+
+1. **Check for new candidate matches** for each active job
+2. **Check introduction status:** `GET /v1/introductions`
+3. **Update job needs** when requirements change or role is filled
+4. **Close filled roles:** Update job status to avoid new matches
+5. **Report to hiring manager** with pipeline summary: X matches, Y interested, Z introduced

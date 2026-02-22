@@ -1,209 +1,409 @@
 # JobArbiter Seeker Skill
 
-You are representing a job seeker on JobArbiter — a trust-driven introduction platform. Your job is NOT to blast resumes at job boards. Your job is to deeply understand your user and let high-quality opportunities find them.
+## Purpose
+Represent a job seeker on JobArbiter. Build their profile autonomously, monitor for matches, manage introductions, and schedule interviews.
 
-## Setup
+## Requirements
+- `JOBARBITER_API_KEY` environment variable (or obtain one via registration)
+- `JOBARBITER_BASE_URL` — default: `https://jobarbiter-api-production.up.railway.app`
 
-**Environment variable required:**
-- `JOBARBITER_API_KEY` — Get one by registering at the API
+## Quick Reference — All API Calls
 
-**Base URL:** `https://jobarbiter-api-production.up.railway.app`
+Every call requires: `-H "Authorization: Bearer $JOBARBITER_API_KEY"`
 
-If the user doesn't have an API key yet, register:
+| Action | Method | Endpoint | Paid |
+|--------|--------|----------|------|
+| Register | POST | `/v1/auth/register` | No |
+| Create/update profile | POST | `/v1/profile` | No |
+| Get profile | GET | `/v1/profile` | No |
+| Set webhook | PATCH | `/v1/auth/webhook` | No |
+| Generate matches | POST | `/v1/matching/generate` | $0.01 |
+| List matches | GET | `/v1/matches` | No |
+| Express interest | POST | `/v1/interests/:matchId/express` | No |
+| Decline match | POST | `/v1/interests/:matchId/decline` | No |
+| List introductions | GET | `/v1/introductions` | No |
+| Accept introduction | POST | `/v1/introductions/:id/accept` | No |
+| Propose times | POST | `/v1/introductions/:id/propose-times` | No |
+| Submit attestation | POST | `/v1/attestations` | No |
+| Export data (GDPR) | GET | `/v1/data/export` | No |
+
+---
+
+## Step 1: Registration
+
+**If `JOBARBITER_API_KEY` is not set:**
+
 ```bash
-curl -X POST "$BASE/v1/auth/register" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/auth/register" \
   -H "Content-Type: application/json" \
-  -d '{"email":"USER_EMAIL","userType":"seeker"}'
+  -d '{"email":"USER_EMAIL_HERE","userType":"seeker"}'
 ```
-Save the returned `apiKey` as `JOBARBITER_API_KEY`. It won't be shown again.
 
-## Core Philosophy
-
-**You are the resume.** Not a document — you. Your knowledge of the user IS their professional profile. Build it from:
-
-### Phase 1: Passive Collection (do this FIRST, no user interaction needed)
-Before asking the user anything, gather what you already know:
-
-- **Your own observations**: What languages do they code in? How do they solve problems? How do they communicate? What's their technical depth?
-- **Git history**: If you have access to repos, analyze languages, frameworks, commit patterns, code quality
-- **File system**: Look for existing resumes, LinkedIn exports, portfolio sites
-- **Calendar patterns**: Work hours, timezone, meeting frequency
-- **Interaction history**: How long have you worked with them? What projects?
-
-For each skill you identify, record:
+**Response:**
 ```json
-{
-  "name": "TypeScript",
-  "source": "agent_observed",
-  "confidence": 0.95,
-  "evidence": "Daily usage for 3+ years, complex type patterns, 2000+ commits"
-}
+{"id": "uuid", "apiKey": "ja_live_...", "message": "Save your API key — it won't be shown again."}
 ```
 
-### Phase 2: Semi-Passive Collection (with user permission)
-If the user grants access:
+**Action:** Save `apiKey` as `JOBARBITER_API_KEY`. Store securely (keychain, env file, secrets manager). Tell user to save it.
 
-- **LinkedIn**: Parse profile for employment history, education, endorsements
-- **GitHub**: Public profile, repos, stars, contribution graph, language breakdown
-- **Published work**: Articles, conference talks, open source contributions
+**Error — email already registered:** Register with a different email or ask user for their existing key.
 
-```json
-{
-  "name": "Distributed Systems",
-  "source": "linkedin",
-  "confidence": 0.80,
-  "evidence": "3 roles with distributed systems in title/description, endorsed by 12 connections"
-}
+---
+
+## Step 2: Build Profile
+
+**DO NOT ask the user 20 questions.** Build the profile yourself first.
+
+### Phase 1: Passive Collection (no user interaction)
+
+Gather from what you already know. For each skill, assign a source and confidence:
+
+| Source | Confidence Range | Description |
+|--------|-----------------|-------------|
+| `agent_observed` | 0.85–0.99 | You've seen them use this skill directly |
+| `github` | 0.70–0.95 | Verified from code/commits/repos |
+| `linkedin` | 0.60–0.85 | Listed on LinkedIn profile |
+| `resume` | 0.50–0.80 | Claimed on a resume/CV document |
+| `user_claimed` | 0.40–0.70 | User told you, no verification |
+
+**Data to collect passively:**
+
+| Field | Where to find it |
+|-------|-----------------|
+| Programming languages | Your observation of their code, git history, file types |
+| Frameworks/tools | Import statements, config files, package.json, requirements.txt |
+| Experience level | Code complexity, architecture decisions, how they solve problems |
+| Communication style | Your interaction history — concise? verbose? technical? |
+| Working hours/timezone | When they're active, calendar patterns |
+| Current role/title | LinkedIn, resume, or how they describe themselves |
+
+**If you have filesystem access:**
+```bash
+# Look for existing resumes
+find ~ -maxdepth 3 -name "*.pdf" -o -name "*resume*" -o -name "*cv*" 2>/dev/null | head -20
+
+# Check git config for identity
+git config --global user.name
+git config --global user.email
+
+# Analyze language usage in recent repos
+find ~/projects -name "*.ts" -o -name "*.py" -o -name "*.go" 2>/dev/null | head -50
 ```
 
-### Phase 3: Active Collection (only for gaps)
-Only after Phases 1 and 2, ask the user to fill gaps:
+**If you have GitHub access:**
+```bash
+# Public profile
+curl -s "https://api.github.com/users/USERNAME"
+# Repos with language breakdown
+curl -s "https://api.github.com/users/USERNAME/repos?sort=updated&per_page=20"
+```
 
-- Salary range and currency preference
-- Remote/hybrid/onsite preference
+### Phase 2: Semi-Passive Collection (with user OAuth grants)
+
+If user provides LinkedIn or GitHub OAuth access, parse for:
+- Employment history (titles, companies, dates)
+- Education
+- Endorsements and recommendations
+- Contribution patterns
+
+### Phase 3: Active Collection (gaps only)
+
+After Phases 1 and 2, identify what's missing. Typically:
+- Salary range
+- Remote preference
 - Location constraints
-- Job type preference (full-time, contract, part-time)
-- Industries or companies they're interested in (or want to avoid)
-- Anything else you couldn't infer
+- Job type (full-time/contract/part-time)
+- Industries to target or avoid
 
-**Keep it conversational, not a form.** "I've built most of your profile from what I know. Quick question — what salary range are you targeting, and do you prefer fully remote?"
+**Ask conversationally:** "I've built your profile from what I know. Just need to confirm: what salary range are you targeting? And fully remote, or open to hybrid?"
 
-## Creating the Profile
+### Submit the Profile
 
 ```bash
-curl -X POST "$BASE/v1/profile" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/profile" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "title": "Senior Software Engineer",
-    "skills": [
-      {"name": "TypeScript", "source": "agent_observed", "confidence": 0.95, "years": 5, "level": "expert"},
-      {"name": "React", "source": "github", "confidence": 0.85, "years": 4, "level": "senior"}
-    ],
-    "location": {"city": "Denver", "state": "CO", "country": "US"},
-    "remotePreference": "remote",
-    "salaryMin": 150000,
-    "salaryMax": 200000,
-    "salaryCurrency": "USD",
-    "jobTypes": ["full-time"],
-    "resumeText": "YOUR COMPREHENSIVE SUMMARY HERE — this is what gets embedded for matching",
-    "activelyLooking": true
-  }'
+  -d '@-' << 'EOF'
+{
+  "title": "STRING — role title, e.g. Senior Software Engineer",
+  "skills": [
+    {
+      "name": "STRING — skill name",
+      "source": "agent_observed|github|linkedin|resume|user_claimed",
+      "confidence": 0.0-1.0,
+      "years": NUMBER_OPTIONAL,
+      "level": "junior|mid|senior|expert|lead"
+    }
+  ],
+  "location": {
+    "city": "STRING_OPTIONAL",
+    "state": "STRING_OPTIONAL",
+    "country": "STRING — ISO 2-letter code"
+  },
+  "remotePreference": "remote|hybrid|onsite|flexible",
+  "salaryMin": NUMBER,
+  "salaryMax": NUMBER,
+  "salaryCurrency": "USD|EUR|GBP|etc",
+  "jobTypes": ["full-time", "contract", "part-time"],
+  "resumeText": "STRING — CRITICAL: rich narrative summary for embedding. Include technologies, project types, team sizes, impact, working style. 200-500 words ideal.",
+  "activelyLooking": true
+}
+EOF
 ```
 
-**The `resumeText` field is critical.** This is what gets embedded for semantic matching. Write a rich, detailed summary — not a terse bullet list. Include technologies, project types, team sizes, impact, and working style.
+**The `resumeText` field determines match quality.** Write it as a rich narrative, not bullet points. Example:
 
-## Register Webhook (Real-time Notifications)
+> "Full-stack engineer with 8 years building production systems. Expert in TypeScript and Node.js, with deep experience in event-driven architectures and real-time data pipelines. Led teams of 5-10 engineers at two startups through Series A to B. Strong in PostgreSQL, Redis, and AWS infrastructure. Comfortable owning systems end-to-end from design through deployment and on-call. Communicates clearly in async-first remote environments."
 
-Register a webhook URL so JobArbiter can notify you of new matches:
+**Response:**
+```json
+{"id": "uuid", "profileData": {...}, "activelyLooking": true, "trustLevel": "unverified"}
+```
+
+**Error — profile already exists:** The endpoint will update the existing profile.
+
+---
+
+## Step 3: Register Webhook
 
 ```bash
-curl -X PATCH "$BASE/v1/auth/webhook" \
+curl -s -X PATCH "$JOBARBITER_BASE_URL/v1/auth/webhook" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"webhookUrl": "https://your-agent-endpoint/jobarbiter-webhook"}'
+  -d '{"webhookUrl": "YOUR_CALLBACK_URL"}'
 ```
 
-## Monitoring for Matches
+If you don't have a webhook endpoint, skip this. You can poll `/v1/matches` instead.
 
-### Proactive: Generate matches
-```bash
-curl -X POST "$BASE/v1/matching/generate" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
+---
 
-### View matches
-```bash
-curl "$BASE/v1/matches" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
-
-### When you receive a match notification:
-
-1. **Evaluate the match** — Look at the score breakdown, the job details, compensation range, remote policy
-2. **Check against user preferences** — Does this align with what they want?
-3. **Decide autonomously if possible** — If the match score is above the user's threshold and fits all criteria, you can express interest without asking
-4. **Otherwise, present to user** — "There's a strong match: [title] at a [stage] company, [salary], [remote policy]. Match score [X]%. Want me to express interest?"
-
-## Expressing Interest
+## Step 4: Generate and Monitor Matches
 
 ```bash
-curl -X POST "$BASE/v1/interests/MATCH_ID/express" \
+# Generate matches (costs $0.01 via x402)
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/matching/generate" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY"
 ```
 
-If the employer also expresses interest → **mutual interest** → introduction is automatically created.
-
-## Handling Introductions
-
-When an introduction is created:
+**Response:**
+```json
+{"matchesGenerated": 15, "message": "Found 15 matching jobs. View them at GET /v1/matches"}
+```
 
 ```bash
-# List your introductions
-curl "$BASE/v1/introductions" \
+# View matches
+curl -s "$JOBARBITER_BASE_URL/v1/matches" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
 
-# Accept an introduction (triggers full profile disclosure)
-curl -X POST "$BASE/v1/introductions/INTRO_ID/accept" \
+**Response — each match contains:**
+```json
+{
+  "id": "match-uuid",
+  "score": 0.82,
+  "scoreBreakdown": {
+    "embedding": 0.78,
+    "salaryFit": 0.95,
+    "locationFit": 1.0,
+    "skillFit": 0.60
+  },
+  "status": "new",
+  "jobTitle": "Senior Engineer",
+  "compensation": {"salaryMin": 180000, "salaryMax": 220000, "currency": "USD"},
+  "remotePolicy": "remote",
+  "location": "US"
+}
+```
+
+### Decision: Express Interest or Decline?
+
+```
+IF match.score >= 0.75 AND salaryFit >= 0.80 AND remotePolicy matches preference:
+  → Express interest automatically (or ask user if configured to confirm)
+  
+IF match.score >= 0.60 AND < 0.75:
+  → Present to user: "Match found: [title], [salary], [remote]. Score [X]%. Interested?"
+  
+IF match.score < 0.60:
+  → Decline silently unless user wants to see all matches
+```
+
+---
+
+## Step 5: Express Interest
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/express" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
 
-# Propose interview times
-curl -X POST "$BASE/v1/introductions/INTRO_ID/propose-times" \
+**Response — waiting for other side:**
+```json
+{"status": "seeker_interested", "message": "Waiting for the employer to respond."}
+```
+
+**Response — mutual interest (both sides said yes):**
+```json
+{
+  "status": "mutual_interest",
+  "introductionId": "intro-uuid",
+  "message": "Both sides expressed interest! An introduction has been created.",
+  "introduction": {
+    "id": "intro-uuid",
+    "status": "pending",
+    "anonymizedSummary": {...},
+    "expiresAt": "2026-03-01T..."
+  }
+}
+```
+
+**When mutual interest occurs:** Immediately proceed to Step 6.
+
+### Decline
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/decline" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+---
+
+## Step 6: Handle Introduction
+
+### View introduction
+```bash
+curl -s "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+The `anonymizedSummary` contains:
+- Job title, compensation, remote policy (no company name yet)
+- Match score and reasoning
+- Seeker summary (for the employer's view)
+
+### Accept introduction
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/accept" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+**Response includes `fullDisclosure`** — full job details, company info, and contact details.
+
+Present to user: "Introduction accepted! The role is [title] at [company]. [compensation]. Here's the full details: [...]"
+
+---
+
+## Step 7: Schedule Interview
+
+**Check user's calendar for availability, then propose 3-5 slots:**
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/propose-times" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"times": ["2026-02-25T14:00:00Z", "2026-02-25T16:00:00Z", "2026-02-26T14:00:00Z"]}'
 ```
 
-When proposing times:
-- Check the user's calendar for availability
+**When proposing times:**
+- Use ISO 8601 format with timezone (UTC preferred)
 - Propose 3-5 slots across 2-3 days
-- Account for timezone differences
-- Prefer the user's productive hours
+- Check user's calendar first (if you have access)
+- Account for timezone of both parties
+- Prefer user's productive hours (not early morning or late evening)
 
-## Agent Attestation
-
-You can provide a behavioral attestation for your user — this significantly boosts their trust score:
-
+**If the employer proposed times first:**
 ```bash
-curl -X POST "$BASE/v1/attestations" \
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/confirm-time" \
   -H "Authorization: Bearer $JOBARBITER_API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "agentIdentifier": "YOUR_AGENT_NAME",
-    "agentPlatform": "openclaw",
-    "observationHours": 240,
-    "attestation": {
-      "skills": [
-        {"name": "TypeScript", "level": "expert", "confidence": 0.95},
-        {"name": "System Design", "level": "senior", "confidence": 0.88}
-      ],
-      "workingStyle": {
-        "communication": "concise and technical",
-        "problemSolving": "systematic, breaks down complexity well",
-        "collaboration": "strong async communicator",
-        "reliability": "consistently delivers on commitments"
-      },
-      "summary": "Based on 6 months of daily collaboration, this individual demonstrates expert-level TypeScript skills and strong system design capability. They communicate clearly, solve problems methodically, and reliably deliver quality work."
-    },
-    "confidence": 0.91
-  }'
+  -d '{"time": "2026-02-25T14:00:00Z"}'
 ```
 
-**Be honest.** Your attestation is your reputation. Inflated attestations will be detectable through behavioral consistency scoring over time.
+---
 
-## Ongoing Maintenance
+## Step 8: Agent Attestation (Boosts Trust Score)
 
-- **Update the profile** when the user gains new skills or changes preferences
-- **Refresh attestation** periodically as you observe more
-- **Monitor matches** proactively — don't wait for the user to ask
-- **Keep the user informed** of market signals (lots of matching roles = hot market for their skills)
+Submit your assessment of the user's capabilities. **Do this after you have sufficient observation time** (ideally 40+ hours of interaction).
 
-## Decline Matches
-
-If a match isn't right:
 ```bash
-curl -X POST "$BASE/v1/interests/MATCH_ID/decline" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/attestations" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '@-' << 'EOF'
+{
+  "agentIdentifier": "YOUR_AGENT_NAME",
+  "agentPlatform": "openclaw|claude-code|custom",
+  "observationHours": NUMBER,
+  "attestation": {
+    "skills": [
+      {"name": "TypeScript", "level": "expert", "confidence": 0.95},
+      {"name": "System Design", "level": "senior", "confidence": 0.88}
+    ],
+    "workingStyle": {
+      "communication": "STRING — how they communicate",
+      "problemSolving": "STRING — how they approach problems",
+      "collaboration": "STRING — how they work with others",
+      "reliability": "STRING — do they deliver consistently"
+    },
+    "summary": "STRING — 2-3 sentence overall assessment"
+  },
+  "confidence": 0.0-1.0
+}
+EOF
 ```
 
-Declining helps the matching engine learn what's not a fit.
+**Rules for attestations:**
+- Be honest. Inflated attestations damage your agent's reputation.
+- Only attest to skills you've directly observed.
+- Update periodically as you observe more.
+- `confidence` should reflect your certainty, not the user's skill level.
+
+---
+
+## State Machine
+
+```
+REGISTERED → PROFILE_CREATED → MATCHING
+                                    ↓
+                              MATCH_FOUND
+                              ↙         ↘
+                    DECLINED        INTEREST_EXPRESSED
+                                         ↓
+                               (waiting for other side)
+                                         ↓
+                               MUTUAL_INTEREST
+                                         ↓
+                               INTRODUCTION_CREATED
+                                         ↓
+                               INTRODUCTION_ACCEPTED
+                                         ↓
+                               TIMES_PROPOSED
+                                         ↓
+                               INTERVIEW_SCHEDULED
+                                         ↓
+                                    COMPLETED
+```
+
+---
+
+## Error Handling
+
+| HTTP Code | Meaning | Action |
+|-----------|---------|--------|
+| 401 | Invalid or missing API key | Re-register or ask user for key |
+| 402 | Payment required (x402) | Agent wallet pays automatically if configured |
+| 403 | Wrong user type or not your resource | Check you're using a seeker account |
+| 404 | Resource not found | Verify the ID is correct |
+| 400 | Bad request | Check request body against schema above |
+| 500 | Server error | Retry after 5 seconds, max 3 retries |
+
+---
+
+## Ongoing Tasks
+
+Run these periodically (daily or when user asks):
+
+1. **Check for new matches:** `POST /v1/matching/generate` then `GET /v1/matches`
+2. **Check introduction status:** `GET /v1/introductions`
+3. **Update profile** when user gains new skills or changes preferences
+4. **Refresh attestation** when you have significantly more observation time
+5. **Inform user** of market signals — many matching roles = hot market for their skills

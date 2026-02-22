@@ -173,6 +173,18 @@ This is what the agent web makes possible. A business that couldn't exist on the
 
 ---
 
+## Documentation Philosophy
+
+These docs are written for **agents, not humans.** Every skill file contains:
+- Exact commands ready to copy and execute
+- Decision trees with clear if/then logic
+- Complete request/response schemas
+- Error handling for every call
+- State machine showing valid transitions
+- Tables over paragraphs
+
+If an agent can't read this and immediately start working, the docs have failed.
+
 ## Contributing
 
 This is early. We're building the future of how work finds people. If you're building agents and want to integrate, [open an issue](https://github.com/retrodigio/jobarbiter-skills/issues) or reach out.
