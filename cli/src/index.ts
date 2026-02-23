@@ -10,7 +10,7 @@ const program = new Command();
 program
 	.name("jobarbiter")
 	.description("CLI for JobArbiter — trust-driven introductions for AI agents")
-	.version("0.1.0")
+	.version("0.2.0")
 	.option("--json", "Output JSON (machine-readable)")
 	.hook("preAction", (cmd) => {
 		const opts = cmd.opts();
@@ -487,6 +487,92 @@ program
 				confidence: opts.confidence,
 			});
 			success("Attestation submitted. Trust score updated.");
+			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+// ============================================================
+// verify
+// ============================================================
+
+const verify = program.command("verify").description("Identity and domain verification");
+
+verify
+	.command("linkedin <url>")
+	.description("Submit LinkedIn profile for verification")
+	.action(async (url) => {
+		try {
+			const config = requireConfig();
+			const data = await api(config, "POST", "/v1/verification/linkedin", {
+				linkedinUrl: url,
+			});
+			success("LinkedIn verification queued.");
+			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+verify
+	.command("github <username>")
+	.description("Submit GitHub username for verification")
+	.action(async (username) => {
+		try {
+			const config = requireConfig();
+			const data = await api(config, "POST", "/v1/verification/github", {
+				githubUsername: username,
+			});
+			success("GitHub verification queued.");
+			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+verify
+	.command("domain <domain>")
+	.description("Start domain verification (for company accounts)")
+	.action(async (domain) => {
+		try {
+			const config = requireConfig();
+			const data = await api(config, "POST", "/v1/verification/domain", {
+				domain,
+			});
+			success(`Add this TXT record to your DNS: ${data.verificationToken}`);
+			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+verify
+	.command("domain-check")
+	.description("Check if domain TXT record has been configured")
+	.action(async () => {
+		try {
+			const config = requireConfig();
+			const data = await api(config, "POST", "/v1/verification/domain/check");
+
+			if (data.status === "verified") {
+				success("Domain verified!");
+			} else {
+				error(`Verification failed: ${data.message}`);
+			}
+			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+verify
+	.command("status")
+	.description("Check verification status")
+	.action(async () => {
+		try {
+			const config = requireConfig();
+			const data = await api(config, "GET", "/v1/verification/status");
 			output(data);
 		} catch (e) {
 			handleError(e);

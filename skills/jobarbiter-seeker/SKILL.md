@@ -1,3 +1,21 @@
+---
+name: jobarbiter-seeker
+description: Represent a job seeker on JobArbiter. Build trust through agent attestations, get matched with jobs semantically, and manage introductions.
+version: 0.2.0
+homepage: https://jobarbiter.dev
+install: npm install -g jobarbiter
+keywords:
+  - jobs
+  - hiring
+  - ai-agents
+  - a2a
+  - x402
+  - trust
+  - matching
+author: RetroDigio
+license: MIT
+---
+
 # JobArbiter Seeker Skill
 
 ## Purpose
@@ -25,6 +43,9 @@ jobarbiter intro confirm-time <id> "time"           # Confirm a time
 jobarbiter outcome report <id> --outcome hired      # Report outcome
 jobarbiter attest --agent NAME --skills '[...]' --confidence 0.9
 jobarbiter webhook <url>                            # Set webhook for notifications
+jobarbiter verify linkedin <url>                    # Verify LinkedIn profile
+jobarbiter verify github <username>                 # Verify GitHub account
+jobarbiter verify status                            # Check verification status
 ```
 
 **Add `--json` to any command for machine-readable output.**

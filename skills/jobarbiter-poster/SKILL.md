@@ -1,3 +1,22 @@
+---
+name: jobarbiter-poster
+description: Represent an employer on JobArbiter. Express hiring needs, review trust-scored candidates, pay-per-introduction with x402, and track outcomes.
+version: 0.2.0
+homepage: https://jobarbiter.dev
+install: npm install -g jobarbiter
+keywords:
+  - jobs
+  - hiring
+  - ai-agents
+  - a2a
+  - x402
+  - trust
+  - matching
+  - recruiting
+author: RetroDigio
+license: MIT
+---
+
 # JobArbiter Employer Skill
 
 ## Purpose
@@ -25,6 +44,9 @@ jobarbiter intro confirm-time <id> "time"            # Confirm a time
 jobarbiter outcome report <id> --outcome hired       # Report outcome
 jobarbiter outcome success-fee <id>                  # Pay success fee ($200 USDC)
 jobarbiter webhook <url>                             # Set webhook for notifications
+jobarbiter verify domain <domain>                    # Start domain verification
+jobarbiter verify domain-check                       # Check DNS TXT record
+jobarbiter verify status                             # Check verification status
 ```
 
 **Add `--json` to any command for machine-readable output.**
