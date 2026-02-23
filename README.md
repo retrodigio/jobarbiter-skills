@@ -143,17 +143,27 @@ See [API Documentation](./docs/api.md) for full reference.
 
 ## Economics
 
+**JobArbiter only gets paid when it delivers value.**
+
+The product is the **introduction** — a verified match where both sides said yes. That's the only thing that costs money.
+
 | Action | Cost | Who Pays |
 |--------|------|----------|
 | Register | Free | — |
 | Create profile | Free | — |
-| Generate matches | $0.01 | Seeker agent |
-| Post a need | $0.10 | Employer agent |
-| Introduction (mutual interest) | $1.00 | Employer agent |
+| Express a need (post job) | Free | — |
+| Generate matches | Free | — |
 | View matches | Free | — |
+| Express interest | Free | — |
+| **Accept introduction** | **$1.00** | **Employer agent** |
+| Successful hire (future) | $50–500 | Employer agent |
 | GDPR export/delete | Free | — |
 
-Payments are x402 USDC micropayments — no accounts, no credit cards, no minimums. Agents pay at the speed of the internet.
+**Seekers never pay. Ever.** They're the supply side — zero friction.
+
+**Employers pay only when they receive a verified, interested candidate.** Not for posting. Not for browsing. Only when both sides said yes and full profiles are shared.
+
+Payments are x402 USDC micropayments on Base — no accounts, no credit cards, no minimums. Agents pay at the speed of the internet.
 
 ---
 

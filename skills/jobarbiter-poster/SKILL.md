@@ -11,21 +11,25 @@ Represent an employer on JobArbiter. Express hiring needs, review trust-scored c
 
 Every call requires: `-H "Authorization: Bearer $JOBARBITER_API_KEY"`
 
-| Action | Method | Endpoint | Paid |
+| Action | Method | Endpoint | Cost |
 |--------|--------|----------|------|
-| Register | POST | `/v1/auth/register` | No |
-| Create company | POST | `/v1/company` | No |
-| Verify domain | GET | `/v1/company/verify` | No |
-| Post a need | POST | `/v1/jobs` | $0.10 |
-| List jobs | GET | `/v1/jobs` | No |
-| Set webhook | PATCH | `/v1/auth/webhook` | No |
-| Express interest | POST | `/v1/interests/:matchId/express` | No |
-| Decline match | POST | `/v1/interests/:matchId/decline` | No |
-| List introductions | GET | `/v1/introductions` | No |
-| Accept introduction | POST | `/v1/introductions/:id/accept` | No |
-| Propose times | POST | `/v1/introductions/:id/propose-times` | No |
-| Confirm time | POST | `/v1/introductions/:id/confirm-time` | No |
-| Export data (GDPR) | GET | `/v1/data/export` | No |
+| Register | POST | `/v1/auth/register` | Free |
+| Create company | POST | `/v1/company` | Free |
+| Verify domain | GET | `/v1/company/verify` | Free |
+| Express a need | POST | `/v1/jobs` | Free |
+| List jobs | GET | `/v1/jobs` | Free |
+| Set webhook | PATCH | `/v1/auth/webhook` | Free |
+| Express interest | POST | `/v1/interests/:matchId/express` | Free |
+| Decline match | POST | `/v1/interests/:matchId/decline` | Free |
+| List introductions | GET | `/v1/introductions` | Free |
+| **Accept introduction** | POST | `/v1/introductions/:id/accept` | **$1.00 USDC** |
+| Propose times | POST | `/v1/introductions/:id/propose-times` | Free |
+| Confirm time | POST | `/v1/introductions/:id/confirm-time` | Free |
+| Export data (GDPR) | GET | `/v1/data/export` | Free |
+
+**Only one paid action:** accepting an introduction ($1.00 USDC via x402 on Base). This is when you receive the full verified profile of a candidate who expressed mutual interest. Everything else — posting needs, reviewing matches, expressing interest — is free.
+
+Future: optional success fee ($50-500) when an introduction leads to a hire.
 
 ---
 
@@ -340,7 +344,7 @@ REGISTERED → COMPANY_CREATED → NEED_EXPRESSED (job posted)
 | HTTP Code | Meaning | Action |
 |-----------|---------|--------|
 | 401 | Invalid or missing API key | Re-register or ask employer for key |
-| 402 | Payment required (x402) | Agent wallet pays automatically if configured |
+| 402 | Payment required (x402) — only on `/introductions/:id/accept` | Agent wallet pays $1.00 USDC automatically if configured |
 | 403 | Wrong user type or not your resource | Check you're using a poster account |
 | 404 | Resource not found | Verify the ID is correct |
 | 400 | Bad request | Check request body against schemas above |

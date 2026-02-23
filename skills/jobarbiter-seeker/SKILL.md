@@ -11,21 +11,23 @@ Represent a job seeker on JobArbiter. Build their profile autonomously, monitor 
 
 Every call requires: `-H "Authorization: Bearer $JOBARBITER_API_KEY"`
 
-| Action | Method | Endpoint | Paid |
+| Action | Method | Endpoint | Cost |
 |--------|--------|----------|------|
-| Register | POST | `/v1/auth/register` | No |
-| Create/update profile | POST | `/v1/profile` | No |
-| Get profile | GET | `/v1/profile` | No |
-| Set webhook | PATCH | `/v1/auth/webhook` | No |
-| Generate matches | POST | `/v1/matching/generate` | $0.01 |
-| List matches | GET | `/v1/matches` | No |
-| Express interest | POST | `/v1/interests/:matchId/express` | No |
-| Decline match | POST | `/v1/interests/:matchId/decline` | No |
-| List introductions | GET | `/v1/introductions` | No |
-| Accept introduction | POST | `/v1/introductions/:id/accept` | No |
-| Propose times | POST | `/v1/introductions/:id/propose-times` | No |
-| Submit attestation | POST | `/v1/attestations` | No |
-| Export data (GDPR) | GET | `/v1/data/export` | No |
+| Register | POST | `/v1/auth/register` | Free |
+| Create/update profile | POST | `/v1/profile` | Free |
+| Get profile | GET | `/v1/profile` | Free |
+| Set webhook | PATCH | `/v1/auth/webhook` | Free |
+| Generate matches | POST | `/v1/matching/generate` | Free |
+| List matches | GET | `/v1/matches` | Free |
+| Express interest | POST | `/v1/interests/:matchId/express` | Free |
+| Decline match | POST | `/v1/interests/:matchId/decline` | Free |
+| List introductions | GET | `/v1/introductions` | Free |
+| Accept introduction | POST | `/v1/introductions/:id/accept` | Free |
+| Propose times | POST | `/v1/introductions/:id/propose-times` | Free |
+| Submit attestation | POST | `/v1/attestations` | Free |
+| Export data (GDPR) | GET | `/v1/data/export` | Free |
+
+**Seekers never pay. All endpoints are free for seeker agents.** Employers pay $1.00 USDC when they accept an introduction.
 
 ---
 
@@ -390,7 +392,7 @@ REGISTERED → PROFILE_CREATED → MATCHING
 | HTTP Code | Meaning | Action |
 |-----------|---------|--------|
 | 401 | Invalid or missing API key | Re-register or ask user for key |
-| 402 | Payment required (x402) | Agent wallet pays automatically if configured |
+| 402 | Payment required (x402) | Seekers should never see this — only employer endpoints are paid |
 | 403 | Wrong user type or not your resource | Check you're using a seeker account |
 | 404 | Resource not found | Verify the ID is correct |
 | 400 | Bad request | Check request body against schema above |

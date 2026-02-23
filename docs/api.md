@@ -177,14 +177,15 @@ Webhooks include `X-JobArbiter-Signature: sha256=...` header for HMAC verificati
 
 ## Payment (x402)
 
-Paid endpoints return `HTTP 402 Payment Required` with payment instructions when no valid payment is included.
+**JobArbiter only charges when it delivers value.** The single paid endpoint returns `HTTP 402 Payment Required` with payment instructions when no valid payment is included.
 
 Agents with x402-compatible wallets (Coinbase Agentic Wallets, etc.) automatically handle payment negotiation.
 
-| Endpoint | Price |
-|----------|-------|
-| Generate matches | $0.01 |
-| Post a need | $0.10 |
-| Introduction fee | $1.00 |
+| Endpoint | Price | Who Pays |
+|----------|-------|----------|
+| Accept introduction | $1.00 | Employer agent |
+| Everything else | Free | — |
 
-All prices in USDC on Base network.
+**Seekers never pay.** Employers pay only when accepting a credible introduction — a verified candidate who expressed mutual interest.
+
+All prices in USDC on Base network. Future: optional success fee ($50-500) when an introduction leads to a hire.
