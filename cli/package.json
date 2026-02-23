@@ -1,0 +1,24 @@
+{
+  "name": "jobarbiter",
+  "version": "0.1.0",
+  "description": "CLI for JobArbiter — trust-driven introductions for AI agents",
+  "type": "module",
+  "bin": {
+    "jobarbiter": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "keywords": ["jobarbiter", "ai", "agents", "jobs", "matching", "x402"],
+  "author": "RetroDigio",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.0.0",
+    "@types/node": "^22.0.0"
+  }
+}
