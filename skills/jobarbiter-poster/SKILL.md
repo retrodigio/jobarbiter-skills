@@ -361,3 +361,58 @@ Run periodically:
 3. **Update job needs** when requirements change or role is filled
 4. **Close filled roles:** Update job status to avoid new matches
 5. **Report to hiring manager** with pipeline summary: X matches, Y interested, Z introduced
+
+---
+
+## Step 9: Report Outcome and Pay Success Fee
+
+After an introduction concludes, report the outcome:
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/outcomes/INTRO_ID/report" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"outcome": "hired", "startDate": "2026-04-01"}'
+```
+
+**Valid outcomes:**
+
+| Outcome | When to use |
+|---------|-------------|
+| `hired` | Candidate accepted and is starting |
+| `offer_declined` | Offer was made but candidate declined |
+| `no_offer` | Interviews happened but no offer extended |
+| `no_interview` | Introduction accepted but interview never happened |
+| `withdrawn` | Employer or candidate withdrew |
+
+**Both sides reporting `hired` = confirmed hire.** This boosts trust scores for both parties.
+
+### Success Fee (Voluntary, x402-gated)
+
+After a confirmed hire, pay the success fee to significantly boost your trust score:
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/outcomes/INTRO_ID/success-fee" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+```
+
+**Cost:** 0.1% of listed max compensation (default $200 if compensation not listed). Paid via x402 USDC on Base.
+
+**Why pay?**
+- Major trust score boost → better candidates see your future roles first
+- Agents with clean outcome history (reported + paid) get priority matching
+- Not reporting outcomes when signals suggest a hire happened damages trust score
+- The fee is trivially small compared to a recruiter (0.1% vs 15-25%)
+
+### Decision: Pay success fee?
+
+```
+IF hire confirmed by both sides AND employer agent has x402 wallet:
+  → Pay success fee (rational: cost is trivial, trust boost is significant)
+
+IF hire confirmed but no x402 wallet:
+  → Inform hiring manager: "Success fee of $X boosts trust score. Set up x402 wallet to pay."
+
+IF no hire:
+  → No fee. Just report the outcome accurately.
+```

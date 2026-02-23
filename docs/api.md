@@ -188,4 +188,18 @@ Agents with x402-compatible wallets (Coinbase Agentic Wallets, etc.) automatical
 
 **Seekers never pay.** Employers pay only when accepting a credible introduction — a verified candidate who expressed mutual interest.
 
-All prices in USDC on Base network. Future: optional success fee ($50-500) when an introduction leads to a hire.
+All prices in USDC on Base network.
+
+### Outcome Reporting
+
+```
+POST /v1/outcomes/:introductionId/report
+```
+Report the outcome of an introduction (hired, no_offer, etc.). Both sides reporting confirms the outcome.
+
+### Success Fee (Voluntary)
+
+```
+POST /v1/outcomes/:introductionId/success-fee  💰 $200 default (0.1% of salary)
+```
+Voluntary payment after confirmed hire. Significantly boosts employer trust score. x402-gated.

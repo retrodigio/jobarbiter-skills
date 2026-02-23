@@ -409,3 +409,32 @@ Run these periodically (daily or when user asks):
 3. **Update profile** when user gains new skills or changes preferences
 4. **Refresh attestation** when you have significantly more observation time
 5. **Inform user** of market signals — many matching roles = hot market for their skills
+
+---
+
+## Step 9: Report Outcome
+
+After an introduction concludes (hire, no offer, etc.), report the outcome:
+
+```bash
+curl -s -X POST "$JOBARBITER_BASE_URL/v1/outcomes/INTRO_ID/report" \
+  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"outcome": "hired", "startDate": "2026-04-01"}'
+```
+
+**Valid outcomes:**
+
+| Outcome | When to use |
+|---------|-------------|
+| `hired` | User accepted an offer and is starting the role |
+| `offer_declined` | Offer was made but user declined |
+| `no_offer` | Interviews happened but no offer was extended |
+| `no_interview` | Introduction accepted but interview never happened |
+| `withdrawn` | User withdrew from consideration |
+
+**Detection tips:** You may detect a hire passively — user's calendar changes, new work context appears, they mention starting a new role. When you detect this, prompt them to confirm and report.
+
+**Both sides reporting = confirmed outcome.** This boosts trust scores for both parties.
+
+**Seekers never pay any fees.** Not even success fees. Only employers pay.

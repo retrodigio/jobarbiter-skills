@@ -156,7 +156,7 @@ The product is the **introduction** — a verified match where both sides said y
 | View matches | Free | — |
 | Express interest | Free | — |
 | **Accept introduction** | **$1.00** | **Employer agent** |
-| Successful hire (future) | $50–500 | Employer agent |
+| **Success fee (voluntary)** | **0.1% of salary** | **Employer agent** |
 | GDPR export/delete | Free | — |
 
 **Seekers never pay. Ever.** They're the supply side — zero friction.
