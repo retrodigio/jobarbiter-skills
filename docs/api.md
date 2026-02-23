@@ -1,5 +1,7 @@
 # JobArbiter API Reference
 
+> **Prefer the CLI.** Install with `npm install -g jobarbiter`. The CLI wraps every endpoint below with proper auth, error handling, and `--json` output. Use the raw API only if you need custom integration.
+
 **Base URL:** `https://jobarbiter-api-production.up.railway.app`
 
 **Authentication:** All endpoints (except register and health) require:
@@ -25,6 +27,8 @@ POST /v1/auth/register
 ```
 Returns API key. Save it — it won't be shown again.
 
+**CLI:** `jobarbiter register --email user@example.com --type seeker` (auto-saves key)
+
 ---
 
 ## Seeker Endpoints
@@ -35,21 +39,27 @@ POST /v1/profile
 ```
 Auto-generates embedding for semantic matching.
 
+**CLI:** `jobarbiter profile create --title "..." --skills '[...]' ...`
+
 ### Get Profile
 ```
 GET /v1/profile
 ```
+**CLI:** `jobarbiter profile show`
 
-### Generate Matches 💰
+### Generate Matches
 ```
 POST /v1/matching/generate
 ```
 Embeds profile (if needed), runs pgvector similarity search + rule-based scoring.
 
+**CLI:** `jobarbiter matches generate`
+
 ### View Matches
 ```
 GET /v1/matches
 ```
+**CLI:** `jobarbiter matches list [--min-score 0.7] [--json]`
 
 ---
 
@@ -59,12 +69,15 @@ GET /v1/matches
 ```
 POST /v1/company
 ```
+**CLI:** `jobarbiter company create --name "..." --domain "..." ...`
 
-### Post a Need 💰
+### Post a Need
 ```
 POST /v1/jobs
 ```
 Auto-generates embedding. Triggers real-time notifications to matching seekers.
+
+**CLI:** `jobarbiter need --title "..." --description "..." ...`
 
 ### List Jobs
 ```
@@ -81,10 +94,13 @@ POST /v1/interests/:matchId/express
 ```
 Either side can call. When both express interest → introduction auto-created.
 
+**CLI:** `jobarbiter interest express MATCH_ID`
+
 ### Decline Match
 ```
 POST /v1/interests/:matchId/decline
 ```
+**CLI:** `jobarbiter interest decline MATCH_ID [--reason salary_mismatch]`
 
 ---
 
@@ -100,11 +116,13 @@ GET /v1/introductions
 GET /v1/introductions/:id
 ```
 
-### Accept Introduction
+### Accept Introduction 💰
 ```
 POST /v1/introductions/:id/accept
 ```
-Triggers full profile disclosure to both sides.
+Triggers full profile disclosure to both sides. Employers pay $1.00 USDC via x402.
+
+**CLI:** `jobarbiter intro accept INTRO_ID`
 
 ### Propose Interview Times
 ```
@@ -173,6 +191,8 @@ PATCH /v1/auth/webhook
 **Signature verification:**
 Webhooks include `X-JobArbiter-Signature: sha256=...` header for HMAC verification.
 
+**CLI:** `jobarbiter webhook https://your-endpoint/webhook`
+
 ---
 
 ## Payment (x402)
@@ -197,9 +217,13 @@ POST /v1/outcomes/:introductionId/report
 ```
 Report the outcome of an introduction (hired, no_offer, etc.). Both sides reporting confirms the outcome.
 
+**CLI:** `jobarbiter outcome report INTRO_ID --outcome hired --start-date 2026-04-01`
+
 ### Success Fee (Voluntary)
 
 ```
 POST /v1/outcomes/:introductionId/success-fee  💰 $200 default (0.1% of salary)
 ```
 Voluntary payment after confirmed hire. Significantly boosts employer trust score. x402-gated.
+
+**CLI:** `jobarbiter outcome success-fee INTRO_ID`
