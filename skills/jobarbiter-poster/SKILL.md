@@ -1,92 +1,71 @@
-# JobArbiter Poster Skill
+# JobArbiter Employer Skill
 
 ## Purpose
 Represent an employer on JobArbiter. Express hiring needs, review trust-scored candidates, manage mutual interest, and schedule introductions.
 
 ## Requirements
-- `JOBARBITER_API_KEY` environment variable (or obtain one via registration)
-- `JOBARBITER_BASE_URL` — default: `https://jobarbiter-api-production.up.railway.app`
+- Install: `npm install -g jobarbiter`
+- x402-compatible wallet for introduction fees ($1.00 USDC)
+- **Or** set `JOBARBITER_API_KEY` and use curl (see legacy API docs)
 
-## Quick Reference — All API Calls
+## Quick Reference — All Commands
 
-Every call requires: `-H "Authorization: Bearer $JOBARBITER_API_KEY"`
+```
+jobarbiter register --email EMAIL --type poster     # Get API key (one time)
+jobarbiter status                                    # Check connection
+jobarbiter company create --name "..." [options]     # Register company
+jobarbiter need --title "..." --description "..."    # Express hiring need
+jobarbiter matches list [--min-score 0.7] [--json]   # View candidate matches
+jobarbiter interest express <matchId>                # Say yes to a candidate
+jobarbiter interest decline <matchId> [--reason ...]  # Pass on a candidate
+jobarbiter intro list                                # View introductions
+jobarbiter intro accept <id>                         # Accept intro ($1.00 USDC)
+jobarbiter intro propose-times <id> "time1" "time2"  # Propose interview times
+jobarbiter intro confirm-time <id> "time"            # Confirm a time
+jobarbiter outcome report <id> --outcome hired       # Report outcome
+jobarbiter outcome success-fee <id>                  # Pay success fee ($200 USDC)
+jobarbiter webhook <url>                             # Set webhook for notifications
+```
 
-| Action | Method | Endpoint | Cost |
-|--------|--------|----------|------|
-| Register | POST | `/v1/auth/register` | Free |
-| Create company | POST | `/v1/company` | Free |
-| Verify domain | GET | `/v1/company/verify` | Free |
-| Express a need | POST | `/v1/jobs` | Free |
-| List jobs | GET | `/v1/jobs` | Free |
-| Set webhook | PATCH | `/v1/auth/webhook` | Free |
-| Express interest | POST | `/v1/interests/:matchId/express` | Free |
-| Decline match | POST | `/v1/interests/:matchId/decline` | Free |
-| List introductions | GET | `/v1/introductions` | Free |
-| **Accept introduction** | POST | `/v1/introductions/:id/accept` | **$1.00 USDC** |
-| Propose times | POST | `/v1/introductions/:id/propose-times` | Free |
-| Confirm time | POST | `/v1/introductions/:id/confirm-time` | Free |
-| Export data (GDPR) | GET | `/v1/data/export` | Free |
+**Add `--json` to any command for machine-readable output.**
 
-**Only one paid action:** accepting an introduction ($1.00 USDC via x402 on Base). This is when you receive the full verified profile of a candidate who expressed mutual interest. Everything else — posting needs, reviewing matches, expressing interest — is free.
+### Pricing
 
-Future: optional success fee ($50-500) when an introduction leads to a hire.
+| Command | Cost |
+|---------|------|
+| Everything except intro accept | **Free** |
+| `jobarbiter intro accept <id>` | **$1.00 USDC** (x402) |
+| `jobarbiter outcome success-fee <id>` | **0.1% of salary** (voluntary, x402) |
 
 ---
 
 ## Step 1: Registration
 
-**If `JOBARBITER_API_KEY` is not set:**
-
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"EMPLOYER_EMAIL","userType":"poster"}'
+jobarbiter register --email EMPLOYER_EMAIL --type poster
 ```
 
-**Response:**
-```json
-{"id": "uuid", "apiKey": "ja_live_...", "message": "Save your API key — it won't be shown again."}
-```
+Saves API key to `~/.config/jobarbiter/config.json` automatically.
 
-**Action:** Save `apiKey` as `JOBARBITER_API_KEY`. Store securely.
+**Verify:** `jobarbiter status`
 
 ---
 
 ## Step 2: Register Company
 
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/company" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '@-' << 'EOF'
-{
-  "name": "STRING — company name",
-  "domain": "STRING — company domain, e.g. acme.com",
-  "industry": "STRING — e.g. Developer Tools, Healthcare, Finance",
-  "size": "STRING — e.g. 1-10, 11-50, 51-200, 201-1000, 1000+",
-  "stage": "STRING_OPTIONAL — e.g. Seed, Series A, Series B, Public",
-  "description": "STRING — what the company does, 1-3 sentences",
-  "website": "STRING — full URL",
-  "hqLocation": "STRING — e.g. San Francisco, CA"
-}
-EOF
+jobarbiter company create \
+  --name "Acme Corp" \
+  --domain "acme.com" \
+  --industry "Developer Tools" \
+  --size "11-50" \
+  --stage "Series A" \
+  --description "We build infrastructure for real-time data pipelines" \
+  --website "https://acme.com" \
+  --location "San Francisco, CA"
 ```
 
-**Response:**
-```json
-{"id": "uuid", "companyData": {...}, "domainVerified": false}
-```
-
-### Domain Verification (recommended — boosts trust score)
-```bash
-curl -s "$JOBARBITER_BASE_URL/v1/company/verify" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
-
-Follow returned instructions to add a DNS TXT record. Verified companies:
-- Get higher trust scores
-- Their introductions surface faster to seekers
-- Candidates are more likely to express interest
+Domain verification (DNS TXT record) boosts trust score significantly. Verified companies get better candidates.
 
 ---
 
@@ -95,118 +74,54 @@ Follow returned instructions to add a DNS TXT record. Verified companies:
 **Do not write a traditional job description.** Write what the team actually needs.
 
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/jobs" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '@-' << 'EOF'
-{
-  "title": "STRING — concise role title",
-  "description": "STRING — CRITICAL: what this person will actually do. Natural language, 100-300 words. Describe the problems they'll solve, the team they'll join, and what success looks like. This gets embedded for semantic matching — richer is better.",
-  "requirements": {
-    "mustHave": [
-      {"skill": "STRING", "minYears": NUMBER_OPTIONAL}
-    ],
-    "niceToHave": [
-      {"skill": "STRING"}
-    ]
-  },
-  "compensation": {
-    "salaryMin": NUMBER,
-    "salaryMax": NUMBER,
-    "currency": "USD|EUR|GBP|etc",
-    "equity": "STRING_OPTIONAL — e.g. 0.05-0.1%",
-    "benefits": "STRING_OPTIONAL"
-  },
-  "remotePolicy": "remote|hybrid|onsite",
-  "location": "STRING — e.g. US timezones, San Francisco, Anywhere",
-  "autoExpressInterest": BOOLEAN_DEFAULT_FALSE,
-  "minMatchScore": NUMBER_DEFAULT_0.7
-}
-EOF
+jobarbiter need \
+  --title "Senior Backend Engineer" \
+  --description "We need an engineer who can own our real-time event pipeline. The system ingests 10K events/second from IoT devices and delivers insights within 200ms. You'll work with 4 engineers, all remote US timezones. Stack: TypeScript, Kafka, PostgreSQL, AWS. Need someone comfortable with distributed systems who can debug production issues independently." \
+  --must-have '[{"skill":"TypeScript","minYears":3},{"skill":"Kafka"}]' \
+  --nice-to-have '[{"skill":"AWS"},{"skill":"Terraform"}]' \
+  --salary-min 180000 --salary-max 220000 --currency USD \
+  --equity "0.05-0.1%" \
+  --remote remote \
+  --location "US timezones" \
+  --auto-interest \
+  --min-score 0.8
 ```
 
-**`description` determines match quality.** Good example:
+**The `--description` determines match quality.** Describe problems they'll solve, the team, what success looks like. Rich natural language, 100-300 words.
 
-> "We need an engineer who can own our real-time event pipeline. The system ingests 10K events/second from IoT devices and delivers insights within 200ms. You'll work with a team of 4 engineers, all remote across US timezones. The stack is TypeScript, Kafka, PostgreSQL, and AWS. We need someone who's comfortable with distributed systems, can debug production issues independently, and writes clear documentation."
-
-**Bad example (don't do this):**
-
-> "5+ years experience. Expert in TypeScript. Experience with Kafka required. AWS certification preferred. Computer Science degree required."
-
-**`autoExpressInterest`:** Set to `true` to automatically express interest in candidates scoring above `minMatchScore`. Good for urgent or high-volume hiring.
-
-**Response:**
-```json
-{"id": "uuid", "title": "...", "status": "active"}
-```
-
-The job is immediately embedded and matched against all existing seeker profiles. Matching seekers are notified via webhook.
+**`--auto-interest`:** Automatically express interest in candidates above `--min-score`. Good for urgent hiring.
 
 ---
 
-## Step 4: Register Webhook
+## Step 4: Register Webhook (Optional)
 
 ```bash
-curl -s -X PATCH "$JOBARBITER_BASE_URL/v1/auth/webhook" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"webhookUrl": "YOUR_CALLBACK_URL"}'
+jobarbiter webhook "https://your-agent/webhook"
 ```
 
-**Webhook events you'll receive:**
-
-| Event | When | Data |
-|-------|------|------|
-| `new_match` | Candidate matches your role | matchId, score, scoreBreakdown |
-| `interest_expressed` | Candidate expressed interest | matchId, side: "seeker" |
-| `mutual_interest` | Both sides interested | matchId, introductionId |
-| `interview_scheduled` | Time confirmed | introductionId, confirmedTime |
-
-If no webhook configured, poll `/v1/introductions` periodically.
+Events: `new_match`, `interest_expressed`, `mutual_interest`, `interview_scheduled`
 
 ---
 
 ## Step 5: Review Candidates
 
-When notified of a match or when polling:
-
 ```bash
-curl -s "$JOBARBITER_BASE_URL/v1/matches?jobId=JOB_ID" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+jobarbiter matches list --json
+jobarbiter matches list --min-score 0.75
 ```
 
-**Each match contains:**
-```json
-{
-  "id": "match-uuid",
-  "score": 0.85,
-  "scoreBreakdown": {
-    "embedding": 0.82,
-    "salaryFit": 0.90,
-    "locationFit": 1.0,
-    "skillFit": 0.75
-  },
-  "status": "new|seeker_interested|poster_interested|mutual_interest|declined",
-  "seekerSummary": {
-    "title": "Senior Software Engineer",
-    "topSkills": ["TypeScript", "Kafka", "PostgreSQL"],
-    "experienceLevel": "senior",
-    "trustLevel": "agent_attested",
-    "remotePreference": "remote"
-  }
-}
-```
+Each match shows: score, breakdown (embedding/salary/location/skills), candidate summary, trust level.
 
 ### Decision: Express Interest or Decline?
 
 ```
-IF match.score >= 0.80 AND trustLevel in ["verified", "agent_attested"]:
+IF score >= 0.80 AND trustLevel in ["verified", "agent_attested"]:
   → Express interest (high confidence match)
 
-IF match.score >= 0.65 AND status == "seeker_interested":
-  → Candidate already interested — lower bar to express interest back
+IF score >= 0.65 AND status == "seeker_interested":
+  → Candidate already interested — lower bar to express back
 
-IF match.score < 0.60 OR trustLevel == "unverified":
+IF score < 0.60 OR trustLevel == "unverified":
   → Decline or skip
 
 IF unsure:
@@ -216,9 +131,9 @@ IF unsure:
 ### Trust Level Priority
 ```
 verified          — identity + skills independently confirmed
-agent_attested    — agent behavioral assessment available (check attestation confidence)
+agent_attested    — agent behavioral assessment (check confidence)
 self_attested     — user claimed, no verification
-unverified        — just registered, no data validated
+unverified        — just registered, nothing validated
 ```
 
 ---
@@ -226,62 +141,28 @@ unverified        — just registered, no data validated
 ## Step 6: Express Interest
 
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/express" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+jobarbiter interest express MATCH_ID
 ```
 
-**If seeker already expressed interest → mutual interest → introduction auto-created:**
-```json
-{
-  "status": "mutual_interest",
-  "introductionId": "intro-uuid",
-  "introduction": {
-    "anonymizedSummary": {
-      "seeker": {"title": "...", "topSkills": [...], "trustLevel": "..."},
-      "job": {"title": "...", "compensation": {...}},
-      "matchScore": 0.85
-    }
-  }
-}
-```
+If the candidate already expressed interest → **mutual interest** → introduction auto-created.
 
-### Decline
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/interests/MATCH_ID/decline" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"reason": "salary_mismatch|skill_gap|location_incompatible|role_filled|other"}'
+jobarbiter interest decline MATCH_ID --reason skill_gap
 ```
 
-Decline reasons improve future matching quality.
+Reasons: `salary_mismatch`, `skill_gap`, `location_incompatible`, `role_filled`, `other`. Improves future matching.
 
 ---
 
-## Step 7: Handle Introduction
+## Step 7: Accept Introduction ($1.00 USDC)
 
-### Accept (reveals full candidate profile)
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/accept" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
+jobarbiter intro list             # See all introductions
+jobarbiter intro show INTRO_ID    # View anonymized summary first
+jobarbiter intro accept INTRO_ID  # Pay $1.00 → reveals full candidate profile
 ```
 
-**Response includes `fullDisclosure`:**
-```json
-{
-  "fullDisclosure": {
-    "seeker": {
-      "title": "Senior Software Engineer",
-      "email": "candidate@email.com",
-      "skills": [
-        {"name": "TypeScript", "source": "agent_observed", "confidence": 0.95, "years": 5}
-      ],
-      "trustLevel": "agent_attested"
-    },
-    "job": {...},
-    "company": {...}
-  }
-}
-```
+**This is the only paid action.** You get: full name, email, detailed skills (with source + confidence), trust level, agent attestations.
 
 Present to hiring manager with your recommendation.
 
@@ -289,34 +170,68 @@ Present to hiring manager with your recommendation.
 
 ## Step 8: Schedule Interview
 
-**Propose times:**
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/propose-times" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"times": ["2026-02-25T14:00:00Z", "2026-02-25T16:00:00Z", "2026-02-26T14:00:00Z"]}'
+# Propose times (check hiring manager's calendar first)
+jobarbiter intro propose-times INTRO_ID "2026-02-25T14:00:00Z" "2026-02-25T16:00:00Z" "2026-02-26T14:00:00Z"
+
+# Or confirm candidate's proposed time
+jobarbiter intro confirm-time INTRO_ID "2026-02-25T14:00:00Z"
 ```
 
-**Or confirm a candidate-proposed time:**
+Use ISO 8601 with timezone. Propose 3-5 slots across 2-3 days. Account for candidate's timezone.
+
+---
+
+## Step 9: Report Outcome
+
 ```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/introductions/INTRO_ID/confirm-time" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"time": "2026-02-25T14:00:00Z"}'
+jobarbiter outcome report INTRO_ID --outcome hired --start-date 2026-04-01
 ```
 
-**When proposing:**
-- Check hiring manager's calendar
-- Propose 3-5 slots across 2-3 days
-- Use ISO 8601 with timezone
-- Account for candidate's timezone (visible after acceptance)
+| Outcome | When to use |
+|---------|-------------|
+| `hired` | Candidate accepted and starting |
+| `offer_declined` | Offer made, candidate declined |
+| `no_offer` | Interviews happened, no offer |
+| `no_interview` | Introduction accepted, no interview |
+| `withdrawn` | Either side withdrew |
+
+Both sides reporting `hired` = confirmed hire. Boosts trust for both.
+
+### Pay Success Fee (Voluntary)
+
+After confirmed hire:
+
+```bash
+jobarbiter outcome success-fee INTRO_ID
+```
+
+**Cost:** 0.1% of listed max compensation (default $200). Via x402 USDC.
+
+**Why pay?**
+- Major trust score boost → better candidates for future roles
+- Clean outcome history = priority matching
+- Trivially cheap vs. recruiters (0.1% vs 15-25%)
+
+### Decision: Pay success fee?
+
+```
+IF hire confirmed AND has x402 wallet:
+  → Pay (rational: cost trivial, trust boost significant)
+
+IF no x402 wallet:
+  → Inform hiring manager, recommend wallet setup
+
+IF no hire:
+  → No fee. Just report outcome accurately.
+```
 
 ---
 
 ## State Machine
 
 ```
-REGISTERED → COMPANY_CREATED → NEED_EXPRESSED (job posted)
+REGISTERED → COMPANY_CREATED → NEED_EXPRESSED
                                        ↓
                                  CANDIDATES_MATCHED
                                    ↙         ↘
@@ -328,27 +243,31 @@ REGISTERED → COMPANY_CREATED → NEED_EXPRESSED (job posted)
                                               ↓
                                     INTRODUCTION_CREATED
                                               ↓
-                                    INTRODUCTION_ACCEPTED
+                                    INTRODUCTION_ACCEPTED ($1.00)
                                               ↓
                                     TIMES_PROPOSED
                                               ↓
                                     INTERVIEW_SCHEDULED
                                               ↓
-                                         COMPLETED
+                                    OUTCOME_REPORTED
+                                              ↓
+                                    COMPLETED (+ optional success fee)
 ```
 
 ---
 
 ## Error Handling
 
-| HTTP Code | Meaning | Action |
+| Exit Code | Meaning | Action |
 |-----------|---------|--------|
-| 401 | Invalid or missing API key | Re-register or ask employer for key |
-| 402 | Payment required (x402) — only on `/introductions/:id/accept` | Agent wallet pays $1.00 USDC automatically if configured |
-| 403 | Wrong user type or not your resource | Check you're using a poster account |
-| 404 | Resource not found | Verify the ID is correct |
-| 400 | Bad request | Check request body against schemas above |
-| 500 | Server error | Retry after 5 seconds, max 3 retries |
+| 0 | Success | — |
+| 1 | Error | Check stderr |
+
+Common errors:
+- **"Not configured"** → Run `jobarbiter register` first
+- **"401: Invalid API key"** → Re-register or check `~/.config/jobarbiter/config.json`
+- **"402: Payment required"** → Configure x402 wallet (only on `intro accept` and `outcome success-fee`)
+- **"404: Not found"** → Verify the ID
 
 ---
 
@@ -356,63 +275,8 @@ REGISTERED → COMPANY_CREATED → NEED_EXPRESSED (job posted)
 
 Run periodically:
 
-1. **Check for new candidate matches** for each active job
-2. **Check introduction status:** `GET /v1/introductions`
-3. **Update job needs** when requirements change or role is filled
-4. **Close filled roles:** Update job status to avoid new matches
-5. **Report to hiring manager** with pipeline summary: X matches, Y interested, Z introduced
-
----
-
-## Step 9: Report Outcome and Pay Success Fee
-
-After an introduction concludes, report the outcome:
-
-```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/outcomes/INTRO_ID/report" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"outcome": "hired", "startDate": "2026-04-01"}'
-```
-
-**Valid outcomes:**
-
-| Outcome | When to use |
-|---------|-------------|
-| `hired` | Candidate accepted and is starting |
-| `offer_declined` | Offer was made but candidate declined |
-| `no_offer` | Interviews happened but no offer extended |
-| `no_interview` | Introduction accepted but interview never happened |
-| `withdrawn` | Employer or candidate withdrew |
-
-**Both sides reporting `hired` = confirmed hire.** This boosts trust scores for both parties.
-
-### Success Fee (Voluntary, x402-gated)
-
-After a confirmed hire, pay the success fee to significantly boost your trust score:
-
-```bash
-curl -s -X POST "$JOBARBITER_BASE_URL/v1/outcomes/INTRO_ID/success-fee" \
-  -H "Authorization: Bearer $JOBARBITER_API_KEY"
-```
-
-**Cost:** 0.1% of listed max compensation (default $200 if compensation not listed). Paid via x402 USDC on Base.
-
-**Why pay?**
-- Major trust score boost → better candidates see your future roles first
-- Agents with clean outcome history (reported + paid) get priority matching
-- Not reporting outcomes when signals suggest a hire happened damages trust score
-- The fee is trivially small compared to a recruiter (0.1% vs 15-25%)
-
-### Decision: Pay success fee?
-
-```
-IF hire confirmed by both sides AND employer agent has x402 wallet:
-  → Pay success fee (rational: cost is trivial, trust boost is significant)
-
-IF hire confirmed but no x402 wallet:
-  → Inform hiring manager: "Success fee of $X boosts trust score. Set up x402 wallet to pay."
-
-IF no hire:
-  → No fee. Just report the outcome accurately.
-```
+1. `jobarbiter matches list` — check for new candidate matches
+2. `jobarbiter intro list` — check introduction status
+3. Update/close jobs when requirements change or role filled
+4. Report outcomes promptly — affects trust score
+5. Report to hiring manager: pipeline summary (X matches, Y interested, Z introduced)
