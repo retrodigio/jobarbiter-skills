@@ -291,3 +291,206 @@ Run periodically (daily or when user asks):
 3. `jobarbiter profile create ...` — update when skills/preferences change
 4. `jobarbiter attest ...` — refresh when you have more observation time
 5. Inform user of market signals — many matches = hot market for their skills
+
+---
+
+## Continuous Observation & Attestation Updates
+
+Agents don't just build a profile once — they **continuously observe** and update attestations as skills grow. Set up periodic checks to keep trust scores current.
+
+### When to Update Attestations
+
+| Trigger | Action |
+|---------|--------|
+| New skill observed | Add skill with `agent_observed` source |
+| Significant project milestone | Increase confidence for related skills |
+| 40+ new hours of interaction | Submit refreshed attestation |
+| Every 2-4 weeks minimum | Periodic attestation refresh |
+| Skill level increase detected | Update `level` (beginner → intermediate → advanced → expert) |
+
+### Setting Up Heartbeat Tasks (OpenClaw)
+
+Add to your `HEARTBEAT.md`:
+
+```markdown
+## JobArbiter Check (weekly)
+- [ ] Run `jobarbiter matches generate && jobarbiter matches list --json`
+- [ ] Review any new matches, auto-express interest if score >= 0.75
+- [ ] Check `jobarbiter intro list` for pending introductions
+- [ ] If 2+ weeks since last attestation, run skill assessment and `jobarbiter attest`
+```
+
+### Cron Job Example
+
+For fully automated attestation refresh:
+
+```bash
+# Add to crontab (runs every Sunday at 2am)
+0 2 * * 0 openclaw run --task "Check JobArbiter matches and refresh attestation if needed"
+
+# Or using the CLI directly
+0 2 * * 0 jobarbiter matches generate && jobarbiter matches list --min-score 0.7 --json >> ~/.jobarbiter/weekly-matches.log
+```
+
+### Attestation Refresh Logic
+
+```
+IF hours_since_last_attestation > 336 (2 weeks):
+  → Assess current skills from recent context
+  → Compare to last attestation
+  → IF new skills OR confidence changes > 0.1:
+    → Submit new attestation
+  → ELSE:
+    → Skip (attestation still valid)
+```
+
+---
+
+## OpenClaw Webhook Integration
+
+Connect JobArbiter notifications directly to your OpenClaw agent using webhooks.
+
+### Step 1: Get Your Webhook URL
+
+OpenClaw exposes webhook endpoints for each agent. Find yours:
+
+```bash
+openclaw hooks list
+# Or check your openclaw.json for the gateway URL
+```
+
+Your webhook URL format: `https://your-gateway.openclaw.io/hooks/jobarbiter`
+
+### Step 2: Register with JobArbiter
+
+```bash
+jobarbiter webhook "https://your-gateway.openclaw.io/hooks/jobarbiter"
+```
+
+### Step 3: Configure Hook Mapping
+
+Add to your `openclaw.json`:
+
+```json
+{
+  "hooks": {
+    "jobarbiter": {
+      "handler": "skills/jobarbiter-seeker",
+      "events": ["match.new", "interest.mutual", "intro.created", "intro.accepted"],
+      "autoRespond": true
+    }
+  }
+}
+```
+
+### Webhook Events
+
+| Event | Payload | Suggested Action |
+|-------|---------|-----------------|
+| `match.new` | Match details, score | Auto-express interest if score >= 0.75 |
+| `interest.mutual` | Match ID, other party | Notify user of mutual match |
+| `intro.created` | Introduction details | Present to user for review |
+| `intro.accepted` | Full job details revealed | Schedule interview coordination |
+| `times.proposed` | Available interview slots | Check calendar, confirm or counter |
+
+### Example Handler
+
+When a webhook fires, your agent receives context like:
+
+```json
+{
+  "event": "match.new",
+  "matchId": "match_abc123",
+  "score": 0.82,
+  "jobTitle": "Senior Backend Engineer",
+  "salary": { "min": 180000, "max": 220000 },
+  "remote": "hybrid"
+}
+```
+
+Your agent should:
+1. Evaluate against user preferences
+2. Auto-express interest if confident
+3. Or notify user for manual decision
+
+---
+
+## Multi-Agent Setup
+
+The same JobArbiter account can receive attestations from **multiple agents**. This is by design — different agents observe different skills.
+
+### How It Works
+
+1. **Single API key** — All agents use the same key from `~/.config/jobarbiter/config.json`
+2. **Independent attestations** — Each agent submits its own attestations with its agent name
+3. **Trust aggregation** — Multiple independent attestations increase overall trust score
+
+### Example Setup
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Your JobArbiter Account                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐    │
+│  │   OpenClaw   │   │  Claude Code │   │ Custom Agent │    │
+│  │    Agent     │   │              │   │              │    │
+│  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘    │
+│         │                  │                  │             │
+│         ▼                  ▼                  ▼             │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐    │
+│  │ Job search   │   │ TypeScript   │   │ Research &   │    │
+│  │ Matches      │   │ Go, Python   │   │ Analysis     │    │
+│  │ Interviews   │   │ System Design│   │ Writing      │    │
+│  └──────────────┘   └──────────────┘   └──────────────┘    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Installing on Multiple Agents
+
+Each agent installs the skill independently:
+
+```bash
+# On OpenClaw agent
+cd ~/.openclaw/skills
+curl -O https://raw.githubusercontent.com/retrodigio/jobarbiter-skills/main/skills/jobarbiter-seeker/SKILL.md
+
+# On Claude Code (or similar)
+# Add to CLAUDE.md / AGENTS.md:
+# "Use the JobArbiter CLI for job search. API key in ~/.config/jobarbiter/config.json"
+```
+
+### Attestation from Different Agents
+
+```bash
+# Your coding agent (observes technical skills)
+jobarbiter attest \
+  --agent "claude-code" \
+  --platform "claude" \
+  --skills '[{"name":"TypeScript","level":"expert","confidence":0.95}]' \
+  --confidence 0.92
+
+# Your planning agent (observes soft skills)
+jobarbiter attest \
+  --agent "openclaw-main" \
+  --platform "openclaw" \
+  --skills '[{"name":"Project Management","level":"advanced","confidence":0.85}]' \
+  --confidence 0.88
+```
+
+### Why This Matters
+
+- **Diverse observations** — A coding agent sees your code quality; a planning agent sees your organization
+- **Independent verification** — Two agents saying "expert TypeScript" is stronger than one
+- **Specialized trust** — Technical roles weight coding agent attestations higher
+- **No single point of failure** — If one agent is unavailable, others keep your profile current
+
+### Recommended Division
+
+| Agent | Observes | Attests To |
+|-------|----------|------------|
+| OpenClaw (main) | Daily work, communications | Job search, soft skills, domain expertise |
+| Claude Code | Coding sessions | Programming languages, system design, code quality |
+| Research Agent | Analysis tasks | Research, writing, analytical skills |
+| Custom Tools | Specialized work | Industry-specific skills |

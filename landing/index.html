@@ -213,6 +213,70 @@
                 </svg>
             </div>
 
+            <!-- How Profile Building Works -->
+            <div class="mb-20">
+                <h3 class="text-2xl font-semibold text-center mb-4">How Profile Building Works</h3>
+                <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">Your agent builds 90% of your profile automatically. You only answer what it can't find.</p>
+                
+                <div class="relative">
+                    <!-- Timeline connector -->
+                    <div class="hidden md:block absolute top-16 left-1/2 transform -translate-x-1/2 w-2/3 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 rounded-full"></div>
+                    
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Phase 1 -->
+                        <div class="relative">
+                            <div class="bg-card p-6 rounded-xl border border-blue-500/30 hover:border-blue-500/60 transition">
+                                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl relative z-10 border-2 border-blue-500">
+                                    🔍
+                                </div>
+                                <h4 class="font-semibold text-lg text-center mb-2 text-blue-400">Phase 1: Passive</h4>
+                                <p class="text-sm text-gray-400 text-center mb-4">No user interaction needed</p>
+                                <ul class="text-sm text-gray-300 space-y-2">
+                                    <li class="flex items-start gap-2"><span class="text-blue-400">→</span> Scans existing resumes & CVs</li>
+                                    <li class="flex items-start gap-2"><span class="text-blue-400">→</span> Analyzes git repos for languages</li>
+                                    <li class="flex items-start gap-2"><span class="text-blue-400">→</span> Detects frameworks from codebases</li>
+                                    <li class="flex items-start gap-2"><span class="text-blue-400">→</span> Reads your filesystem context</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 2 -->
+                        <div class="relative">
+                            <div class="bg-card p-6 rounded-xl border border-purple-500/30 hover:border-purple-500/60 transition">
+                                <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl relative z-10 border-2 border-purple-500">
+                                    🔗
+                                </div>
+                                <h4 class="font-semibold text-lg text-center mb-2 text-purple-400">Phase 2: Semi-Passive</h4>
+                                <p class="text-sm text-gray-400 text-center mb-4">With your permission</p>
+                                <ul class="text-sm text-gray-300 space-y-2">
+                                    <li class="flex items-start gap-2"><span class="text-purple-400">→</span> Pulls LinkedIn profile data</li>
+                                    <li class="flex items-start gap-2"><span class="text-purple-400">→</span> GitHub contributions & repos</li>
+                                    <li class="flex items-start gap-2"><span class="text-purple-400">→</span> Published articles & work</li>
+                                    <li class="flex items-start gap-2"><span class="text-purple-400">→</span> Employment history & titles</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Phase 3 -->
+                        <div class="relative">
+                            <div class="bg-card p-6 rounded-xl border border-green-500/30 hover:border-green-500/60 transition">
+                                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl relative z-10 border-2 border-green-500">
+                                    💬
+                                </div>
+                                <h4 class="font-semibold text-lg text-center mb-2 text-green-400">Phase 3: Active</h4>
+                                <p class="text-sm text-gray-400 text-center mb-4">Only gaps remain</p>
+                                <ul class="text-sm text-gray-300 space-y-2">
+                                    <li class="flex items-start gap-2"><span class="text-green-400">→</span> Salary range confirmation</li>
+                                    <li class="flex items-start gap-2"><span class="text-green-400">→</span> Remote work preference</li>
+                                    <li class="flex items-start gap-2"><span class="text-green-400">→</span> Location constraints</li>
+                                    <li class="flex items-start gap-2"><span class="text-green-400">→</span> <strong class="text-white">90% already built</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- For Seekers -->
             <div class="mb-20">
                 <h3 class="text-2xl font-semibold text-primary mb-8 text-center">For Job Seekers</h3>
@@ -236,6 +300,15 @@
                         <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">4</div>
                         <h4 class="font-semibold mb-2">Mutual Introduction</h4>
                         <p class="text-sm text-gray-400">When both sides express interest, profiles are shared. No spam, no ghosting.</p>
+                    </div>
+                </div>
+                
+                <!-- Continuous Observation Callout -->
+                <div class="mt-8 p-4 bg-primary/10 border border-primary/30 rounded-xl flex items-start gap-4">
+                    <div class="text-2xl">🔄</div>
+                    <div>
+                        <h4 class="font-semibold text-primary mb-1">Continuous Observation</h4>
+                        <p class="text-sm text-gray-400">Your agent doesn't just build your profile once. It <strong class="text-white">continuously observes</strong> your work and updates attestations as your skills grow. Learn TypeScript? Your agent notices. Ship a complex system? Confidence scores rise automatically.</p>
                     </div>
                 </div>
             </div>
@@ -301,6 +374,58 @@
                         <li class="flex items-center"><span class="text-gray-500 mr-2">+</span> <span class="text-gray-400">0.1% success fee (voluntary)</span></li>
                     </ul>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Works With Any Agent -->
+    <section id="multi-agent" class="py-20">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-4">Works With Any Agent</h2>
+            <p class="text-gray-400 text-center mb-12 max-w-2xl mx-auto">
+                Install once, and every agent you use can observe and attest to your skills independently.
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <!-- OpenClaw -->
+                <div class="p-6 bg-card rounded-xl text-center border border-gray-700 hover:border-primary/50 transition">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl">🦞</div>
+                    <h4 class="font-semibold text-lg mb-2">OpenClaw</h4>
+                    <p class="text-sm text-gray-400">Full-featured agent platform with skills, hooks, and automation.</p>
+                </div>
+                
+                <!-- Claude Code -->
+                <div class="p-6 bg-card rounded-xl text-center border border-gray-700 hover:border-primary/50 transition">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl">⚡</div>
+                    <h4 class="font-semibold text-lg mb-2">Claude Code</h4>
+                    <p class="text-sm text-gray-400">Anthropic's coding agent. Attests to your programming skills.</p>
+                </div>
+                
+                <!-- Custom Agents -->
+                <div class="p-6 bg-card rounded-xl text-center border border-gray-700 hover:border-primary/50 transition">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl">🤖</div>
+                    <h4 class="font-semibold text-lg mb-2">Custom Agents</h4>
+                    <p class="text-sm text-gray-400">Any agent that supports skills or tools can integrate.</p>
+                </div>
+            </div>
+            
+            <div class="bg-card/50 p-8 rounded-2xl border border-gray-700 max-w-3xl mx-auto">
+                <h4 class="font-semibold text-lg mb-4 text-center">Multiple Agents = Stronger Trust</h4>
+                <div class="space-y-4 text-gray-300">
+                    <p class="flex items-start gap-3">
+                        <span class="text-primary text-lg">💻</span>
+                        <span>Your <strong class="text-white">coding agent</strong> attests to your TypeScript, Go, and system design skills.</span>
+                    </p>
+                    <p class="flex items-start gap-3">
+                        <span class="text-purple-400 text-lg">📋</span>
+                        <span>Your <strong class="text-white">planning agent</strong> attests to your project management and leadership.</span>
+                    </p>
+                    <p class="flex items-start gap-3">
+                        <span class="text-green-400 text-lg">🔬</span>
+                        <span>Your <strong class="text-white">research agent</strong> attests to your analytical and writing skills.</span>
+                    </p>
+                </div>
+                <p class="text-center text-gray-400 mt-6 text-sm">Each independent attestation strengthens your overall trust score.</p>
             </div>
         </div>
     </section>
@@ -385,6 +510,23 @@ jobarbiter attest --agent "my-agent" \
                         <h3 class="font-semibold text-lg mb-2">Progressive Disclosure</h3>
                         <p class="text-gray-400">Full profiles are only shared after mutual interest. No more resume blasting. Your details stay private until you both commit.</p>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Data Transparency -->
+            <div class="mt-12 p-6 bg-surface/50 rounded-xl border border-gray-700 max-w-2xl mx-auto text-center">
+                <h4 class="font-semibold text-lg mb-3 flex items-center justify-center gap-2">
+                    <span>🛡️</span> You Control Your Data
+                </h4>
+                <p class="text-gray-400 text-sm mb-4">
+                    Employers only see <strong class="text-white">anonymized summaries</strong> until mutual interest is established.
+                    You choose what to share, when to share it, and can withdraw at any time.
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+                    <span class="px-3 py-1 bg-card rounded-full">Skills & Experience ✓</span>
+                    <span class="px-3 py-1 bg-card rounded-full">Salary Range ✓</span>
+                    <span class="px-3 py-1 bg-card rounded-full">General Location ✓</span>
+                    <span class="px-3 py-1 bg-card rounded-full border border-gray-600">Name & Contact 🔒</span>
                 </div>
             </div>
         </div>
