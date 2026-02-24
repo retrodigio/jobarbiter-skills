@@ -33,7 +33,7 @@ Represent an employer on JobArbiter. Express hiring needs, review trust-scored c
 The agent can do steps 1, 2, 4, 5, 6 **autonomously**. Step 3 requires human action (sending funds).
 
 ```
-1. jobarbiter register --email EMAIL --type poster    ← Agent does this
+1. jobarbiter register --email EMAIL --userType poster  ← Agent does this
 2. jobarbiter wallet setup                            ← Agent does this (one-time)
 3. User funds wallet with USDC on Base                ← HUMAN REQUIRED
 4. jobarbiter company create --name "..." --domain "..."  ← Agent does this
@@ -48,7 +48,7 @@ The agent can do steps 1, 2, 4, 5, 6 **autonomously**. Step 3 requires human act
 
 ### Account & Configuration
 ```
-jobarbiter register --email EMAIL --type poster     # Get API key (one-time)
+jobarbiter register --email EMAIL --userType poster  # Get API key (one-time)
 jobarbiter status                                    # Check connection
 jobarbiter webhook <url>                             # Set webhook for notifications
 ```
@@ -110,8 +110,10 @@ jobarbiter outcome success-fee <id>                  # Pay success fee (voluntar
 ## Step 1: Registration
 
 ```bash
-jobarbiter register --email EMPLOYER_EMAIL --type poster
+jobarbiter register --email EMPLOYER_EMAIL --userType poster
 ```
+
+**API:** `POST /v1/auth/register` with `{email, userType: "poster"}`
 
 Saves API key to `~/.config/jobarbiter/config.json` automatically.
 
@@ -205,6 +207,8 @@ jobarbiter company create \
 
 Domain verification (DNS TXT record) boosts trust score significantly. Verified companies get better candidates.
 
+**API:** `POST /v1/company` with `{name, domain, description, ...}`
+
 ---
 
 ## Step 4: Express a Hiring Need
@@ -228,6 +232,16 @@ jobarbiter need \
 **The `--description` determines match quality.** Describe problems they'll solve, the team, what success looks like. Rich natural language, 100-300 words.
 
 **`--auto-interest`:** Automatically express interest in candidates above `--min-score`. Good for urgent hiring.
+
+**API:** `POST /v1/jobs` with nested `requirements` and `compensation` objects:
+```json
+{
+  "title": "...",
+  "description": "...",
+  "requirements": {"skills": [...], "experience": "senior", "remote": "remote"},
+  "compensation": {"salaryMin": 180000, "salaryMax": 220000, "currency": "USD"}
+}
+```
 
 ---
 
@@ -284,11 +298,15 @@ unverified        — just registered, nothing validated
 jobarbiter interest express MATCH_ID
 ```
 
+**API:** `POST /v1/interests/:matchId/express`
+
 If the candidate already expressed interest → **mutual interest** → introduction auto-created.
 
 ```bash
 jobarbiter interest decline MATCH_ID --reason skill_gap
 ```
+
+**API:** `POST /v1/interests/:matchId/decline`
 
 Reasons: `salary_mismatch`, `skill_gap`, `location_incompatible`, `role_filled`, `other`. Improves future matching.
 
@@ -297,9 +315,9 @@ Reasons: `salary_mismatch`, `skill_gap`, `location_incompatible`, `role_filled`,
 ## Step 8: Accept Introduction ($1.00 USDC — Auto-Paid)
 
 ```bash
-jobarbiter intro list             # See all introductions
+jobarbiter intro list             # See all introductions (GET /v1/introductions)
 jobarbiter intro show INTRO_ID    # View anonymized summary first
-jobarbiter intro accept INTRO_ID  # Pays $1.00 → reveals full candidate profile
+jobarbiter intro accept INTRO_ID  # Pays $1.00 → reveals full profile (POST /v1/introductions/:id/accept)
 ```
 
 ### How Payment Works (x402 Flow)
@@ -351,6 +369,8 @@ Use ISO 8601 with timezone. Propose 3-5 slots across 2-3 days. Account for candi
 ```bash
 jobarbiter outcome report INTRO_ID --outcome hired --start-date 2026-04-01
 ```
+
+**API:** `POST /v1/outcomes/:introductionId/report` with `{outcome, startDate, notes}`
 
 | Outcome | When to use |
 |---------|-------------|
