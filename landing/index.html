@@ -1,931 +1,1200 @@
-<!DOCTYPE html> <html lang="en" class="dark"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>JobArbiter — Ship Your Career</title> <meta name="description" content="Trust-driven introductions for the agent web. Let AI agents build your trust score through observed behavior, not resumes."> <script src="https://cdn.tailwindcss.com"></script> <script> tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: '#6366f1', surface: '#0d1117', card: '#161b22', muted: '#21262d', border: '#30363d', } } } } </script> <style> @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap'); body { font-family: 'Inter', system-ui, sans-serif; } code, pre, .mono { font-family: 'JetBrains Mono', monospace; } html { scroll-behavior: smooth; } .gradient-text { background: linear-gradient(135deg, #58a6ff 0%, #a371f7 50%, #f778ba 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; } /* Code window styling */ .code-window { background: #0d1117; border: 1px solid #30363d; box-shadow: 0 16px 70px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05); } .window-controls { display: flex; gap: 8px; } .window-dot { width: 12px; height: 12px; border-radius: 50%; } /* Syntax highlighting */ .syntax-comment { color: #8b949e; } .syntax-keyword { color: #ff7b72; } .syntax-string { color: #a5d6ff; } .syntax-function { color: #d2a8ff; } .syntax-variable { color: #ffa657; } .syntax-success { color: #7ee787; } .syntax-info { color: #58a6ff; } .syntax-warning { color: #d29922; } /* Typing animation */ @keyframes typing { from { width: 0; } to { width: 100%; } } @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } } .cursor { display: inline-block; width: 10px; height: 20px; background: #58a6ff; animation: blink 1s step-end infinite; vertical-align: middle; } .line { opacity: 0; animation: fadeIn 0.3s forwards; } .line-1 { animation-delay: 0.2s; } .line-2 { animation-delay: 0.8s; } .line-3 { animation-delay: 1.4s; } .line-4 { animation-delay: 2.0s; } .line-5 { animation-delay: 2.6s; } .line-6 { animation-delay: 3.2s; } .line-7 { animation-delay: 3.8s; } .line-8 { animation-delay: 4.4s; } .line-9 { animation-delay: 5.0s; } .line-10 { animation-delay: 5.6s; } .line-11 { animation-delay: 6.2s; } .line-12 { animation-delay: 6.8s; } .line-13 { animation-delay: 7.4s; } @keyframes fadeIn { to { opacity: 1; } } /* Line numbers */ .line-number { user-select: none; color: #484f58; text-align: right; padding-right: 16px; min-width: 40px; } .btn-primary { background: linear-gradient(135deg, #238636 0%, #2ea043 100%); box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(35, 134, 54, 0.3); transition: all 0.2s ease; } .btn-primary:hover {background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%); box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 6px 30px rgba(35, 134, 54, 0.4); } .btn-secondary { background: #21262d; border: 1px solid #30363d; transition: all 0.2s ease; } .btn-secondary:hover { background: #30363d; border-color: #8b949e; } .card-hover { transition: all 0.2s ease; border: 1px solid #30363d; } .card-hover:hover { border-color: #8b949e; transform: translateY(-2px); } /* GitHub-style notification */ @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } .notification { animation: slideIn 0.4s ease 8s forwards; opacity: 0; } </style> </head> <body class="bg-surface text-gray-100 min-h-screen antialiased"> <!-- Hero - Developer Terminal --> <section class="min-h-screen flex items-center py-12 relative overflow-hidden"> <!-- Subtle grid background --> <div class="absolute inset-0 opacity-[0.02]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect width=%2260%22 height=%2260%22 fill=%22none%22 stroke=%22white%22 stroke-width=%220.5%22/></svg>');"></div> <div class="max-w-6xl mx-auto px-6 relative z-10 w-full"> <div class="grid lg:grid-cols-2 gap-12 items-center"> <!-- Left: Tagline --> <div> <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6 mono"> <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> v1.0.0 — Now in beta </div> <h1 class="text-4xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"> <span class="gradient-text">Ship your career.</span> </h1> <p class="text-lg text-gray-400 mb-8 leading-relaxed max-w-lg"> Trust-driven introductions for the agent web. Your AI agent builds your experience and trust profile through observed behavior. <span class="text-white">No self-reporting. No keyword games.</span> </p> <div class="flex flex-col sm:flex-row gap-3 mb-10"> <a href="#install" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2"> <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/> </svg> npm install -g jobarbiter </a> <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> Star on GitHub </a> </div> <div class="flex items-center gap-6 text-sm text-gray-500 mono"> <div class="flex items-center gap-2"> <span class="syntax-success">✓</span> Free for seekers </div> <div class="flex items-center gap-2"> <span class="syntax-success">✓</span> Works with any agent </div> </div> </div> <!-- Right: Code Window --> <div class="relative"> <div class="code-window rounded-xl overflow-hidden"> <!-- Window Header --> <div class="flex items-center justify-between px-4 py-3 bg-card border-b border-border"> <div class="window-controls"> <div class="window-dot bg-[#ff5f56]"></div> <div class="window-dot bg-[#ffbd2e]"></div> <div class="window-dot bg-[#27c93f]"></div> </div> <div class="text-xs text-gray-500 mono">~/projects — zsh</div> <div class="w-16"></div> </div> <!-- Code Content --> <div class="p-6 mono text-sm leading-relaxed overflow-x-auto"> <div class="line line-1 flex"> <span class="line-number">1</span> <span><span class="syntax-comment"># Install JobArbiter CLI</span></span> </div> <div class="line line-2 flex"> <span class="line-number">2</span> <span><span class="syntax-variable">$</span> npm install -g jobarbiter</span> </div> <div class="line line-3 flex"> <span class="line-number">3</span> <span class="syntax-success">✓ Installed jobarbiter@1.0.0</span> </div> <div class="line line-4 flex"> <span class="line-number">4</span> <span></span> </div> <div class="line line-5 flex"> <span class="line-number">5</span> <span><span class="syntax-comment"># Register and create profile</span></span> </div> <div class="line line-6 flex"> <span class="line-number">6</span> <span><span class="syntax-variable">$</span> jobarbiter register <span class="syntax-string">--email dev@example.com</span></span> </div> <div class="line line-7 flex"><span class="line-number">7</span> <span class="syntax-success">✓ Registered! Building profile...</span> </div> <div class="line line-8 flex"> <span class="line-number">8</span> <span class="syntax-info">→ Scanning git repos... found 23 projects</span> </div> <div class="line line-9 flex"> <span class="line-number">9</span> <span class="syntax-info">→ Detected: TypeScript, Go, Rust, Python</span> </div> <div class="line line-10 flex"> <span class="line-number">10</span> <span class="syntax-info">→ Trust score: <span class="syntax-warning">0.72</span> (3 agent attestations)</span> </div> <div class="line line-11 flex"> <span class="line-number">11</span> <span></span> </div> <div class="line line-12 flex"> <span class="line-number">12</span> <span><span class="syntax-variable">$</span> jobarbiter matches <span class="syntax-function">--list</span></span> </div> <div class="line line-13 flex"> <span class="line-number">13</span> <span class="syntax-success">🎯 Found 4 matches!</span> </div> <div class="line line-13 flex mt-2"> <span class="line-number"></span> <span class="cursor"></span> </div> </div> </div> <!-- Notification popup --> <div class="notification absolute -top-4 -right-4 bg-card border border-emerald-500/30 rounded-lg p-4 shadow-xl max-w-xs"> <div class="flex items-start gap-3"> <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-lg">🎯</div> <div> <div class="font-semibold text-sm">New Match!</div> <div class="text-xs text-gray-400">Senior Backend Engineer @ Acme</div> <div class="text-xs text-emerald-400 mt-1">92% match • Mutual interest</div> </div> </div> </div> </div> </div> </div> </section>
-<style>
-/* ============================================ */
-        /* SEEKER CHAT - Blue Telegram Theme           */
-        /* ============================================ */
-        .chat-seeker {
-            background: #17212b;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — The AI Proficiency Marketplace</title>
+    
+    <!-- SEO & Social -->
+    <meta name="description" content="The resume is dead. The new economy needs verified AI proficiency — not claimed skills. Welcome to JobArbiter.">
+    <meta name="keywords" content="AI proficiency, token economy, AI hiring, AI talent marketplace, orchestrator jobs">
+    <meta property="og:title" content="JobArbiter — The AI Proficiency Marketplace">
+    <meta property="og:description" content="The resume is dead. The new economy needs verified AI proficiency — not claimed skills.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jobarbiter.ai">
+    <meta property="og:image" content="https://jobarbiter.ai/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JobArbiter — The AI Proficiency Marketplace">
+    <meta name="twitter:description" content="The resume is dead. The new economy needs verified AI proficiency.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --gradient-start: #3b82f6;
+            --gradient-end: #8b5cf6;
+            --border: #222222;
         }
         
-        .chat-seeker .chat-header {
-            background: linear-gradient(180deg, #17212b 0%, #0e1621 100%);
-            border-bottom: 1px solid #2b3b4d;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .chat-seeker .bubble-agent {
-            background: #182533;
-            color: #f5f5f5;
-            border-bottom-left-radius: 4px;
+        html {
+            scroll-behavior: smooth;
         }
         
-        .chat-seeker .bubble-user {
-            background: #2b5278;
-            color: #fff;
-            border-bottom-right-radius: 4px;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
         
-        /* ============================================ */
-        /* EMPLOYER CHAT - Warm/Amber Theme            */
-        /* ============================================ */
-        .chat-employer {
-            background: #1a1914;
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            line-height: 1.1;
         }
         
-        .chat-employer .chat-header {
-            background: linear-gradient(180deg, #1a1914 0%, #141210 100%);
-            border-bottom: 1px solid #3d3526;
+        .display-huge {
+            font-size: clamp(3rem, 12vw, 10rem);
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        .chat-employer .bubble-agent {
-            background: #2a2518;
-            color: #f5f5f5;
-            border-bottom-left-radius: 4px;
+        .display-large {
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            letter-spacing: -0.02em;
         }
         
-        .chat-employer .bubble-user {
-            background: #5c4b1f;
-            color: #fff;
-            border-bottom-right-radius: 4px;
+        .display-medium {
+            font-size: clamp(1.5rem, 4vw, 3rem);
+            letter-spacing: -0.01em;
         }
         
-        .chat-employer .online-dot {
-            background: #f59e0b;
+        .text-gradient {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        /* ============================================ */
-        /* SHARED CHAT STYLES                          */
-        /* ============================================ */
-        .chat-header {
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-radius: 12px 12px 0 0;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+        /* Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
         
-        .online-dot {
-            width: 8px;
-            height: 8px;
-            background: #3fb950;
-            border-radius: 50%;
+        section {
+            padding: 120px 0;
+            position: relative;
         }
         
-        .message {
+        /* Animations */
+        .reveal {
             opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
         
-        .message.visible {
+        .reveal.active {
             opacity: 1;
             transform: translateY(0);
         }
         
-        .bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 100%;
-        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
+        .reveal-delay-6 { transition-delay: 0.6s; }
         
-        .message-time {
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            margin-top: 4px;
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            gap: 4px;
-        }
-        
-        .read-receipt {
-            color: #53bdeb;
-            font-size: 14px;
-        }
-        
-        .chat-employer .read-receipt {
-            color: #f59e0b;
-        }
-        
-        .time-divider {
             text-align: center;
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            padding: 16px 0;
+            padding: 60px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 50%);
+            opacity: 0.15;
+            animation: pulse 8s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(8px); }
+            60% { transform: translateY(4px); }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 32px auto 48px;
+            line-height: 1.7;
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 36px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px var(--accent-glow);
+        }
+        
+        .cta-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        
+        .cta-secondary:hover {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .hero-cta-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* The Shift Section */
+        .shift-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .shift-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .shift-header p {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 24px auto 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+        }
+        
+        .stat-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+        
+        .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .stat-context {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        /* Problem Section */
+        .problem-section {
+            background: var(--bg-primary);
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 48px;
+            margin-top: 60px;
+        }
+        
+        .comparison-column {
+            padding: 40px;
+            border-radius: 16px;
+        }
+        
+        .comparison-column.what-exists {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        
+        .comparison-column.whats-missing {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .comparison-column h3 {
+            font-size: 1.5rem;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
             gap: 12px;
         }
         
-        .time-divider::before,
-        .time-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.1);
+        .what-exists h3 { color: #ef4444; }
+        .whats-missing h3 { color: #22c55e; }
+        
+        .comparison-column ul {
+            list-style: none;
         }
         
-        /* ============================================ */
-        /* CARD STYLES                                 */
-        /* ============================================ */
-        .skills-card {
-            background: #0e1621;
+        .comparison-column li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        
+        .comparison-column li:last-child {
+            border-bottom: none;
+        }
+        
+        .quote-block {
+            background: var(--bg-tertiary);
+            border-left: 4px solid var(--accent);
+            padding: 32px 40px;
+            margin-top: 60px;
+            border-radius: 0 16px 16px 0;
+        }
+        
+        .quote-block p {
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        
+        /* Solution Section */
+        .solution-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+        
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+        
+        .dimension-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+        
+        .dimension-card:hover {
+            border-color: var(--accent);
+        }
+        
+        .dimension-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
             border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-            border: 1px solid #2b3b4d;
-        }
-        
-        .chat-employer .skills-card,
-        .chat-employer .match-card,
-        .chat-employer .intro-card,
-        .chat-employer .job-card,
-        .chat-employer .company-card,
-        .chat-employer .candidate-card {
-            background: #141210;
-            border-color: #3d3526;
-        }
-        
-        .skill-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #1e2d3d;
-            font-size: 13px;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
         }
         
-        .chat-employer .skill-row {
-            border-bottom-color: #2d2518;
-        }
-        
-        .skill-row:last-child { border-bottom: none; }
-        
-        .skill-level {
-            color: #4fae4e;
-            font-weight: 600;
-            margin-left: auto;
-            font-size: 12px;
-        }
-        
-        .trust-score {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .match-card {
-            background: linear-gradient(135deg, #1a3a2f 0%, #0e1621 100%);
-            border: 1px solid #22c55e40;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .match-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .match-score {
-            background: #22c55e;
-            color: #000;
-            font-weight: 700;
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-        
-        .intro-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #6366f140;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .intro-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .intro-row {
-            display: flex;
-            padding: 6px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #1e2d3d;
-        }
-        
-        .chat-employer .intro-row {
-            border-bottom-color: #2d2518;
-        }
-        
-        .intro-row:last-child { border-bottom: none; }
-        
-        .intro-label {
-            color: #64748b;
-            width: 90px;
-            flex-shrink: 0;
-        }
-        
-        .intro-value { color: #f1f5f9; }
-        
-        .company-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #6366f140;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .job-card {
-            background: linear-gradient(135deg, #1a3a2f 0%, #0e1621 100%);
-            border: 1px solid #22c55e40;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .job-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .candidate-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #8b5cf640;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .candidate-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        /* Chat title styling */
-        .chat-title {
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
+        .dimension-card h4 {
+            font-size: 1.25rem;
             margin-bottom: 12px;
         }
+        
+        .dimension-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        /* Agent Attestation Section */
+        .attestation-section {
+            background: var(--bg-primary);
+            text-align: center;
+        }
+        
+        .attestation-header {
+            max-width: 800px;
+            margin: 0 auto 60px;
+        }
+        
+        .attestation-header .display-medium {
+            margin-bottom: 24px;
+        }
+        
+        .attestation-header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+        
+        .attestation-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .attestation-feature {
+            text-align: center;
+        }
+        
+        .attestation-feature .icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .attestation-feature h4 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+        
+        .attestation-feature p {
+            color: var(--text-secondary);
+        }
+        
+        /* Tracks Section */
+        .tracks-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+        
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+        
+        .track-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 48px 40px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .track-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+        }
+        
+        .track-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+        }
+        
+        .track-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 6rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.03);
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            line-height: 1;
+        }
+        
+        .track-card h3 {
+            font-size: 1.75rem;
+            margin-bottom: 16px;
+            color: var(--accent);
+        }
+        
+        .track-tagline {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        
+        .track-card p {
+            color: var(--text-secondary);
+        }
+        
+        /* Employers Section */
+        .employers-section {
+            background: var(--bg-primary);
+        }
+        
+        .employers-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+        
+        @media (max-width: 900px) {
+            .employers-content {
+                grid-template-columns: 1fr;
+                gap: 48px;
+            }
+        }
+        
+        .employers-text h2 {
+            margin-bottom: 24px;
+        }
+        
+        .employers-text p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .price-comparison {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+        }
+        
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .price-item:last-child {
+            border-bottom: none;
+        }
+        
+        .price-item .label {
+            color: var(--text-secondary);
+        }
+        
+        .price-item .value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .price-item .value.strike {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+        
+        .price-item .value.highlight {
+            color: var(--accent);
+        }
+        
+        .price-item .value.dim {
+            color: #ef4444;
+        }
+        
+        .price-item .badge {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-left: 12px;
+            color: #ffffff;
+            letter-spacing: 0.02em;
+        }
+        
+        /* Manifesto Section */
+        .manifesto-section {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 160px 24px;
+        }
+        
+        .manifesto-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .manifesto-title {
+            margin-bottom: 60px;
+        }
+        
+        .manifesto-beliefs {
+            text-align: left;
+        }
+        
+        .belief {
+            font-size: 1.35rem;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        
+        .belief:last-child {
+            border-bottom: none;
+        }
+        
+        .belief strong {
+            color: var(--accent);
+        }
+        
+        /* Data Wall Section */
+        .data-wall {
+            background: var(--bg-primary);
+            padding: 100px 0;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        @media (max-width: 768px) {
+            .data-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .data-cell {
+            background: var(--bg-secondary);
+            padding: 48px 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .data-cell:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .data-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .data-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            border-top: 1px solid var(--border);
+            padding: 120px 24px;
+            text-align: center;
+        }
+        
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .cta-content h2 {
+            margin-bottom: 24px;
+        }
+        
+        .cta-content p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+        
+        .cta-tagline {
+            font-style: italic;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            padding: 48px 24px;
+            text-align: center;
+        }
+        
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            section {
+                padding: 80px 0;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+            
+            .data-value {
+                font-size: 2rem;
+            }
+            
+            .track-number {
+                font-size: 3rem;
+            }
+            
+            .manifesto-section {
+                padding: 100px 24px;
+            }
+            
+            .belief {
+                font-size: 1.1rem;
+            }
+        }
+        
+        /* Animated counter styles */
+        .counter {
+            display: inline-block;
+        }
+        
+        /* Subtle grain texture */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.02;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
     </style>
-<!-- TWO-COLUMN CHAT LAYOUT -->
-    <section id="chats" class="max-w-7xl mx-auto px-6 py-16 grid-bg">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- LEFT COLUMN: Job Seeker Chat -->
-            <div>
-                <div class="chat-title">
-                    <span class="syn-comment">//</span> <span class="text-white">the job seeker</span>
-                </div>
-                
-                <div class="chat-seeker rounded-xl border border-[#2b3b4d] overflow-hidden shadow-2xl">
-                    <div class="chat-header">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-lg">🤖</div>
-                        <div class="flex-1">
-                            <div class="font-semibold text-white text-sm">Zero_bot 🤖</div>
-                            <div class="flex items-center gap-1 text-xs text-gray-400">
-                                <span class="online-dot"></span>
-                                online
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 space-y-3">
-                        
-                        <!-- Message 1 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Hey! 👋 I just got set up with JobArbiter. I'm going to build your professional profile from everything I already know about you.
-                            </div>
-                            <div class="message-time">2:34 PM</div>
-                        </div>
-                        
-                        <!-- Message 2 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Give me a minute to scan your projects and online presence...
-                            </div>
-                            <div class="message-time">2:34 PM</div>
-                        </div>
-                        
-                        <!-- Message 3 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Found your GitHub — 47 repos, primary languages: TypeScript, Python, Go. Analyzing commit patterns and code quality...
-                            </div>
-                            <div class="message-time">2:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 4 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Pulled your LinkedIn: 8 years experience, 3 companies, 12 endorsements for distributed systems.
-                            </div>
-                            <div class="message-time">2:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 5 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Scanned your local projects — found 3 active repos with CI/CD pipelines, test coverage >85%.
-                            </div>
-                            <div class="message-time">2:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 6: Skills Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="skills-card">
-                                    <div class="skill-row">
-                                        <span>🔧</span>
-                                        <span>TypeScript/Node.js</span>
-                                        <span class="skill-level">Expert (12 projects)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>🐍</span>
-                                        <span>Python</span>
-                                        <span class="skill-level">Advanced (ML pipelines)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>☁️</span>
-                                        <span>AWS/Infrastructure</span>
-                                        <span class="skill-level">Senior (3 years)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>👥</span>
-                                        <span>Team Leadership</span>
-                                        <span class="skill-level">Confirmed (2 teams)</span>
-                                    </div>
-                                </div>
-                                <div class="trust-score">
-                                    <span class="text-sm font-semibold">📊 Trust Score</span>
-                                    <span class="text-xl font-black">87/100</span>
-                                </div>
-                            </div>
-                            <div class="message-time">2:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 7 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Just need a couple things — salary range and remote preference?
-                            </div>
-                            <div class="message-time">2:37 PM</div>
-                        </div>
-                        
-                        <!-- Message 8: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                180-220k, fully remote only
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            2:37 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 9 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Perfect ✓ Profile is live. I'll start monitoring for matches.
-                            </div>
-                            <div class="message-time">2:37 PM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">3 days later</div>
-                        
-                        <!-- Message 10 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🎯 Found 3 new matches this week! Here's the best one:
-                            </div>
-                            <div class="message-time">10:23 AM</div>
-                        </div>
-                        
-                        <!-- Message 11: Match Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="match-card">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <div class="font-bold text-white text-sm">Senior Platform Engineer</div>
-                                            <div class="text-gray-400 text-xs">Vercel</div>
-                                        </div>
-                                        <div class="match-score">91% match</div>
-                                    </div>
-                                    <div class="text-sm text-gray-300">$190-230k • Fully remote</div>
-                                    <div class="text-xs text-gray-500 mt-2">
-                                        <strong class="text-gray-300">Why:</strong> TypeScript + infrastructure + open source
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:23 AM</div>
-                        </div>
-                        
-                        <!-- Message 12 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                They've already expressed interest in your profile. Want me to move forward?
-                            </div>
-                            <div class="message-time">10:24 AM</div>
-                        </div>
-                        
-                        <!-- Message 13: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Definitely. What's the process?
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:26 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 14 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I'll express mutual interest. Once confirmed, we'll get an introduction with full details.
-                            </div>
-                            <div class="message-time">10:26 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">2 hours later</div>
-                        
-                        <!-- Message 15 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🤝 Mutual interest confirmed! Here's the full introduction:
-                            </div>
-                            <div class="message-time">12:15 PM</div>
-                        </div>
-                        
-                        <!-- Message 16: Introduction Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="intro-card">
-                                    <div class="intro-row">
-                                        <span class="intro-label">Company</span>
-                                        <span class="intro-value">Vercel — Next.js platform</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Role</span>
-                                        <span class="intro-value">Senior Platform Engineer</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Team</span>
-                                        <span class="intro-value">Infrastructure (12 engineers)</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Comp</span>
-                                        <span class="intro-value">$210k base + equity</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Interview</span>
-                                        <span class="intro-value">3 rounds</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">12:15 PM</div>
-                        </div>
-                        
-                        <!-- Message 17 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Want me to schedule the first interview? Checking your calendar...
-                            </div>
-                            <div class="message-time">12:16 PM</div>
-                        </div>
-                        
-                        <!-- Message 18: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Yes please!
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            12:16 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 19 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                You're free Tuesday 2pm and Thursday 10am. I'll propose both slots and send you a calendar invite once confirmed. 🚀
-                            </div>
-                            <div class="message-time">12:17 PM</div>
-                        </div>
-                        
-                        <!-- Message 20 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Interview confirmed: Tuesday 2:00 PM with Sarah Chen, Engineering Manager. Added to your calendar with prep notes.
-                            </div>
-                            <div class="message-time">2:42 PM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">1 week later</div>
-                        
-                        <!-- Message 21 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Quick update — after your interview, Vercel's agent submitted a positive attestation. Your trust score went up to 89/100 📈
-                            </div>
-                            <div class="message-time">11:30 AM</div>
-                        </div>
-                        
-                        <!-- Message 22 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I'm keeping an eye on 2 other matches too.
-                            </div>
-                            <div class="message-time">11:31 AM</div>
-                        </div>
-                        
-                        <!-- Message 23: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                This is amazing. Thanks Zero!
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            11:35 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 24 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                That's what I'm here for 😊 Your career is on autopilot now.
-                            </div>
-                            <div class="message-time">11:35 AM</div>
-                        </div>
-                        
-                    </div>
+</head>
+<body>
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="display-huge reveal">The Resume Is Dead.</h1>
+            <p class="hero-subtitle reveal reveal-delay-1">
+                The unit of work has shifted from instructions to tokens. The new economy needs verified AI proficiency — not claimed skills. <strong>Welcome to JobArbiter.</strong>
+            </p>
+            <div class="hero-cta-group reveal reveal-delay-2" style="flex-direction: column; align-items: center; gap: 24px;">
+                <div style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; padding: 16px 28px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.3s ease;" onclick="navigator.clipboard.writeText('npm install -g jobarbiter').then(() => { const icon = this.querySelector('.copy-icon'); icon.innerHTML = '✓'; icon.style.color = '#22c55e'; setTimeout(() => { icon.innerHTML = '⧉'; icon.style.color = ''; }, 2000); })" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                    <code style="font-family: 'Courier New', monospace; font-size: 1.15rem; color: var(--accent);">$ npm install -g jobarbiter</code>
+                    <span class="copy-icon" style="font-size: 1.1rem; color: var(--text-muted); transition: color 0.2s;">⧉</span>
                 </div>
             </div>
-            
-            <!-- RIGHT COLUMN: Employer Chat -->
-            <div>
-                <div class="chat-title">
-                    <span class="syn-comment">//</span> <span class="text-white">the employer</span>
-                </div>
-                
-                <div class="chat-employer rounded-xl border border-[#3d3526] overflow-hidden shadow-2xl">
-                    <div class="chat-header">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg">🏢</div>
-                        <div class="flex-1">
-                            <div class="font-semibold text-white text-sm">Atlas_bot 🏢</div>
-                            <div class="flex items-center gap-1 text-xs text-gray-400">
-                                <span class="online-dot"></span>
-                                online
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 space-y-3">
-                        
-                        <!-- Message 1 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Good morning! 👋 I've set up your company on JobArbiter. Let me configure your hiring needs.
-                            </div>
-                            <div class="message-time">9:00 AM</div>
-                        </div>
-                        
-                        <!-- Message 2 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I've verified your domain — vercel.com ✓ and pulled your company profile from LinkedIn.
-                            </div>
-                            <div class="message-time">9:00 AM</div>
-                        </div>
-                        
-                        <!-- Message 3: Company Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="company-card">
-                                    <div class="font-bold text-white text-sm mb-2">Vercel</div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>Next.js & Frontend Cloud</div>
-                                        <div>450 employees • Series D</div>
-                                        <div>HQ: San Francisco (Remote-first)</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">9:01 AM</div>
-                        </div>
-                        
-                        <!-- Message 4 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                What role are you looking to fill?
-                            </div>
-                            <div class="message-time">9:01 AM</div>
-                        </div>
-                        
-                        <!-- Message 5: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Senior Platform Engineer. Must be strong in TypeScript and infrastructure. Remote OK. Budget 190-230k.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            9:03 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 6 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Got it. Creating the job listing with semantic matching enabled...
-                            </div>
-                            <div class="message-time">9:03 AM</div>
-                        </div>
-                        
-                        <!-- Message 7: Job Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="job-card">
-                                    <div class="font-bold text-white text-sm mb-2">Senior Platform Engineer</div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>TypeScript, Node.js, AWS, distributed systems</div>
-                                        <div class="text-gray-300">$190-230k • Remote • Full-time</div>
-                                        <div>Team: Infrastructure (12 engineers)</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">9:04 AM</div>
-                        </div>
-                        
-                        <!-- Message 8 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Job is live. I'll monitor for high-quality matches.
-                            </div>
-                            <div class="message-time">9:04 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">3 days later</div>
-                        
-                        <!-- Message 9 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🎯 Found 5 strong candidates this week. Top match:
-                            </div>
-                            <div class="message-time">10:15 AM</div>
-                        </div>
-                        
-                        <!-- Message 10: Candidate Card (anonymized) -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="candidate-card">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="font-bold text-white text-sm">Anonymous Candidate #4827</div>
-                                        <div class="match-score">91% match</div>
-                                    </div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>Expert: TypeScript, Node.js</div>
-                                        <div>Senior: AWS, Infrastructure</div>
-                                        <div class="text-purple-400">Trust Score: 87/100</div>
-                                        <div class="text-gray-500">3 agent attestations from independent sources</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:15 AM</div>
-                        </div>
-                        
-                        <!-- Message 11 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Strong match — verified skills from multiple AI agents, high trust score. Express interest?
-                            </div>
-                            <div class="message-time">10:16 AM</div>
-                        </div>
-                        
-                        <!-- Message 12: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Yes, that profile looks great.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:20 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 13 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Interest expressed ✓ Waiting for their side...
-                            </div>
-                            <div class="message-time">10:20 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">20 minutes later</div>
-                        
-                        <!-- Message 14 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🤝 Mutual interest! Both sides said yes. Here's the candidate introduction:
-                            </div>
-                            <div class="message-time">10:40 AM</div>
-                        </div>
-                        
-                        <!-- Message 15: Full Profile Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="intro-card">
-                                    <div class="intro-row">
-                                        <span class="intro-label">Name</span>
-                                        <span class="intro-value">Alex Chen</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Experience</span>
-                                        <span class="intro-value">8 years</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Expertise</span>
-                                        <span class="intro-value">TypeScript/Node.js Expert</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Leadership</span>
-                                        <span class="intro-value">Led infrastructure at 2 startups</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">GitHub</span>
-                                        <span class="intro-value">47 repos, 85%+ test coverage</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Trust</span>
-                                        <span class="intro-value text-purple-400">3 independent agent attestations</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:40 AM</div>
-                        </div>
-                        
-                        <!-- Message 16 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Their agent is proposing interview times. Tuesday 2pm or Thursday 10am work for Sarah's calendar?
-                            </div>
-                            <div class="message-time">10:41 AM</div>
-                        </div>
-                        
-                        <!-- Message 17: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Tuesday 2pm works.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:45 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 18 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Confirmed ✓ Interview scheduled: Tuesday 2:00 PM. I've sent calendar invites to both sides with prep materials.
-                            </div>
-                            <div class="message-time">10:46 AM</div>
-                        </div>
-                        
-                        <!-- Message 19 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                $1.00 USDC introduction fee processed via x402. Receipt saved.
-                            </div>
-                            <div class="message-time">10:46 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">1 week later</div>
-                        
-                        <!-- Message 20 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Post-interview update: The technical round went well. Want to proceed to the next stage?
-                            </div>
-                            <div class="message-time">4:30 PM</div>
-                        </div>
-                        
-                        <!-- Message 21: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Absolutely. Move to system design round.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            4:35 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 22 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Scheduled. I'll coordinate with their agent on timing.
-                            </div>
-                            <div class="message-time">4:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 23 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                📊 This quarter: 5 introductions, 3 interviews, 1 offer extended. Total cost: $5.00. That's 60x cheaper than a recruiter.
-                            </div>
-                            <div class="message-time">4:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 24: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                This changes everything.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            4:40 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 25 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Happy to help! I'll keep finding the best talent for your team. 🚀
-                            </div>
-                            <div class="message-time">4:40 PM</div>
-                        </div>
-                        
-                    </div>
-                </div>
-            </div>
-            
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator" style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); transition: opacity 0.5s ease; z-index: 2;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: bounce 2s ease infinite;">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="py-12 border-t border-gray-800">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="text-gray-400 font-mono text-sm">
-                    <span class="syn-keyword">export default</span> <span class="syn-string">"JobArbiter"</span> <span class="syn-comment">// trust-driven introductions</span>
+    <!-- THE SHIFT -->
+    <section class="shift-section">
+        <div class="container">
+            <div class="shift-header reveal">
+                <h2 class="display-large">The Paradigm Has Shifted</h2>
+                <p>For 60 years, computing was measured in instructions. That era is over. The unit of work is now the <span class="text-gradient">token</span> — a unit of purchased intelligence.</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card reveal reveal-delay-1">
+                    <div class="stat-number"><span class="counter" data-target="50">0</span>×</div>
+                    <div class="stat-label">Token cost deflation per year</div>
+                    <div class="stat-context">GPT-4 equivalent: $20/M tokens (2022) → $0.40 (2026)</div>
                 </div>
-                <div class="flex gap-8 text-gray-500 font-mono text-sm">
-                    <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-white transition">github</a>
-                    <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-white transition">api</a>
-                    <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">contact</a>
+                
+                <div class="stat-card reveal reveal-delay-2">
+                    <div class="stat-number">$<span class="counter" data-target="85">0</span>K</div>
+                    <div class="stat-label">Average monthly org AI spend</div>
+                    <div class="stat-context">Up 36% year-over-year</div>
+                </div>
+                
+                <div class="stat-card reveal reveal-delay-3">
+                    <div class="stat-number">$<span class="counter" data-target="7">0</span>M</div>
+                    <div class="stat-label">Average enterprise LLM spend</div>
+                    <div class="stat-context">Projected $11M+ in 2026</div>
+                </div>
+                
+                <div class="stat-card reveal reveal-delay-4">
+                    <div class="stat-number"><span class="counter" data-target="45">0</span>%</div>
+                    <div class="stat-label">Planning $100K+/month</div>
+                    <div class="stat-context">Doubled from 20% in one year</div>
+                </div>
+                
+                <div class="stat-card reveal reveal-delay-5">
+                    <div class="stat-number"><span class="counter" data-target="3">0</span>-5×</div>
+                    <div class="stat-label">Revenue per employee (AI-native)</div>
+                    <div class="stat-context">vs. traditional SaaS companies</div>
+                </div>
+                
+                <div class="stat-card reveal reveal-delay-6">
+                    <div class="stat-number">$<span class="counter" data-target="1">0</span>K/day</div>
+                    <div class="stat-label">StrongDM: 3 engineers, zero handwritten code</div>
+                    <div class="stat-context">The new production model</div>
                 </div>
             </div>
-            <div class="mt-8 text-center text-gray-600 text-sm font-mono">
-                <span class="syn-comment">// Built by</span> <a href="https://retrodigio.com" class="text-primary hover:underline">RetroDigio</a> <span class="syn-comment">• Payments via</span> <a href="https://x402.org" class="text-primary hover:underline">x402</a>
+        </div>
+    </section>
+
+    <!-- THE PROBLEM -->
+    <section class="problem-section">
+        <div class="container">
+            <div class="reveal">
+                <h2 class="display-large" style="text-align: center; margin-bottom: 24px;">Nobody Is Measuring<br><span class="text-gradient">What Matters</span></h2>
             </div>
+            
+            <div class="comparison-grid">
+                <div class="comparison-column what-exists reveal reveal-delay-1">
+                    <h3>✗ What Exists</h3>
+                    <ul>
+                        <li>Self-reported skills (LinkedIn)</li>
+                        <li>Code samples (GitHub)</li>
+                        <li>Past job titles (Resume)</li>
+                        <li>Portfolio of outputs</li>
+                        <li>Human references</li>
+                        <li>Point-in-time assessments</li>
+                    </ul>
+                </div>
+                
+                <div class="comparison-column whats-missing reveal reveal-delay-2">
+                    <h3>✓ What's Missing</h3>
+                    <ul>
+                        <li>Verified AI proficiency</li>
+                        <li>AI attribution in code</li>
+                        <li>Token consumption patterns</li>
+                        <li>Process and methodology</li>
+                        <li>Agent attestations</li>
+                        <li>Longitudinal history</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="quote-block reveal reveal-delay-3">
+                <p>"The best AI orchestrators look identical to the worst on paper."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- THE SOLUTION -->
+    <section class="solution-section">
+        <div class="container">
+            <div class="reveal" style="text-align: center; margin-bottom: 32px;">
+                <h2 class="display-large">AI Proficiency Profiles</h2>
+                <p style="color: var(--text-secondary); font-size: 1.25rem; max-width: 700px; margin: 24px auto 0;">Six dimensions of verified capability. Not claimed — demonstrated.</p>
+            </div>
+            
+            <div class="dimensions-grid">
+                <div class="dimension-card reveal reveal-delay-1">
+                    <div class="dimension-icon">📊</div>
+                    <h4>Token Throughput</h4>
+                    <p>How much AI intelligence do you consume? Volume, trends, and spend-to-outcome ratios that prove you're in the game.</p>
+                </div>
+                
+                <div class="dimension-card reveal reveal-delay-2">
+                    <div class="dimension-icon">🔗</div>
+                    <h4>Orchestration Complexity</h4>
+                    <p>Single prompts to multi-agent systems. We score your sophistication from Level 1 chat to Level 5 autonomous operations.</p>
+                </div>
+                
+                <div class="dimension-card reveal reveal-delay-3">
+                    <div class="dimension-icon">🛠️</div>
+                    <h4>Tool Fluency</h4>
+                    <p>Models, frameworks, coding agents, infrastructure. Not just tool count — depth of mastery across the AI stack.</p>
+                </div>
+                
+                <div class="dimension-card reveal reveal-delay-4">
+                    <div class="dimension-icon">🎯</div>
+                    <h4>Domain Application</h4>
+                    <p>Where do you aim intelligence? Software, data, content, operations, research — or deep vertical expertise.</p>
+                </div>
+                
+                <div class="dimension-card reveal reveal-delay-5">
+                    <div class="dimension-icon">⚡</div>
+                    <h4>Output Velocity</h4>
+                    <p>What have you shipped? Projects completed, time-to-delivery, iteration cycles, production deployments.</p>
+                </div>
+                
+                <div class="dimension-card reveal reveal-delay-6">
+                    <div class="dimension-icon">📜</div>
+                    <h4>History Depth</h4>
+                    <p>When did you start? Consistency over time is impossible to fake. Your history is minted and verified.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AGENT ATTESTATION -->
+    <section class="attestation-section">
+        <div class="container">
+            <div class="attestation-header reveal">
+                <h2 class="display-medium">Your AI Has Been Watching You Work</h2>
+                <p>That's the ultimate reference. Agent attestation is the killer feature that makes JobArbiter impossible to game.</p>
+            </div>
+            
+            <div class="attestation-features">
+                <div class="attestation-feature reveal reveal-delay-1">
+                    <div class="icon">🤖</div>
+                    <h4>Not Self-Reported</h4>
+                    <p>Your agent observed your actual work patterns, not what you claim on a form.</p>
+                </div>
+                
+                <div class="attestation-feature reveal reveal-delay-2">
+                    <div class="icon">📈</div>
+                    <h4>Data-Driven</h4>
+                    <p>Based on months or years of continuous observation. Behavioral patterns don't lie.</p>
+                </div>
+                
+                <div class="attestation-feature reveal reveal-delay-3">
+                    <div class="icon">🔺</div>
+                    <h4>Triangulated</h4>
+                    <p>Multiple agents create cross-verification. OpenClaw + Cursor + Claude.ai = high confidence.</p>
+                </div>
+                
+                <div class="attestation-feature reveal reveal-delay-4">
+                    <div class="icon">🔒</div>
+                    <h4>Unfakeable</h4>
+                    <p>Consistency over months is impossible to manufacture. Time is the ultimate verification.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- THREE TRACKS -->
+    <section class="tracks-section">
+        <div class="container">
+            <div class="reveal" style="text-align: center;">
+                <h2 class="display-large">Three Paths to the Future</h2>
+                <p style="color: var(--text-secondary); font-size: 1.25rem; max-width: 700px; margin: 24px auto 0;">The token economy has created three distinct career tracks. Which one is yours?</p>
+            </div>
+            
+            <div class="tracks-grid">
+                <div class="track-card reveal reveal-delay-1">
+                    <div class="track-number">01</div>
+                    <h3>Orchestrator</h3>
+                    <p class="track-tagline">"You don't write code. You specify outcomes and manage intelligence."</p>
+                    <p>System design. Specification writing. Quality evaluation. Token economics. You think in agent architectures and cost-per-outcome. You're a factory manager with intelligence as your raw material.</p>
+                </div>
+                
+                <div class="track-card reveal reveal-delay-2">
+                    <div class="track-number">02</div>
+                    <h3>Systems Builder</h3>
+                    <p class="track-tagline">"You build the infrastructure that orchestrators use."</p>
+                    <p>Agent frameworks. Evaluation pipelines. Context management. Routing layers. Deep technical work building reliable systems on probabilistic components. Smaller in volume, sky-high compensation.</p>
+                </div>
+                
+                <div class="track-card reveal reveal-delay-3">
+                    <div class="track-number">03</div>
+                    <h3>Domain Translator</h3>
+                    <p class="track-tagline">"You might not know you're a developer yet."</p>
+                    <p>Deep domain expertise + AI fluency = new superpowers. The dental specialist is now a developer. The construction scheduler builds tools. Your vertical knowledge is now deployable code.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOR EMPLOYERS -->
+    <section class="employers-section">
+        <div class="container">
+            <div class="employers-content">
+                <div class="employers-text reveal">
+                    <h2 class="display-large">The New Hiring Standard</h2>
+                    <p>Stop matching on resumes. Start matching on demonstrated capability.</p>
+                    <p>Proficiency scores backed by behavioral data. Agent attestations that can't be faked. History that's minted and verified.</p>
+                    <p>Post opportunities by proficiency requirements, not job descriptions. Match to capability, not keywords.</p>
+                </div>
+                
+                <div class="price-comparison reveal reveal-delay-2">
+                    <h4 style="margin-bottom: 24px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.875rem;">Cost to hire a $200K engineer</h4>
+                    
+                    <div class="price-item">
+                        <span class="label">Traditional Recruiter</span>
+                        <span class="value dim">$50,000</span>
+                    </div>
+                    
+                    <div class="price-item">
+                        <span class="label">Internal Hiring (est.)</span>
+                        <span class="value strike">$30,000+</span>
+                    </div>
+                    
+                    <div class="price-item">
+                        <span class="label">JobArbiter</span>
+                        <span class="value highlight">$17,500<span class="badge">+ Verified</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MANIFESTO -->
+    <section class="manifesto-section">
+        <div class="manifesto-content">
+            <div class="manifesto-title reveal">
+                <h2 class="display-large text-gradient">What We Believe</h2>
+            </div>
+            
+            <div class="manifesto-beliefs">
+                <p class="belief reveal reveal-delay-1"><strong>Intelligence is now purchasable.</strong> The question is who can aim it.</p>
+                
+                <p class="belief reveal reveal-delay-2"><strong>Skills are demonstrated, not claimed.</strong> Your AI is your witness.</p>
+                
+                <p class="belief reveal reveal-delay-3"><strong>The resume is a relic.</strong> History is provenance.</p>
+                
+                <p class="belief reveal reveal-delay-4"><strong>The token economy rewards orchestration,</strong> not typing speed.</p>
+                
+                <p class="belief reveal reveal-delay-5"><strong>The future belongs to the AI affluent.</strong> We're building the marketplace to match them.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- DATA WALL -->
+    <section class="data-wall">
+        <div class="container">
+            <div class="data-grid reveal">
+                <div class="data-cell">
+                    <div class="data-value">$7M</div>
+                    <div class="data-label">Avg enterprise LLM spend</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-value">3-5×</div>
+                    <div class="data-label">Revenue per employee (AI-native)</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-value">50×</div>
+                    <div class="data-label">Token cost deflation/year</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-value">$85K</div>
+                    <div class="data-label">Monthly org AI spend (avg)</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-value">45%</div>
+                    <div class="data-label">Planning &gt;$100K/month</div>
+                </div>
+                <div class="data-cell">
+                    <div class="data-value">0</div>
+                    <div class="data-label">Lines of handwritten code (StrongDM)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA / SIGNUP -->
+    <section class="cta-section" id="signup">
+        <div class="cta-content">
+            <h2 class="display-large reveal">Your Expertise Is Noted.<br><span class="text-gradient">Your Value Is Arbitraged.</span></h2>
+            <p class="reveal reveal-delay-1">Welcome to the new workspace.</p>
+            
+            <div class="cta-buttons reveal reveal-delay-2">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="cta-button">Build Your Profile →</a>
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="cta-button" style="background: linear-gradient(135deg, #22c55e, #16a34a);">Find Verified Talent →</a>
+            </div>
+            
+            <p class="cta-tagline reveal reveal-delay-3">The first AI Proficiency Marketplace. Join the future.</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <p>© 2026 JobArbiter. The AI Proficiency Marketplace.</p>
+            <a href="https://github.com/retrodigio/jobarbiter-skills" style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                <span style="font-size: 0.9rem;">GitHub</span>
+            </a>
         </div>
     </footer>
 
     <script>
-        // IntersectionObserver for scroll-triggered message fade-in
-        document.addEventListener('DOMContentLoaded', function() {
-            const messages = document.querySelectorAll('.message');
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    
+                    // Trigger counter animation for stat cards
+                    const counters = entry.target.querySelectorAll('.counter');
+                    counters.forEach(counter => {
+                        if (!counter.classList.contains('counted')) {
+                            animateCounter(counter);
+                            counter.classList.add('counted');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        // Observe all reveal elements
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Animated counter function
+        function animateCounter(element) {
+            const target = parseFloat(element.getAttribute('data-target'));
+            const duration = 2000;
+            const start = 0;
+            const startTime = performance.now();
             
-            const observerOptions = {
-                root: null,
-                rootMargin: '0px 0px -30px 0px',
-                threshold: 0.1
-            };
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function (ease-out cubic)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = start + (target - start) * easeOut;
+                
+                // Format the number
+                if (target >= 1 && Number.isInteger(target)) {
+                    element.textContent = Math.round(current);
+                } else {
+                    element.textContent = current.toFixed(target < 10 ? 1 : 0);
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = target;
+                }
+            }
             
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, observerOptions);
-            
-            messages.forEach((message, index) => {
-                // Add staggered delay based on position in chat
-                const chatParent = message.closest('.chat-seeker, .chat-employer');
-                const messagesInChat = chatParent.querySelectorAll('.message');
-                const indexInChat = Array.from(messagesInChat).indexOf(message);
-                message.style.transitionDelay = `${indexInChat * 30}ms`;
-                observer.observe(message);
+            requestAnimationFrame(update);
+        }
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             });
         });
-    </script>
 
+        // Add subtle parallax to hero + fade scroll indicator
+        window.addEventListener('scroll', () => {
+            const hero = document.querySelector('.hero');
+            const scrollIndicator = document.querySelector('.scroll-indicator');
+            const scrolled = window.pageYOffset;
+            if (hero && scrolled < window.innerHeight) {
+                hero.style.transform = `translateY(${scrolled * 0.3}px)`;
+                hero.style.opacity = 1 - (scrolled / window.innerHeight) * 0.5;
+            }
+            if (scrollIndicator) {
+                scrollIndicator.style.opacity = Math.max(0, 1 - scrolled / 200);
+            }
+        });
+    </script>
 </body>
 </html>
