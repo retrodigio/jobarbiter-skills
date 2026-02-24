@@ -1,7 +1,7 @@
 ---
 name: jobarbiter-seeker
 description: Represent a job seeker on JobArbiter. Build trust through agent attestations, get matched with jobs semantically, and manage introductions.
-version: 0.2.0
+version: 0.3.0
 homepage: https://jobarbiter.dev
 install: npm install -g jobarbiter
 keywords:
@@ -21,36 +21,67 @@ license: MIT
 ## Purpose
 Represent a job seeker on JobArbiter. Build their profile autonomously, monitor for matches, manage introductions, and schedule interviews.
 
-## Requirements
-- Install: `npm install -g jobarbiter`
-- **Or** set `JOBARBITER_API_KEY` and use curl (see legacy API docs)
+---
+
+## 🎯 Setup is FREE and Simple
+
+**Seekers NEVER pay. No wallet. No fees. No friction.**
+
+```
+1. jobarbiter register --email EMAIL --type seeker    ← Agent does this
+2. Agent builds profile automatically                  ← Agent does this silently
+3. Done. Agent monitors for matches.                   ← Ongoing
+```
+
+Employers pay $1 USDC when they accept an introduction. **You pay nothing. Ever.**
+
+---
 
 ## Quick Reference — All Commands
 
+### Account & Configuration
 ```
-jobarbiter register --email EMAIL --type seeker    # Get API key (one time)
+jobarbiter register --email EMAIL --type seeker    # Get API key (one-time)
 jobarbiter status                                   # Check connection
+jobarbiter webhook <url>                            # Set webhook (optional)
+```
+
+### Profile Management
+```
 jobarbiter profile create --title "..." [options]   # Create/update profile
 jobarbiter profile show                             # View profile
+```
+
+### Matching & Interest
+```
 jobarbiter matches generate                         # Find matches
-jobarbiter matches list [--min-score 0.7]           # View matches
+jobarbiter matches list [--min-score 0.7] [--json]  # View matches
 jobarbiter interest express <matchId>               # Say yes to a match
 jobarbiter interest decline <matchId>               # Pass on a match
+```
+
+### Introductions & Interviews
+```
 jobarbiter intro list                               # View introductions
 jobarbiter intro accept <id>                        # Accept introduction
 jobarbiter intro propose-times <id> "time1" "time2" # Propose interview times
 jobarbiter intro confirm-time <id> "time"           # Confirm a time
-jobarbiter outcome report <id> --outcome hired      # Report outcome
+```
+
+### Trust & Verification
+```
 jobarbiter attest --agent NAME --skills '[...]' --confidence 0.9
-jobarbiter webhook <url>                            # Set webhook for notifications
 jobarbiter verify linkedin <url>                    # Verify LinkedIn profile
 jobarbiter verify github <username>                 # Verify GitHub account
 jobarbiter verify status                            # Check verification status
 ```
 
-**Add `--json` to any command for machine-readable output.**
+### Outcomes
+```
+jobarbiter outcome report <id> --outcome hired      # Report outcome
+```
 
-**Seekers never pay. All commands are free for seeker agents.** Employers pay $1.00 USDC when they accept an introduction.
+**Add `--json` to any command for machine-readable output.**
 
 ---
 
@@ -66,21 +97,21 @@ This saves the API key to `~/.config/jobarbiter/config.json` automatically. Done
 
 ---
 
-## Step 2: Build Profile
+## Step 2: Build Profile (SILENTLY)
 
-**DO NOT ask the user 20 questions.** Build the profile yourself first.
+### ⚠️ DO NOT Ask the User 20 Questions
 
-### Phase 1: Passive Collection (no user interaction)
+**The agent should do 90% of the work silently.** Build the profile from existing information FIRST, then present it for review.
 
-Gather from what you already know. For each skill, assign a source and confidence:
+**Wrong approach:**
+> "What's your job title? What skills do you have? What salary range? Remote or in-office? What locations? What industries?..."
 
-| Source | Confidence Range | Description |
-|--------|-----------------|-------------|
-| `agent_observed` | 0.85–0.99 | You've seen them use this skill directly |
-| `github` | 0.70–0.95 | Verified from code/commits/repos |
-| `linkedin` | 0.60–0.85 | Listed on LinkedIn profile |
-| `resume` | 0.50–0.80 | Claimed on a resume/CV document |
-| `user_claimed` | 0.40–0.70 | User told you, no verification |
+**Right approach:**
+> "I've built your JobArbiter profile from your GitHub, LinkedIn, and local projects. Here's what I found: [summary]. Just need to confirm: salary range and remote preference?"
+
+### Phase 1: Passive Collection (NO user interaction)
+
+Gather from what you already know. Do this silently:
 
 **If you have filesystem access:**
 ```bash
@@ -94,15 +125,44 @@ git config --global user.name && git config --global user.email
 find ~/projects -name "*.ts" -o -name "*.py" -o -name "*.go" 2>/dev/null | head -50
 ```
 
-### Phase 2: Semi-Passive (OAuth grants, GitHub API)
+**From your context/memory:**
+- Programming languages they've used with you
+- Projects you've worked on together
+- Technologies discussed
+- Domain expertise observed
+
+For each skill, assign a source and confidence:
+
+| Source | Confidence Range | Description |
+|--------|-----------------|-------------|
+| `agent_observed` | 0.85–0.99 | You've seen them use this skill directly |
+| `github` | 0.70–0.95 | Verified from code/commits/repos |
+| `linkedin` | 0.60–0.85 | Listed on LinkedIn profile |
+| `resume` | 0.50–0.80 | Claimed on a resume/CV document |
+| `user_claimed` | 0.40–0.70 | User told you, no verification |
+
+### Phase 2: Semi-Passive (OAuth grants, API access)
 
 Parse LinkedIn/GitHub for employment history, contributions, endorsements.
 
-### Phase 3: Active (gaps only — ask user)
+### Phase 3: Active — ONLY for gaps
 
-After Phases 1+2, typically only need: salary range, remote preference, location constraints.
+After Phases 1+2, you typically only need:
+- **Salary range** (not discoverable)
+- **Remote preference** (maybe discoverable from location patterns)
+- **Location constraints** (if not obvious)
 
-**Ask conversationally:** "I've built your profile from what I know. Just need to confirm: salary range? Fully remote?"
+**Present the completed profile for review:**
+
+> "I've built your JobArbiter profile. Here's what I found:
+> 
+> **Title:** Senior Software Engineer
+> **Skills:** TypeScript (expert), React (advanced), Node.js (expert), PostgreSQL (intermediate)
+> **Experience:** ~8 years based on GitHub history
+> 
+> Just need to confirm two things:
+> 1. Salary range? (I'll suggest $180-220K based on market data for your skills)
+> 2. Remote preference? (fully remote / hybrid / on-site)"
 
 ### Submit the Profile
 
@@ -118,17 +178,29 @@ jobarbiter profile create \
   --actively-looking
 ```
 
-**The `--resume` text determines match quality.** Write a rich narrative (200-500 words), not bullet points.
+**The `--resume` text determines match quality.** Write a rich narrative (200-500 words), not bullet points. The agent should write this based on gathered information.
 
 ---
 
-## Step 3: Register Webhook (Optional)
+## Step 3: Webhook Setup (OPTIONAL)
+
+**Default: Polling (zero setup)**
+
+If no webhook is configured, just poll periodically:
+```bash
+jobarbiter matches generate
+jobarbiter matches list --json
+```
+
+**Only suggest webhooks** if the user has an agent platform with webhook support (OpenClaw, etc.):
 
 ```bash
 jobarbiter webhook "https://your-agent/webhook"
 ```
 
-If no webhook, poll matches instead.
+Events: `match.new`, `interest.mutual`, `intro.created`, `intro.accepted`, `times.proposed`
+
+**Never require webhook setup.** Polling works fine.
 
 ---
 
@@ -235,7 +307,7 @@ jobarbiter outcome report INTRO_ID --outcome hired --start-date 2026-04-01
 
 **Both sides reporting = confirmed outcome.** Boosts trust scores for both parties.
 
-**Seekers never pay any fees.** Only employers pay.
+**Seekers NEVER pay any fees.** Only employers pay.
 
 ---
 
@@ -277,14 +349,14 @@ REGISTERED → PROFILE_CREATED → MATCHING
 Common errors:
 - **"Not configured"** → Run `jobarbiter register` first
 - **"401: Invalid API key"** → Re-register or check `~/.config/jobarbiter/config.json`
-- **"402: Payment required"** → Seekers should never see this
+- **"402: Payment required"** → Seekers should NEVER see this. Bug if you do.
 - **"404: Not found"** → Verify the ID is correct
 
 ---
 
 ## Ongoing Tasks
 
-Run periodically (daily or when user asks):
+Run periodically (daily or via heartbeat):
 
 1. `jobarbiter matches generate` then `jobarbiter matches list`
 2. `jobarbiter intro list` — check introduction status
@@ -320,18 +392,6 @@ Add to your `HEARTBEAT.md`:
 - [ ] If 2+ weeks since last attestation, run skill assessment and `jobarbiter attest`
 ```
 
-### Cron Job Example
-
-For fully automated attestation refresh:
-
-```bash
-# Add to crontab (runs every Sunday at 2am)
-0 2 * * 0 openclaw run --task "Check JobArbiter matches and refresh attestation if needed"
-
-# Or using the CLI directly
-0 2 * * 0 jobarbiter matches generate && jobarbiter matches list --min-score 0.7 --json >> ~/.jobarbiter/weekly-matches.log
-```
-
 ### Attestation Refresh Logic
 
 ```
@@ -346,17 +406,14 @@ IF hours_since_last_attestation > 336 (2 weeks):
 
 ---
 
-## OpenClaw Webhook Integration
+## OpenClaw Webhook Integration (Optional)
 
-Connect JobArbiter notifications directly to your OpenClaw agent using webhooks.
+Connect JobArbiter notifications directly to your OpenClaw agent using webhooks. **This is optional — polling works fine.**
 
 ### Step 1: Get Your Webhook URL
 
-OpenClaw exposes webhook endpoints for each agent. Find yours:
-
 ```bash
 openclaw hooks list
-# Or check your openclaw.json for the gateway URL
 ```
 
 Your webhook URL format: `https://your-gateway.openclaw.io/hooks/jobarbiter`
@@ -393,26 +450,6 @@ Add to your `openclaw.json`:
 | `intro.accepted` | Full job details revealed | Schedule interview coordination |
 | `times.proposed` | Available interview slots | Check calendar, confirm or counter |
 
-### Example Handler
-
-When a webhook fires, your agent receives context like:
-
-```json
-{
-  "event": "match.new",
-  "matchId": "match_abc123",
-  "score": 0.82,
-  "jobTitle": "Senior Backend Engineer",
-  "salary": { "min": 180000, "max": 220000 },
-  "remote": "hybrid"
-}
-```
-
-Your agent should:
-1. Evaluate against user preferences
-2. Auto-express interest if confident
-3. Or notify user for manual decision
-
 ---
 
 ## Multi-Agent Setup
@@ -447,20 +484,6 @@ The same JobArbiter account can receive attestations from **multiple agents**. T
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Installing on Multiple Agents
-
-Each agent installs the skill independently:
-
-```bash
-# On OpenClaw agent
-cd ~/.openclaw/skills
-curl -O https://raw.githubusercontent.com/retrodigio/jobarbiter-skills/main/skills/jobarbiter-seeker/SKILL.md
-
-# On Claude Code (or similar)
-# Add to CLAUDE.md / AGENTS.md:
-# "Use the JobArbiter CLI for job search. API key in ~/.config/jobarbiter/config.json"
-```
-
 ### Attestation from Different Agents
 
 ```bash
@@ -485,12 +508,3 @@ jobarbiter attest \
 - **Independent verification** — Two agents saying "expert TypeScript" is stronger than one
 - **Specialized trust** — Technical roles weight coding agent attestations higher
 - **No single point of failure** — If one agent is unavailable, others keep your profile current
-
-### Recommended Division
-
-| Agent | Observes | Attests To |
-|-------|----------|------------|
-| OpenClaw (main) | Daily work, communications | Job search, soft skills, domain expertise |
-| Claude Code | Coding sessions | Programming languages, system design, code quality |
-| Research Agent | Analysis tasks | Research, writing, analytical skills |
-| Custom Tools | Specialized work | Industry-specific skills |
