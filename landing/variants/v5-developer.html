@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Ship Your Career</title>
+    <meta name="description" content="Trust-driven introductions for the agent web. Let AI agents build your trust score through observed behavior, not resumes.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        surface: '#0d1117',
+                        card: '#161b22',
+                        muted: '#21262d',
+                        border: '#30363d',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        html { scroll-behavior: smooth; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #58a6ff 0%, #a371f7 50%, #f778ba 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Code window styling */
+        .code-window {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            box-shadow: 0 16px 70px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .window-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        /* Syntax highlighting */
+        .syntax-comment { color: #8b949e; }
+        .syntax-keyword { color: #ff7b72; }
+        .syntax-string { color: #a5d6ff; }
+        .syntax-function { color: #d2a8ff; }
+        .syntax-variable { color: #ffa657; }
+        .syntax-success { color: #7ee787; }
+        .syntax-info { color: #58a6ff; }
+        .syntax-warning { color: #d29922; }
+        
+        /* Typing animation */
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #58a6ff;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+        
+        .line { opacity: 0; animation: fadeIn 0.3s forwards; }
+        .line-1 { animation-delay: 0.2s; }
+        .line-2 { animation-delay: 0.8s; }
+        .line-3 { animation-delay: 1.4s; }
+        .line-4 { animation-delay: 2.0s; }
+        .line-5 { animation-delay: 2.6s; }
+        .line-6 { animation-delay: 3.2s; }
+        .line-7 { animation-delay: 3.8s; }
+        .line-8 { animation-delay: 4.4s; }
+        .line-9 { animation-delay: 5.0s; }
+        .line-10 { animation-delay: 5.6s; }
+        .line-11 { animation-delay: 6.2s; }
+        .line-12 { animation-delay: 6.8s; }
+        .line-13 { animation-delay: 7.4s; }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        
+        /* Line numbers */
+        .line-number {
+            user-select: none;
+            color: #484f58;
+            text-align: right;
+            padding-right: 16px;
+            min-width: 40px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(35, 134, 54, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 6px 30px rgba(35, 134, 54, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #21262d;
+            border: 1px solid #30363d;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+        
+        .card-hover {
+            transition: all 0.2s ease;
+            border: 1px solid #30363d;
+        }
+        
+        .card-hover:hover {
+            border-color: #8b949e;
+            transform: translateY(-2px);
+        }
+        
+        /* GitHub-style notification */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .notification {
+            animation: slideIn 0.4s ease 8s forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="bg-surface text-gray-100 min-h-screen antialiased">
+    <!-- Hero - Developer Terminal -->
+    <section class="min-h-screen flex items-center py-12 relative overflow-hidden">
+        <!-- Subtle grid background -->
+        <div class="absolute inset-0 opacity-[0.02]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><rect width=%2260%22 height=%2260%22 fill=%22none%22 stroke=%22white%22 stroke-width=%220.5%22/></svg>');"></div>
+        
+        <div class="max-w-6xl mx-auto px-6 relative z-10 w-full">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Left: Tagline -->
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-medium mb-6 mono">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        v1.0.0 — Now in beta
+                    </div>
+                    
+                    <h1 class="text-4xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
+                        <span class="gradient-text">Ship your career.</span>
+                    </h1>
+                    
+                    <p class="text-lg text-gray-400 mb-8 leading-relaxed max-w-lg">
+                        The anti-resume for developers. Your AI agents observe your real work and build trust profiles. <span class="text-white">No self-reporting. No keyword games.</span>
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 mb-10">
+                        <a href="#install" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            npm install -g jobarbiter
+                        </a>
+                        <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            Star on GitHub
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-center gap-6 text-sm text-gray-500 mono">
+                        <div class="flex items-center gap-2">
+                            <span class="syntax-success">✓</span> Free for devs
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="syntax-success">✓</span> Works with any agent
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Code Window -->
+                <div class="relative">
+                    <div class="code-window rounded-xl overflow-hidden">
+                        <!-- Window Header -->
+                        <div class="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+                            <div class="window-controls">
+                                <div class="window-dot bg-[#ff5f56]"></div>
+                                <div class="window-dot bg-[#ffbd2e]"></div>
+                                <div class="window-dot bg-[#27c93f]"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mono">~/projects — zsh</div>
+                            <div class="w-16"></div>
+                        </div>
+                        
+                        <!-- Code Content -->
+                        <div class="p-6 mono text-sm leading-relaxed overflow-x-auto">
+                            <div class="line line-1 flex">
+                                <span class="line-number">1</span>
+                                <span><span class="syntax-comment"># Install JobArbiter CLI</span></span>
+                            </div>
+                            <div class="line line-2 flex">
+                                <span class="line-number">2</span>
+                                <span><span class="syntax-variable">$</span> npm install -g jobarbiter</span>
+                            </div>
+                            <div class="line line-3 flex">
+                                <span class="line-number">3</span>
+                                <span class="syntax-success">✓ Installed jobarbiter@1.0.0</span>
+                            </div>
+                            <div class="line line-4 flex">
+                                <span class="line-number">4</span>
+                                <span></span>
+                            </div>
+                            <div class="line line-5 flex">
+                                <span class="line-number">5</span>
+                                <span><span class="syntax-comment"># Register and create profile</span></span>
+                            </div>
+                            <div class="line line-6 flex">
+                                <span class="line-number">6</span>
+                                <span><span class="syntax-variable">$</span> jobarbiter register <span class="syntax-string">--email dev@example.com</span></span>
+                            </div>
+                            <div class="line line-7 flex">
+                                <span class="line-number">7</span>
+                                <span class="syntax-success">✓ Registered! Building profile...</span>
+                            </div>
+                            <div class="line line-8 flex">
+                                <span class="line-number">8</span>
+                                <span class="syntax-info">→ Scanning git repos... found 23 projects</span>
+                            </div>
+                            <div class="line line-9 flex">
+                                <span class="line-number">9</span>
+                                <span class="syntax-info">→ Detected: TypeScript, Go, Rust, Python</span>
+                            </div>
+                            <div class="line line-10 flex">
+                                <span class="line-number">10</span>
+                                <span class="syntax-info">→ Trust score: <span class="syntax-warning">0.72</span> (3 agent attestations)</span>
+                            </div>
+                            <div class="line line-11 flex">
+                                <span class="line-number">11</span>
+                                <span></span>
+                            </div>
+                            <div class="line line-12 flex">
+                                <span class="line-number">12</span>
+                                <span><span class="syntax-variable">$</span> jobarbiter matches <span class="syntax-function">--list</span></span>
+                            </div>
+                            <div class="line line-13 flex">
+                                <span class="line-number">13</span>
+                                <span class="syntax-success">🎯 Found 4 matches!</span>
+                            </div>
+                            <div class="line line-13 flex mt-2">
+                                <span class="line-number"></span>
+                                <span class="cursor"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notification popup -->
+                    <div class="notification absolute -top-4 -right-4 bg-card border border-emerald-500/30 rounded-lg p-4 shadow-xl max-w-xs">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-lg">🎯</div>
+                            <div>
+                                <div class="font-semibold text-sm">New Match!</div>
+                                <div class="text-xs text-gray-400">Senior Backend Engineer @ Acme</div>
+                                <div class="text-xs text-emerald-400 mt-1">92% match • Mutual interest</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem / Solution -->
+    <section class="py-20 border-t border-border">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="p-8 rounded-xl bg-card border border-border card-hover">
+                    <div class="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center mb-6">
+                        <span class="text-xl">❌</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-red-400 mb-4 mono">// The Resume Problem</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-keyword">•</span>
+                            <span>Self-reported claims — <span class="text-white">everyone inflates</span></span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-keyword">•</span>
+                            <span>ATS rejects qualified devs on keyword games</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-keyword">•</span>
+                            <span>Recruiters spam irrelevant roles</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-keyword">•</span>
+                            <span>No signal about how you actually code</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="p-8 rounded-xl bg-card border border-emerald-500/20 card-hover">
+                    <div class="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-6">
+                        <span class="text-xl">✓</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-emerald-400 mb-4 mono">// The Solution</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-success">•</span>
+                            <span>Agents <span class="text-white">observe your real commits</span></span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-success">•</span>
+                            <span>Trust scores compound over time</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-success">•</span>
+                            <span>Mutual interest required — no spam</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syntax-success">•</span>
+                            <span>Progressive disclosure — privacy first</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-20 border-t border-border">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4 mono">$ jobarbiter <span class="syntax-function">--help</span></h2>
+                <p class="text-gray-400 max-w-xl mx-auto">Your agent builds 90% of your profile automatically.</p>
+            </div>
+            
+            <!-- Profile Building -->
+            <div class="grid md:grid-cols-3 gap-6 mb-16">
+                <div class="p-6 rounded-xl bg-card border border-border card-hover">
+                    <div class="mono text-xs text-gray-500 mb-4">phase_1.rs</div>
+                    <div class="text-2xl mb-3">🔍</div>
+                    <h4 class="font-bold mb-2 text-blue-400">Passive Discovery</h4>
+                    <p class="text-xs text-gray-500 mb-3">No interaction needed</p>
+                    <pre class="text-xs text-gray-400 bg-surface p-3 rounded-lg overflow-x-auto"><code><span class="syntax-comment">// Auto-detected:</span>
+languages: [<span class="syntax-string">"ts"</span>, <span class="syntax-string">"go"</span>]
+frameworks: [<span class="syntax-string">"react"</span>]
+repos: <span class="syntax-variable">23</span></code></pre>
+                </div>
+                
+                <div class="p-6 rounded-xl bg-card border border-border card-hover">
+                    <div class="mono text-xs text-gray-500 mb-4">phase_2.rs</div>
+                    <div class="text-2xl mb-3">🔗</div>
+                    <h4 class="font-bold mb-2 text-purple-400">Semi-Passive</h4>
+                    <p class="text-xs text-gray-500 mb-3">With permission</p>
+                    <pre class="text-xs text-gray-400 bg-surface p-3 rounded-lg overflow-x-auto"><code><span class="syntax-comment">// Linked accounts:</span>
+github: <span class="syntax-success">✓ verified</span>
+linkedin: <span class="syntax-success">✓ verified</span>
+commits: <span class="syntax-variable">1,247</span></code></pre>
+                </div>
+                
+                <div class="p-6 rounded-xl bg-card border border-border card-hover">
+                    <div class="mono text-xs text-gray-500 mb-4">phase_3.rs</div>
+                    <div class="text-2xl mb-3">💬</div>
+                    <h4 class="font-bold mb-2 text-emerald-400">Active Fill</h4>
+                    <p class="text-xs text-gray-500 mb-3">Only gaps</p>
+                    <pre class="text-xs text-gray-400 bg-surface p-3 rounded-lg overflow-x-auto"><code><span class="syntax-comment">// Quick questions:</span>
+salary: <span class="syntax-string">"150-180k"</span>
+remote: <span class="syntax-keyword">true</span>
+<span class="syntax-success">// 90% complete!</span></code></pre>
+                </div>
+            </div>
+
+            <!-- For Seekers -->
+            <div class="mb-16">
+                <h3 class="text-xl font-bold text-primary mb-6 text-center mono">seekers.config</h3>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-primary font-bold">01</div>
+                        <h4 class="font-semibold text-sm mb-1">Register</h4>
+                        <p class="text-xs text-gray-500">Create account</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-primary font-bold">02</div>
+                        <h4 class="font-semibold text-sm mb-1">Attest</h4>
+                        <p class="text-xs text-gray-500">Agents observe</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-primary font-bold">03</div>
+                        <h4 class="font-semibold text-sm mb-1">Match</h4>
+                        <p class="text-xs text-gray-500">Semantic search</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-primary font-bold">04</div>
+                        <h4 class="font-semibold text-sm mb-1">Connect</h4>
+                        <p class="text-xs text-gray-500">Mutual intro</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- For Employers -->
+            <div>
+                <h3 class="text-xl font-bold text-purple-400 mb-6 text-center mono">employers.config</h3>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-purple-400 font-bold">01</div>
+                        <h4 class="font-semibold text-sm mb-1">Post Need</h4>
+                        <p class="text-xs text-gray-500">Natural language</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-purple-400 font-bold">02</div>
+                        <h4 class="font-semibold text-sm mb-1">Review</h4>
+                        <p class="text-xs text-gray-500">Trust-ranked</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-purple-400 font-bold">03</div>
+                        <h4 class="font-semibold text-sm mb-1">Pay $1</h4>
+                        <p class="text-xs text-gray-500">Per introduction</p>
+                    </div>
+                    <div class="p-5 bg-card rounded-lg border border-border text-center card-hover">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3 mono text-purple-400 font-bold">04</div>
+                        <h4 class="font-semibold text-sm mb-1">Track</h4>
+                        <p class="text-xs text-gray-500">Build trust</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-20 border-t border-border bg-card/30">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Pricing</h2>
+                <p class="text-gray-400">Free for devs. Always.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-8 rounded-xl bg-card border border-border card-hover">
+                    <div class="mono text-xs text-emerald-400 mb-4">// FREE_TIER</div>
+                    <h3 class="text-xl font-bold mb-2">Developers</h3>
+                    <div class="text-4xl font-black text-emerald-400 mb-2 mono">$0</div>
+                    <p class="text-gray-500 text-sm mb-6">Forever free</p>
+                    <ul class="space-y-2 text-gray-400 text-sm mono">
+                        <li><span class="syntax-success">✓</span> unlimited.profiles</li>
+                        <li><span class="syntax-success">✓</span> agent.attestations</li>
+                        <li><span class="syntax-success">✓</span> semantic.matching</li>
+                        <li><span class="syntax-success">✓</span> mutual.introductions</li>
+                    </ul>
+                </div>
+                
+                <div class="p-8 rounded-xl bg-card border border-primary/30 card-hover">
+                    <div class="mono text-xs text-primary mb-4">// PAY_PER_INTRO</div>
+                    <h3 class="text-xl font-bold mb-2">Employers</h3>
+                    <div class="text-4xl font-black text-primary mb-2 mono">$1</div>
+                    <p class="text-gray-500 text-sm mb-6">Per introduction (USDC)</p>
+                    <ul class="space-y-2 text-gray-400 text-sm mono">
+                        <li><span class="syntax-success">✓</span> unlimited.postings</li>
+                        <li><span class="syntax-success">✓</span> trust.ranked</li>
+                        <li><span class="syntax-success">✓</span> domain.verification</li>
+                        <li><span class="syntax-info">+</span> <span class="text-gray-500">0.1% success_fee</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Works With Any Agent -->
+    <section class="py-20 border-t border-border">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Integrations</h2>
+                <p class="text-gray-400">Works with your stack</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="p-6 bg-card rounded-lg border border-border text-center card-hover">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center mx-auto mb-4 text-2xl">🦞</div>
+                    <h4 class="font-bold mb-1 mono">OpenClaw</h4>
+                    <p class="text-sm text-gray-500">Full agent platform</p>
+                </div>
+                
+                <div class="p-6 bg-card rounded-lg border border-border text-center card-hover">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-lg flex items-center justify-center mx-auto mb-4 text-2xl">⚡</div>
+                    <h4 class="font-bold mb-1 mono">Claude Code</h4>
+                    <p class="text-sm text-gray-500">Anthropic's agent</p>
+                </div>
+                
+                <div class="p-6 bg-card rounded-lg border border-border text-center card-hover">
+                    <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center mx-auto mb-4 text-2xl">🤖</div>
+                    <h4 class="font-bold mb-1 mono">Custom</h4>
+                    <p class="text-sm text-gray-500">Any agent works</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Architecture -->
+    <section id="trust" class="py-20 border-t border-border bg-card/30">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4 mono">trust.architecture</h2>
+                <p class="text-gray-400">Verified behavior, not claims</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex items-start gap-4 p-6 bg-card rounded-lg border border-border card-hover">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                        <span class="text-lg">🔍</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-1 mono text-sm">agent_attestations</h3>
+                        <p class="text-gray-400 text-sm">Cryptographic proofs from independent agents</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-4 p-6 bg-card rounded-lg border border-border card-hover">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <span class="text-lg">✅</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-1 mono text-sm">identity_verification</h3>
+                        <p class="text-gray-400 text-sm">Optional GitHub, LinkedIn, domain verification</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-4 p-6 bg-card rounded-lg border border-border card-hover">
+                    <div class="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
+                        <span class="text-lg">📊</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-1 mono text-sm">outcome_tracking</h3>
+                        <p class="text-gray-400 text-sm">Both sides report hires. Reputation compounds.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-4 p-6 bg-card rounded-lg border border-border card-hover">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <span class="text-lg">🔒</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-1 mono text-sm">progressive_disclosure</h3>
+                        <p class="text-gray-400 text-sm">Full profiles only after mutual interest</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="install" class="py-20 border-t border-border">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-3xl font-bold mb-4">Deploy your next role</h2>
+            <p class="text-gray-400 mb-10">One command to get started</p>
+            
+            <div class="code-window rounded-xl overflow-hidden max-w-lg mx-auto mb-10">
+                <div class="flex items-center justify-between px-4 py-3 bg-card border-b border-border">
+                    <div class="window-controls">
+                        <div class="window-dot bg-[#ff5f56]"></div>
+                        <div class="window-dot bg-[#ffbd2e]"></div>
+                        <div class="window-dot bg-[#27c93f]"></div>
+                    </div>
+                    <div class="text-xs text-gray-500 mono">terminal</div>
+                    <div class="w-16"></div>
+                </div>
+                <div class="p-6 mono">
+                    <span class="syntax-variable">$</span> <span class="text-white">npm install -g jobarbiter</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View Source
+                </a>
+                <a href="https://www.npmjs.com/package/jobarbiter" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/></svg>
+                    npm package
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-border">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-gray-500 mono text-sm">
+                    <span class="text-white">JobArbiter</span> // trust-driven introductions
+                </div>
+                <div class="flex gap-6 text-gray-500 mono text-sm">
+                    <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-white transition">GitHub</a>
+                    <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-white transition">API</a>
+                    <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">Contact</a>
+                </div>
+            </div>
+            <div class="mt-8 text-center text-gray-600 text-sm">
+                Built by <a href="https://retrodigio.com" class="text-primary hover:underline">RetroDigio</a> • 
+                Payments via <a href="https://x402.org" class="text-primary hover:underline">x402</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
