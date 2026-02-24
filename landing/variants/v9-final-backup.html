@@ -286,9 +286,258 @@
 
     <!-- TWO-COLUMN LAYOUT: Entire page content -->
     <section class="max-w-7xl mx-auto px-6 py-16">
-        <div class="grid grid-cols-1 lg:grid-cols-[45%_55%] gap-12 lg:gap-16">
-
-            <!-- LEFT COLUMN: Telegram chat -->
+        <div class="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-12 lg:gap-16">
+            
+            <!-- LEFT COLUMN: Flowing content -->
+            <div class="space-y-12">
+                
+                <!-- The Problem -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-comment">//</span> The Problem
+                    </h2>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="syn-keyword mt-1">→</span>
+                            <span>Resumes are <span class="text-white">self-reported claims</span> — everyone inflates</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-keyword mt-1">→</span>
+                            <span>ATS systems reject qualified candidates on keyword games</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-keyword mt-1">→</span>
+                            <span>Recruiters spam; candidates shotgun applications</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-keyword mt-1">→</span>
+                            <span>No signal about <span class="text-white">how someone actually works</span></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- The Solution -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-success">//</span> The Solution
+                    </h2>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="syn-success mt-1">✓</span>
+                            <span>Your AI agents <span class="syn-function">observe()</span> your real work and attest to skills</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-success mt-1">✓</span>
+                            <span>Trust scores compound over time — <span class="text-white">reputation is portable</span></span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-success mt-1">✓</span>
+                            <span>Mutual interest required — no spam, no ghosting</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-success mt-1">✓</span>
+                            <span>Progressive disclosure — full profiles only after both say yes</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- How Your Profile Gets Built -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-6 font-mono">
+                        <span class="syn-info">//</span> How Your Profile Gets Built
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-blue-400 mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-xs font-mono">1</span>
+                                Phase 1: Passive
+                            </h3>
+                            <p class="text-gray-400 text-sm pl-8">
+                                Agent scans your repos, local projects, existing resumes. Discovers languages, frameworks, patterns without asking you anything.
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold text-purple-400 mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center text-xs font-mono">2</span>
+                                Phase 2: Semi-Passive
+                            </h3>
+                            <p class="text-gray-400 text-sm pl-8">
+                                With your permission, pulls LinkedIn, GitHub contributions, published work. Cross-references endorsements and commit history.
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-semibold text-green-400 mb-2 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded bg-green-500/20 flex items-center justify-center text-xs font-mono">3</span>
+                                Phase 3: Active
+                            </h3>
+                            <p class="text-gray-400 text-sm pl-8">
+                                Agent asks only what it can't find: salary range, remote preference, location. <span class="text-white font-semibold">90% of your profile is already built.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI-Powered Matching -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-function">//</span> AI-Powered Matching
+                    </h2>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="syn-info mt-1">⚡</span>
+                            <span>Semantic similarity via <span class="font-mono text-sm text-white">pgvector</span> — not keyword matching</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-info mt-1">⚡</span>
+                            <span>Match scores reflect real skill overlap</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-info mt-1">⚡</span>
+                            <span>Both sides must express interest before identities are revealed</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-info mt-1">⚡</span>
+                            <span>Your agent handles it all — you just approve</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- What Happens After a Match -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-variable">//</span> What Happens After a Match
+                    </h2>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="syn-variable mt-1">→</span>
+                            <span>Mutual interest triggers an introduction</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-variable mt-1">→</span>
+                            <span>Full company details, role info, and compensation revealed</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-variable mt-1">→</span>
+                            <span>Your agent checks your calendar and proposes interview times</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-variable mt-1">→</span>
+                            <span>You show up prepared — <span class="text-white">your agent handles the logistics</span></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Works With Any Agent -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-string">//</span> Works With Any Agent
+                    </h2>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
+                            <span class="text-xl">🦞</span>
+                            <span class="text-sm">OpenClaw</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
+                            <span class="text-xl">⚡</span>
+                            <span class="text-sm">Claude Code</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
+                            <span class="text-xl">🤖</span>
+                            <span class="text-sm">Any AI Assistant</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="syn-string mt-1">→</span>
+                            <span>Install the skill once — every agent you use can observe and attest</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-string mt-1">→</span>
+                            <span>Multiple agents = stronger trust (coding agent + planning agent + research agent)</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="syn-string mt-1">→</span>
+                            <span>Your career runs on autopilot across all your tools</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Simple Pricing -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-number">//</span> Simple Pricing
+                    </h2>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="p-4 rounded-lg bg-terminal border border-green-500/30">
+                            <p class="text-lg font-bold text-green-400">Job Seekers</p>
+                            <p class="text-3xl font-black text-white">Free</p>
+                            <p class="text-gray-500 text-sm">Every feature, no limits.</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-terminal border border-primary/30">
+                            <p class="text-lg font-bold text-primary">Employers</p>
+                            <p class="text-3xl font-black text-white">$1</p>
+                            <p class="text-gray-500 text-sm">Per accepted introduction.</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mt-3">No subscriptions. No hidden fees. No recruiter commissions.</p>
+                </div>
+                
+                <!-- Trust Architecture -->
+                <div>
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-keyword">//</span> Trust Architecture
+                    </h2>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start gap-3">
+                            <span class="text-blue-400 mt-1">🌐</span>
+                            <span><span class="text-white">Domain verification</span> — prove you own your company</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-green-400 mt-1">🪪</span>
+                            <span><span class="text-white">Identity verification</span> — LinkedIn, GitHub</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-purple-400 mt-1">👥</span>
+                            <span><span class="text-white">Social verification</span> — endorsements, connections</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-amber-400 mt-1">🤖</span>
+                            <span><span class="text-white">Agent attestation</span> — AI-observed skill validation</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="text-rose-400 mt-1">📊</span>
+                            <span><span class="text-white">Behavioral trust</span> — outcomes, interaction quality over time</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Get Started -->
+                <div id="install">
+                    <h2 class="text-2xl font-bold mb-4 font-mono">
+                        <span class="syn-success">//</span> Get Started
+                    </h2>
+                    <div class="p-4 rounded-lg bg-terminal border border-gray-800 font-mono text-sm mb-4">
+                        <span class="syn-success">$</span> <span class="text-white">npm install -g jobarbiter</span>
+                    </div>
+                    <p class="text-gray-400 mb-6">Get started in 30 seconds. Your agent does the rest.</p>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 text-gray-300">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            View Source
+                        </a>
+                        <a href="https://www.npmjs.com/package/jobarbiter" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/></svg>
+                            npm package
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- RIGHT COLUMN: One continuous Telegram chat -->
             <div class="lg:sticky lg:top-8 lg:self-start">
                 <div class="bg-[#17212b] rounded-xl border border-[#2b3b4d] overflow-hidden shadow-2xl">
                     
@@ -555,256 +804,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- RIGHT COLUMN: Flowing content -->
-            <div class="space-y-12">
-                
-                <!-- The Problem -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-comment">//</span> The Problem
-                    </h2>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="syn-keyword mt-1">→</span>
-                            <span>Resumes are <span class="text-white">self-reported claims</span> — everyone inflates</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-keyword mt-1">→</span>
-                            <span>ATS systems reject qualified candidates on keyword games</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-keyword mt-1">→</span>
-                            <span>Recruiters spam; candidates shotgun applications</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-keyword mt-1">→</span>
-                            <span>No signal about <span class="text-white">how someone actually works</span></span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- The Solution -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-success">//</span> The Solution
-                    </h2>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="syn-success mt-1">✓</span>
-                            <span>Your AI agents <span class="syn-function">observe()</span> your real work and attest to skills</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-success mt-1">✓</span>
-                            <span>Trust scores compound over time — <span class="text-white">reputation is portable</span></span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-success mt-1">✓</span>
-                            <span>Mutual interest required — no spam, no ghosting</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-success mt-1">✓</span>
-                            <span>Progressive disclosure — full profiles only after both say yes</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- How Your Profile Gets Built -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-6 font-mono">
-                        <span class="syn-info">//</span> How Your Profile Gets Built
-                    </h2>
-                    
-                    <div class="space-y-6">
-                        <div>
-                            <h3 class="font-semibold text-blue-400 mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center text-xs font-mono">1</span>
-                                Phase 1: Passive
-                            </h3>
-                            <p class="text-gray-400 text-sm pl-8">
-                                Agent scans your repos, local projects, existing resumes. Discovers languages, frameworks, patterns without asking you anything.
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <h3 class="font-semibold text-purple-400 mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center text-xs font-mono">2</span>
-                                Phase 2: Semi-Passive
-                            </h3>
-                            <p class="text-gray-400 text-sm pl-8">
-                                With your permission, pulls LinkedIn, GitHub contributions, published work. Cross-references endorsements and commit history.
-                            </p>
-                        </div>
-                        
-                        <div>
-                            <h3 class="font-semibold text-green-400 mb-2 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded bg-green-500/20 flex items-center justify-center text-xs font-mono">3</span>
-                                Phase 3: Active
-                            </h3>
-                            <p class="text-gray-400 text-sm pl-8">
-                                Agent asks only what it can't find: salary range, remote preference, location. <span class="text-white font-semibold">90% of your profile is already built.</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- AI-Powered Matching -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-function">//</span> AI-Powered Matching
-                    </h2>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="syn-info mt-1">⚡</span>
-                            <span>Semantic similarity via <span class="font-mono text-sm text-white">pgvector</span> — not keyword matching</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-info mt-1">⚡</span>
-                            <span>Match scores reflect real skill overlap</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-info mt-1">⚡</span>
-                            <span>Both sides must express interest before identities are revealed</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-info mt-1">⚡</span>
-                            <span>Your agent handles it all — you just approve</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- What Happens After a Match -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-variable">//</span> What Happens After a Match
-                    </h2>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="syn-variable mt-1">→</span>
-                            <span>Mutual interest triggers an introduction</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-variable mt-1">→</span>
-                            <span>Full company details, role info, and compensation revealed</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-variable mt-1">→</span>
-                            <span>Your agent checks your calendar and proposes interview times</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-variable mt-1">→</span>
-                            <span>You show up prepared — <span class="text-white">your agent handles the logistics</span></span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Works With Any Agent -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-string">//</span> Works With Any Agent
-                    </h2>
-                    <div class="flex flex-wrap gap-4 mb-4">
-                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
-                            <span class="text-xl">🦞</span>
-                            <span class="text-sm">OpenClaw</span>
-                        </div>
-                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
-                            <span class="text-xl">⚡</span>
-                            <span class="text-sm">Claude Code</span>
-                        </div>
-                        <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-terminal border border-gray-800">
-                            <span class="text-xl">🤖</span>
-                            <span class="text-sm">Any AI Assistant</span>
-                        </div>
-                    </div>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="syn-string mt-1">→</span>
-                            <span>Install the skill once — every agent you use can observe and attest</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-string mt-1">→</span>
-                            <span>Multiple agents = stronger trust (coding agent + planning agent + research agent)</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="syn-string mt-1">→</span>
-                            <span>Your career runs on autopilot across all your tools</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Simple Pricing -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-number">//</span> Simple Pricing
-                    </h2>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <div class="p-4 rounded-lg bg-terminal border border-green-500/30">
-                            <p class="text-lg font-bold text-green-400">Job Seekers</p>
-                            <p class="text-3xl font-black text-white">Free</p>
-                            <p class="text-gray-500 text-sm">Every feature, no limits.</p>
-                        </div>
-                        <div class="p-4 rounded-lg bg-terminal border border-primary/30">
-                            <p class="text-lg font-bold text-primary">Employers</p>
-                            <p class="text-3xl font-black text-white">$1</p>
-                            <p class="text-gray-500 text-sm">Per accepted introduction.</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-500 text-sm mt-3">No subscriptions. No hidden fees. No recruiter commissions.</p>
-                </div>
-                
-                <!-- Trust Architecture -->
-                <div>
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-keyword">//</span> Trust Architecture
-                    </h2>
-                    <ul class="space-y-3 text-gray-400">
-                        <li class="flex items-start gap-3">
-                            <span class="text-blue-400 mt-1">🌐</span>
-                            <span><span class="text-white">Domain verification</span> — prove you own your company</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="text-green-400 mt-1">🪪</span>
-                            <span><span class="text-white">Identity verification</span> — LinkedIn, GitHub</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="text-purple-400 mt-1">👥</span>
-                            <span><span class="text-white">Social verification</span> — endorsements, connections</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="text-amber-400 mt-1">🤖</span>
-                            <span><span class="text-white">Agent attestation</span> — AI-observed skill validation</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="text-rose-400 mt-1">📊</span>
-                            <span><span class="text-white">Behavioral trust</span> — outcomes, interaction quality over time</span>
-                        </li>
-                    </ul>
-                </div>
-                
-                <!-- Get Started -->
-                <div id="install">
-                    <h2 class="text-2xl font-bold mb-4 font-mono">
-                        <span class="syn-success">//</span> Get Started
-                    </h2>
-                    <div class="p-4 rounded-lg bg-terminal border border-gray-800 font-mono text-sm mb-4">
-                        <span class="syn-success">$</span> <span class="text-white">npm install -g jobarbiter</span>
-                    </div>
-                    <p class="text-gray-400 mb-6">Get started in 30 seconds. Your agent does the rest.</p>
-                    <div class="flex flex-wrap gap-3">
-                        <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 text-gray-300">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                            View Source
-                        </a>
-                        <a href="https://www.npmjs.com/package/jobarbiter" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/></svg>
-                            npm package
-                        </a>
-                    </div>
-                </div>
-                
-            </div>
-
             
         </div>
     </section>
