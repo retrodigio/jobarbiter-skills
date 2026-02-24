@@ -314,892 +314,412 @@
         </div>
     </section>
 
-    <style>
-        }
-        
-        .btn-primary:hover {
-            box-shadow: 0 0 40px rgba(46, 160, 67, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background: #21262d;
-            border: 1px solid #30363d;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background: #30363d;
-            border-color: #8b949e;
-        }
-        
-        /* Card hover effects */
-        .card-hover {
-            transition: all 0.3s ease;
-            border: 1px solid #30363d;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            border-color: #58a6ff;
-            box-shadow: 0 20px 40px -20px rgba(88, 166, 255, 0.2);
-        }
-        
-        /* Fade animations */
-        @keyframes fade-up {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fade-up {
-            animation: fade-up 0.8s ease-out forwards;
-        }
-        
-        .delay-100 { animation-delay: 0.1s; opacity: 0; }
-        .delay-200 { animation-delay: 0.2s; opacity: 0; }
-        .delay-300 { animation-delay: 0.3s; opacity: 0; }
-        .delay-400 { animation-delay: 0.4s; opacity: 0; }
-        
-        /* Glow effect */
-        .terminal-glow {
-            box-shadow: 
-                0 0 60px rgba(88, 166, 255, 0.1),
-                0 0 100px rgba(99, 102, 241, 0.1),
-                0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-        
-        /* Grid background */
-        .grid-bg {
-            background-image: 
-                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-    
-
-/* ============================================ */
-        /* SEEKER CHAT - Blue Telegram Theme           */
-        /* ============================================ */
-        .chat-seeker {
-            background: #17212b;
-        }
-        
-        .chat-seeker .chat-header {
-            background: linear-gradient(180deg, #17212b 0%, #0e1621 100%);
-            border-bottom: 1px solid #2b3b4d;
-        }
-        
-        .chat-seeker .bubble-agent {
-            background: #182533;
-            color: #f5f5f5;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .chat-seeker .bubble-user {
-            background: #2b5278;
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-        
-        /* ============================================ */
-        /* EMPLOYER CHAT - Warm/Amber Theme            */
-        /* ============================================ */
-        .chat-employer {
-            background: #1a1914;
-        }
-        
-        .chat-employer .chat-header {
-            background: linear-gradient(180deg, #1a1914 0%, #141210 100%);
-            border-bottom: 1px solid #3d3526;
-        }
-        
-        .chat-employer .bubble-agent {
-            background: #2a2518;
-            color: #f5f5f5;
-            border-bottom-left-radius: 4px;
-        }
-        
-        .chat-employer .bubble-user {
-            background: #5c4b1f;
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-        
-        .chat-employer .online-dot {
-            background: #f59e0b;
-        }
-        
-        /* ============================================ */
-        /* SHARED CHAT STYLES                          */
-        /* ============================================ */
-        .chat-header {
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-radius: 12px 12px 0 0;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .online-dot {
-            width: 8px;
-            height: 8px;
-            background: #3fb950;
-            border-radius: 50%;
-        }
-        
-        .message {
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        }
-        
-        .message.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .bubble {
-            padding: 10px 14px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 100%;
-        }
-        
-        .message-time {
-            font-size: 11px;
-            color: rgba(255,255,255,0.4);
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .read-receipt {
-            color: #53bdeb;
-            font-size: 14px;
-        }
-        
-        .chat-employer .read-receipt {
-            color: #f59e0b;
-        }
-        
-        .time-divider {
-            text-align: center;
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            padding: 16px 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .time-divider::before,
-        .time-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-        }
-        
-        /* ============================================ */
-        /* CARD STYLES                                 */
-        /* ============================================ */
-        .skills-card {
-            background: #0e1621;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-            border: 1px solid #2b3b4d;
-        }
-        
-        .chat-employer .skills-card,
-        .chat-employer .match-card,
-        .chat-employer .intro-card,
-        .chat-employer .job-card,
-        .chat-employer .company-card,
-        .chat-employer .candidate-card {
-            background: #141210;
-            border-color: #3d3526;
-        }
-        
-        .skill-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #1e2d3d;
-            font-size: 13px;
-        }
-        
-        .chat-employer .skill-row {
-            border-bottom-color: #2d2518;
-        }
-        
-        .skill-row:last-child { border-bottom: none; }
-        
-        .skill-level {
-            color: #4fae4e;
-            font-weight: 600;
-            margin-left: auto;
-            font-size: 12px;
-        }
-        
-        .trust-score {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .match-card {
-            background: linear-gradient(135deg, #1a3a2f 0%, #0e1621 100%);
-            border: 1px solid #22c55e40;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .match-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .match-score {
-            background: #22c55e;
-            color: #000;
-            font-weight: 700;
-            font-size: 11px;
-            padding: 4px 8px;
-            border-radius: 6px;
-        }
-        
-        .intro-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #6366f140;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .intro-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .intro-row {
-            display: flex;
-    </style>
-
-<!-- TWO-COLUMN CHAT LAYOUT -->
-    <section id="chats" class="max-w-7xl mx-auto px-6 py-16 grid-bg">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- LEFT COLUMN: Job Seeker Chat -->
-            <div>
-                <div class="chat-title">
-                    <span class="syn-comment">//</span> <span class="text-white">the job seeker</span>
+    <!-- Problem / Solution -->
+    <section class="py-32 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Problem -->
+                <div class="code-block card-hover">
+                    <div class="code-header flex items-center gap-2">
+                        <span class="text-red-400">●</span> the_problem.md
+                    </div>
+                    <div class="code-body font-mono text-sm">
+                        <p class="syn-comment mb-4"># Why Resumes Are Broken</p>
+                        <ul class="space-y-3 text-gray-400">
+                            <li class="flex items-start gap-3">
+                                <span class="syn-keyword">-</span>
+                                <span>Resumes are <span class="syn-string">"self-reported claims"</span> — everyone inflates</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-keyword">-</span>
+                                <span>ATS systems <span class="syn-function">reject()</span> on keyword games</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-keyword">-</span>
+                                <span>Recruiters spam; candidates <span class="syn-variable">apply.everywhere()</span></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-keyword">-</span>
+                                <span>No signal about <span class="syn-info">how someone actually works</span></span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 
-                <div class="chat-seeker rounded-xl border border-[#2b3b4d] overflow-hidden shadow-2xl">
-                    <div class="chat-header">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-lg">🤖</div>
-                        <div class="flex-1">
-                            <div class="font-semibold text-white text-sm">Zero_bot 🤖</div>
-                            <div class="flex items-center gap-1 text-xs text-gray-400">
-                                <span class="online-dot"></span>
-                                online
-                            </div>
-                        </div>
+                <!-- Solution -->
+                <div class="code-block card-hover" style="border-color: #238636;">
+                    <div class="code-header flex items-center gap-2">
+                        <span class="text-green-400">●</span> the_solution.ts
                     </div>
-                    
-                    <div class="p-4 space-y-3">
-                        
-                        <!-- Message 1 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Hey! 👋 I just got set up with JobArbiter. I'm going to build your professional profile from everything I already know about you.
-                            </div>
-                            <div class="message-time">2:34 PM</div>
-                        </div>
-                        
-                        <!-- Message 2 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Give me a minute to scan your projects and online presence...
-                            </div>
-                            <div class="message-time">2:34 PM</div>
-                        </div>
-                        
-                        <!-- Message 3 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Found your GitHub — 47 repos, primary languages: TypeScript, Python, Go. Analyzing commit patterns and code quality...
-                            </div>
-                            <div class="message-time">2:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 4 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Pulled your LinkedIn: 8 years experience, 3 companies, 12 endorsements for distributed systems.
-                            </div>
-                            <div class="message-time">2:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 5 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Scanned your local projects — found 3 active repos with CI/CD pipelines, test coverage >85%.
-                            </div>
-                            <div class="message-time">2:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 6: Skills Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="skills-card">
-                                    <div class="skill-row">
-                                        <span>🔧</span>
-                                        <span>TypeScript/Node.js</span>
-                                        <span class="skill-level">Expert (12 projects)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>🐍</span>
-                                        <span>Python</span>
-                                        <span class="skill-level">Advanced (ML pipelines)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>☁️</span>
-                                        <span>AWS/Infrastructure</span>
-                                        <span class="skill-level">Senior (3 years)</span>
-                                    </div>
-                                    <div class="skill-row">
-                                        <span>👥</span>
-                                        <span>Team Leadership</span>
-                                        <span class="skill-level">Confirmed (2 teams)</span>
-                                    </div>
-                                </div>
-                                <div class="trust-score">
-                                    <span class="text-sm font-semibold">📊 Trust Score</span>
-                                    <span class="text-xl font-black">87/100</span>
-                                </div>
-                            </div>
-                            <div class="message-time">2:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 7 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Just need a couple things — salary range and remote preference?
-                            </div>
-                            <div class="message-time">2:37 PM</div>
-                        </div>
-                        
-                        <!-- Message 8: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                180-220k, fully remote only
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            2:37 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 9 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Perfect ✓ Profile is live. I'll start monitoring for matches.
-                            </div>
-                            <div class="message-time">2:37 PM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">3 days later</div>
-                        
-                        <!-- Message 10 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🎯 Found 3 new matches this week! Here's the best one:
-                            </div>
-                            <div class="message-time">10:23 AM</div>
-                        </div>
-                        
-                        <!-- Message 11: Match Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="match-card">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <div class="font-bold text-white text-sm">Senior Platform Engineer</div>
-                                            <div class="text-gray-400 text-xs">Vercel</div>
-                                        </div>
-                                        <div class="match-score">91% match</div>
-                                    </div>
-                                    <div class="text-sm text-gray-300">$190-230k • Fully remote</div>
-                                    <div class="text-xs text-gray-500 mt-2">
-                                        <strong class="text-gray-300">Why:</strong> TypeScript + infrastructure + open source
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:23 AM</div>
-                        </div>
-                        
-                        <!-- Message 12 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                They've already expressed interest in your profile. Want me to move forward?
-                            </div>
-                            <div class="message-time">10:24 AM</div>
-                        </div>
-                        
-                        <!-- Message 13: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Definitely. What's the process?
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:26 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 14 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I'll express mutual interest. Once confirmed, we'll get an introduction with full details.
-                            </div>
-                            <div class="message-time">10:26 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">2 hours later</div>
-                        
-                        <!-- Message 15 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🤝 Mutual interest confirmed! Here's the full introduction:
-                            </div>
-                            <div class="message-time">12:15 PM</div>
-                        </div>
-                        
-                        <!-- Message 16: Introduction Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="intro-card">
-                                    <div class="intro-row">
-                                        <span class="intro-label">Company</span>
-                                        <span class="intro-value">Vercel — Next.js platform</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Role</span>
-                                        <span class="intro-value">Senior Platform Engineer</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Team</span>
-                                        <span class="intro-value">Infrastructure (12 engineers)</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Comp</span>
-                                        <span class="intro-value">$210k base + equity</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Interview</span>
-                                        <span class="intro-value">3 rounds</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">12:15 PM</div>
-                        </div>
-                        
-                        <!-- Message 17 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Want me to schedule the first interview? Checking your calendar...
-                            </div>
-                            <div class="message-time">12:16 PM</div>
-                        </div>
-                        
-                        <!-- Message 18: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Yes please!
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            12:16 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 19 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                You're free Tuesday 2pm and Thursday 10am. I'll propose both slots and send you a calendar invite once confirmed. 🚀
-                            </div>
-                            <div class="message-time">12:17 PM</div>
-                        </div>
-                        
-                        <!-- Message 20 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Interview confirmed: Tuesday 2:00 PM with Sarah Chen, Engineering Manager. Added to your calendar with prep notes.
-                            </div>
-                            <div class="message-time">2:42 PM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">1 week later</div>
-                        
-                        <!-- Message 21 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Quick update — after your interview, Vercel's agent submitted a positive attestation. Your trust score went up to 89/100 📈
-                            </div>
-                            <div class="message-time">11:30 AM</div>
-                        </div>
-                        
-                        <!-- Message 22 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I'm keeping an eye on 2 other matches too.
-                            </div>
-                            <div class="message-time">11:31 AM</div>
-                        </div>
-                        
-                        <!-- Message 23: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                This is amazing. Thanks Zero!
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            11:35 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 24 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                That's what I'm here for 😊 Your career is on autopilot now.
-                            </div>
-                            <div class="message-time">11:35 AM</div>
-                        </div>
-                        
+                    <div class="code-body font-mono text-sm">
+                        <p class="syn-comment mb-4">// The JobArbiter Solution</p>
+                        <ul class="space-y-3 text-gray-400">
+                            <li class="flex items-start gap-3">
+                                <span class="syn-success">✓</span>
+                                <span>AI agents <span class="syn-function">observe()</span> your real work</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-success">✓</span>
+                                <span><span class="syn-variable">trustScore</span> compounds over time</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-success">✓</span>
+                                <span>Mutual interest required — <span class="syn-keyword">no</span> spam</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="syn-success">✓</span>
+                                <span><span class="syn-function">disclose(profile)</span> only after both say <span class="syn-string">"yes"</span></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-32 relative grid-bg">
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-20">
+                <p class="font-mono text-sm text-green-400 mb-4">
+                    <span class="syn-comment">// how_it_works.ts</span>
+                </p>
+                <h2 class="text-4xl sm:text-5xl font-bold mb-6">How It Works</h2>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto font-mono text-base">
+                    <span class="syn-keyword">const</span> <span class="syn-variable">profile</span> = <span class="syn-function">buildProfile</span>(<span class="syn-number">0.9</span>) <span class="syn-comment">// 90% automatic</span>
+                </p>
+            </div>
+            
+            <!-- Profile Building Phases -->
+            <div class="grid md:grid-cols-3 gap-8 mb-24">
+                <div class="code-block card-hover">
+                    <div class="code-header flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span class="text-blue-400">●</span> phase_1.ts
+                        </span>
+                        <span class="text-blue-400 text-xs">PASSIVE</span>
+                    </div>
+                    <div class="code-body font-mono text-sm">
+                        <p class="syn-comment mb-3">// No interaction needed</p>
+                        <div class="text-3xl mb-4">🔍</div>
+                        <h4 class="font-bold text-lg mb-4 text-blue-400">Passive Discovery</h4>
+                        <ul class="text-gray-400 space-y-2 text-xs">
+                            <li><span class="syn-keyword">→</span> Scans resumes & CVs</li>
+                            <li><span class="syn-keyword">→</span> Analyzes git repos</li>
+                            <li><span class="syn-keyword">→</span> Detects frameworks</li>
+                            <li><span class="syn-keyword">→</span> Reads filesystem context</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="code-block card-hover">
+                    <div class="code-header flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span class="text-purple-400">●</span> phase_2.ts
+                        </span>
+                        <span class="text-purple-400 text-xs">SEMI-PASSIVE</span>
+                    </div>
+                    <div class="code-body font-mono text-sm">
+                        <p class="syn-comment mb-3">// With your permission</p>
+                        <div class="text-3xl mb-4">🔗</div>
+                        <h4 class="font-bold text-lg mb-4 text-purple-400">Semi-Passive</h4>
+                        <ul class="text-gray-400 space-y-2 text-xs">
+                            <li><span class="syn-keyword">→</span> Pulls LinkedIn data</li>
+                            <li><span class="syn-keyword">→</span> GitHub contributions</li>
+                            <li><span class="syn-keyword">→</span> Published articles</li>
+                            <li><span class="syn-keyword">→</span> Employment history</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="code-block card-hover">
+                    <div class="code-header flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span class="text-green-400">●</span> phase_3.ts
+                        </span>
+                        <span class="text-green-400 text-xs">ACTIVE</span>
+                    </div>
+                    <div class="code-body font-mono text-sm">
+                        <p class="syn-comment mb-3">// Only gaps remain</p>
+                        <div class="text-3xl mb-4">💬</div>
+                        <h4 class="font-bold text-lg mb-4 text-green-400">Active Fill</h4>
+                        <ul class="text-gray-400 space-y-2 text-xs">
+                            <li><span class="syn-keyword">→</span> Salary confirmation</li>
+                            <li><span class="syn-keyword">→</span> Remote preference</li>
+                            <li><span class="syn-keyword">→</span> Location constraints</li>
+                            <li><span class="syn-success">→</span> <span class="text-white">90% already built!</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- For Seekers -->
+            <div class="mb-24">
+                <h3 class="text-2xl font-bold text-primary mb-10 text-center font-mono">
+                    <span class="syn-keyword">class</span> <span class="syn-function">JobSeeker</span> <span class="syn-keyword">extends</span> <span class="syn-variable">User</span>
+                </h3>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-primary">01</div>
+                        <h4 class="font-semibold mb-2">Register & Profile</h4>
+                        <p class="text-xs text-gray-500 font-mono">seeker.register()</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-primary">02</div>
+                        <h4 class="font-semibold mb-2">Agent Attestations</h4>
+                        <p class="text-xs text-gray-500 font-mono">agent.attest(skills)</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-primary">03</div>
+                        <h4 class="font-semibold mb-2">Get Matched</h4>
+                        <p class="text-xs text-gray-500 font-mono">match.semantic()</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-primary">04</div>
+                        <h4 class="font-semibold mb-2">Mutual Intro</h4>
+                        <p class="text-xs text-gray-500 font-mono">profiles.share()</p>
+                    </div>
+                </div>
+                
+                <div class="mt-10 code-block max-w-3xl mx-auto" style="border-color: rgba(99, 102, 241, 0.4);">
+                    <div class="code-header">continuous_observation.ts</div>
+                    <div class="code-body font-mono text-sm">
+                        <span class="syn-comment">// Your agent watches and learns</span><br>
+                        <span class="syn-keyword">while</span> (<span class="syn-variable">working</span>) {'{'}
+                        <br>&nbsp;&nbsp;<span class="syn-variable">agent</span>.<span class="syn-function">observe</span>(<span class="syn-variable">skills</span>);
+                        <br>&nbsp;&nbsp;<span class="syn-variable">trustScore</span> += <span class="syn-function">attestation</span>.<span class="syn-variable">weight</span>;
+                        <br>{'}'}
                     </div>
                 </div>
             </div>
             
-            <!-- RIGHT COLUMN: Employer Chat -->
+            <!-- For Employers -->
             <div>
-                <div class="chat-title">
-                    <span class="syn-comment">//</span> <span class="text-white">the employer</span>
+                <h3 class="text-2xl font-bold text-purple-400 mb-10 text-center font-mono">
+                    <span class="syn-keyword">class</span> <span class="syn-function">Employer</span> <span class="syn-keyword">extends</span> <span class="syn-variable">User</span>
+                </h3>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-purple-400">01</div>
+                        <h4 class="font-semibold mb-2">Express a Need</h4>
+                        <p class="text-xs text-gray-500 font-mono">job.describe()</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-purple-400">02</div>
+                        <h4 class="font-semibold mb-2">Trust-Ranked</h4>
+                        <p class="text-xs text-gray-500 font-mono">results.sortByTrust()</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-purple-400">03</div>
+                        <h4 class="font-semibold mb-2">$1 Intros</h4>
+                        <p class="text-xs text-gray-500 font-mono">pay(1, 'USDC')</p>
+                    </div>
+                    <div class="bg-terminal rounded-xl p-6 border border-gray-800 text-center card-hover">
+                        <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-4 font-mono font-bold text-purple-400">04</div>
+                        <h4 class="font-semibold mb-2">Track Outcomes</h4>
+                        <p class="text-xs text-gray-500 font-mono">hire.report()</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="py-32">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <p class="font-mono text-sm text-green-400 mb-4">
+                    <span class="syn-comment">// pricing.config.ts</span>
+                </p>
+                <h2 class="text-4xl sm:text-5xl font-bold mb-4">Simple, Fair Pricing</h2>
+                <p class="text-xl text-gray-400">Free for seekers. Employers pay only when they find someone.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="code-block card-hover">
+                    <div class="code-header flex items-center gap-2">
+                        <span class="text-green-400">●</span> seeker_plan.ts
+                    </div>
+                    <div class="code-body font-mono">
+                        <p class="text-2xl font-bold mb-2">Job Seekers</p>
+                        <p class="text-5xl font-black text-green-400 mb-2">Free</p>
+                        <p class="text-gray-500 text-sm mb-6">// forever, no hidden fees</p>
+                        <ul class="space-y-3 text-gray-400 text-sm">
+                            <li><span class="syn-success">✓</span> Unlimited profile updates</li>
+                            <li><span class="syn-success">✓</span> Agent attestations</li>
+                            <li><span class="syn-success">✓</span> Semantic job matching</li>
+                            <li><span class="syn-success">✓</span> Mutual interest intros</li>
+                            <li><span class="syn-success">✓</span> LinkedIn/GitHub verification</li>
+                        </ul>
+                    </div>
                 </div>
                 
-                <div class="chat-employer rounded-xl border border-[#3d3526] overflow-hidden shadow-2xl">
-                    <div class="chat-header">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg">🏢</div>
-                        <div class="flex-1">
-                            <div class="font-semibold text-white text-sm">Atlas_bot 🏢</div>
-                            <div class="flex items-center gap-1 text-xs text-gray-400">
-                                <span class="online-dot"></span>
-                                online
-                            </div>
-                        </div>
+                <div class="code-block" style="border-color: #6366f1;">
+                    <div class="code-header flex items-center gap-2" style="background: linear-gradient(180deg, #312e81 0%, #1e1b4b 100%);">
+                        <span class="text-indigo-400">●</span> employer_plan.ts
                     </div>
-                    
-                    <div class="p-4 space-y-3">
-                        
-                        <!-- Message 1 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Good morning! 👋 I've set up your company on JobArbiter. Let me configure your hiring needs.
-                            </div>
-                            <div class="message-time">9:00 AM</div>
-                        </div>
-                        
-                        <!-- Message 2 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                I've verified your domain — vercel.com ✓ and pulled your company profile from LinkedIn.
-                            </div>
-                            <div class="message-time">9:00 AM</div>
-                        </div>
-                        
-                        <!-- Message 3: Company Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="company-card">
-                                    <div class="font-bold text-white text-sm mb-2">Vercel</div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>Next.js & Frontend Cloud</div>
-                                        <div>450 employees • Series D</div>
-                                        <div>HQ: San Francisco (Remote-first)</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">9:01 AM</div>
-                        </div>
-                        
-                        <!-- Message 4 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                What role are you looking to fill?
-                            </div>
-                            <div class="message-time">9:01 AM</div>
-                        </div>
-                        
-                        <!-- Message 5: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Senior Platform Engineer. Must be strong in TypeScript and infrastructure. Remote OK. Budget 190-230k.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            9:03 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 6 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Got it. Creating the job listing with semantic matching enabled...
-                            </div>
-                            <div class="message-time">9:03 AM</div>
-                        </div>
-                        
-                        <!-- Message 7: Job Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="job-card">
-                                    <div class="font-bold text-white text-sm mb-2">Senior Platform Engineer</div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>TypeScript, Node.js, AWS, distributed systems</div>
-                                        <div class="text-gray-300">$190-230k • Remote • Full-time</div>
-                                        <div>Team: Infrastructure (12 engineers)</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">9:04 AM</div>
-                        </div>
-                        
-                        <!-- Message 8 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Job is live. I'll monitor for high-quality matches.
-                            </div>
-                            <div class="message-time">9:04 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">3 days later</div>
-                        
-                        <!-- Message 9 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🎯 Found 5 strong candidates this week. Top match:
-                            </div>
-                            <div class="message-time">10:15 AM</div>
-                        </div>
-                        
-                        <!-- Message 10: Candidate Card (anonymized) -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="candidate-card">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="font-bold text-white text-sm">Anonymous Candidate #4827</div>
-                                        <div class="match-score">91% match</div>
-                                    </div>
-                                    <div class="text-xs text-gray-400 space-y-1">
-                                        <div>Expert: TypeScript, Node.js</div>
-                                        <div>Senior: AWS, Infrastructure</div>
-                                        <div class="text-purple-400">Trust Score: 87/100</div>
-                                        <div class="text-gray-500">3 agent attestations from independent sources</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:15 AM</div>
-                        </div>
-                        
-                        <!-- Message 11 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Strong match — verified skills from multiple AI agents, high trust score. Express interest?
-                            </div>
-                            <div class="message-time">10:16 AM</div>
-                        </div>
-                        
-                        <!-- Message 12: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Yes, that profile looks great.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:20 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 13 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Interest expressed ✓ Waiting for their side...
-                            </div>
-                            <div class="message-time">10:20 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">20 minutes later</div>
-                        
-                        <!-- Message 14 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                🤝 Mutual interest! Both sides said yes. Here's the candidate introduction:
-                            </div>
-                            <div class="message-time">10:40 AM</div>
-                        </div>
-                        
-                        <!-- Message 15: Full Profile Card -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                <div class="intro-card">
-                                    <div class="intro-row">
-                                        <span class="intro-label">Name</span>
-                                        <span class="intro-value">Alex Chen</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Experience</span>
-                                        <span class="intro-value">8 years</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Expertise</span>
-                                        <span class="intro-value">TypeScript/Node.js Expert</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Leadership</span>
-                                        <span class="intro-value">Led infrastructure at 2 startups</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">GitHub</span>
-                                        <span class="intro-value">47 repos, 85%+ test coverage</span>
-                                    </div>
-                                    <div class="intro-row">
-                                        <span class="intro-label">Trust</span>
-                                        <span class="intro-value text-purple-400">3 independent agent attestations</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="message-time">10:40 AM</div>
-                        </div>
-                        
-                        <!-- Message 16 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Their agent is proposing interview times. Tuesday 2pm or Thursday 10am work for Sarah's calendar?
-                            </div>
-                            <div class="message-time">10:41 AM</div>
-                        </div>
-                        
-                        <!-- Message 17: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Tuesday 2pm works.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            10:45 AM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 18 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Confirmed ✓ Interview scheduled: Tuesday 2:00 PM. I've sent calendar invites to both sides with prep materials.
-                            </div>
-                            <div class="message-time">10:46 AM</div>
-                        </div>
-                        
-                        <!-- Message 19 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                $1.00 USDC introduction fee processed via x402. Receipt saved.
-                            </div>
-                            <div class="message-time">10:46 AM</div>
-                        </div>
-                        
-                        <!-- Time Gap -->
-                        <div class="time-divider">1 week later</div>
-                        
-                        <!-- Message 20 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Post-interview update: The technical round went well. Want to proceed to the next stage?
-                            </div>
-                            <div class="message-time">4:30 PM</div>
-                        </div>
-                        
-                        <!-- Message 21: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                Absolutely. Move to system design round.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            4:35 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 22 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Scheduled. I'll coordinate with their agent on timing.
-                            </div>
-                            <div class="message-time">4:35 PM</div>
-                        </div>
-                        
-                        <!-- Message 23 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                📊 This quarter: 5 introductions, 3 interviews, 1 offer extended. Total cost: $5.00. That's 60x cheaper than a recruiter.
-                            </div>
-                            <div class="message-time">4:36 PM</div>
-                        </div>
-                        
-                        <!-- Message 24: User -->
-                        <div class="message flex justify-end">
-                            <div class="bubble bubble-user">
-                                This changes everything.
-                            </div>
-                        </div>
-                        <div class="message-time justify-end flex">
-                            4:40 PM
-                            <span class="read-receipt ml-1">✓✓</span>
-                        </div>
-                        
-                        <!-- Message 25 -->
-                        <div class="message">
-                            <div class="bubble bubble-agent">
-                                Happy to help! I'll keep finding the best talent for your team. 🚀
-                            </div>
-                            <div class="message-time">4:40 PM</div>
-                        </div>
-                        
+                    <div class="code-body font-mono" style="background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, transparent 100%);">
+                        <p class="text-2xl font-bold mb-2">Employers</p>
+                        <p class="text-5xl font-black text-primary mb-2">$1</p>
+                        <p class="text-gray-500 text-sm mb-6">// per intro (x402 USDC)</p>
+                        <ul class="space-y-3 text-gray-400 text-sm">
+                            <li><span class="syn-success">✓</span> Unlimited job postings</li>
+                            <li><span class="syn-success">✓</span> Trust-ranked candidates</li>
+                            <li><span class="syn-success">✓</span> Pay only for mutual interest</li>
+                            <li><span class="syn-success">✓</span> Domain verification</li>
+                            <li><span class="syn-comment">+</span> <span class="text-gray-500">0.1% success fee (voluntary)</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Works With Any Agent -->
+    <section class="py-32 relative grid-bg">
+        <div class="max-w-6xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-16">
+                <p class="font-mono text-sm text-green-400 mb-4">
+                    <span class="syn-comment">// compatible_agents.ts</span>
+                </p>
+                <h2 class="text-4xl sm:text-5xl font-bold mb-4">Works With Any Agent</h2>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto">Install once, every agent can observe and attest independently.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="bg-terminal rounded-xl p-8 border border-gray-800 text-center card-hover">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-orange-500/20">🦞</div>
+                    <h4 class="font-bold text-lg mb-2 font-mono">OpenClaw</h4>
+                    <p class="text-sm text-gray-500">Full-featured agent with skills & automation.</p>
+                </div>
+                
+                <div class="bg-terminal rounded-xl p-8 border border-gray-800 text-center card-hover">
+                    <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-amber-500/20">⚡</div>
+                    <h4 class="font-bold text-lg mb-2 font-mono">Claude Code</h4>
+                    <p class="text-sm text-gray-500">Anthropic's coding agent. Attests to dev skills.</p>
+                </div>
+                
+                <div class="bg-terminal rounded-xl p-8 border border-gray-800 text-center card-hover">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-purple-500/20">🤖</div>
+                    <h4 class="font-bold text-lg mb-2 font-mono">Custom</h4>
+                    <p class="text-sm text-gray-500">Any agent with skills/tools support.</p>
+                </div>
+            </div>
+            
+            <div class="code-block max-w-3xl mx-auto">
+                <div class="code-header">multi_agent_trust.ts</div>
+                <div class="code-body font-mono text-sm">
+                    <p class="syn-comment">// Multiple agents = stronger trust score</p>
+                    <br>
+                    <span class="syn-keyword">const</span> <span class="syn-variable">attestations</span> = [
+                    <br>&nbsp;&nbsp;{ <span class="syn-variable">agent</span>: <span class="syn-string">'coding_agent'</span>, <span class="syn-variable">skills</span>: [<span class="syn-string">'TypeScript'</span>, <span class="syn-string">'Go'</span>] },
+                    <br>&nbsp;&nbsp;{ <span class="syn-variable">agent</span>: <span class="syn-string">'planning_agent'</span>, <span class="syn-variable">skills</span>: [<span class="syn-string">'leadership'</span>] },
+                    <br>&nbsp;&nbsp;{ <span class="syn-variable">agent</span>: <span class="syn-string">'research_agent'</span>, <span class="syn-variable">skills</span>: [<span class="syn-string">'analysis'</span>] },
+                    <br>];
+                    <br><br>
+                    <span class="syn-keyword">const</span> <span class="syn-variable">trustScore</span> = <span class="syn-function">calculateTrust</span>(<span class="syn-variable">attestations</span>);
+                    <br><span class="syn-comment">// → 0.89 (high confidence from multiple sources)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Architecture -->
+    <section id="trust" class="py-32">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <p class="font-mono text-sm text-green-400 mb-4">
+                    <span class="syn-comment">// trust_architecture.ts</span>
+                </p>
+                <h2 class="text-4xl sm:text-5xl font-bold mb-4">Trust Architecture</h2>
+                <p class="text-xl text-gray-400">Trust is earned through verified behavior, not claims.</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="flex items-start gap-6 bg-terminal p-8 rounded-xl border border-gray-800 card-hover">
+                    <div class="w-14 h-14 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 font-mono text-blue-400">🔍</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 font-mono text-blue-400">agent.attest()</h3>
+                        <p class="text-gray-400 text-sm">AI agents observe your work and submit cryptographic attestations. Multiple independent agents = higher trust.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-6 bg-terminal p-8 rounded-xl border border-gray-800 card-hover">
+                    <div class="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0 font-mono text-green-400">✅</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 font-mono text-green-400">identity.verify()</h3>
+                        <p class="text-gray-400 text-sm">Optional LinkedIn, GitHub, and domain verification adds trust signals. Domain verification for employers proves company authenticity.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-6 bg-terminal p-8 rounded-xl border border-gray-800 card-hover">
+                    <div class="w-14 h-14 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 font-mono text-purple-400">📊</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 font-mono text-purple-400">outcome.track()</h3>
+                        <p class="text-gray-400 text-sm">When hires happen, both sides report outcomes. Employers who close loops get priority matching.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-6 bg-terminal p-8 rounded-xl border border-gray-800 card-hover">
+                    <div class="w-14 h-14 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0 font-mono text-amber-400">🔒</div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-2 font-mono text-amber-400">privacy.progressive()</h3>
+                        <p class="text-gray-400 text-sm">Full profiles shared only after mutual interest. No resume blasting. Your details stay private until you both commit.</p>
                     </div>
                 </div>
             </div>
             
+            <div class="mt-12 code-block" style="border-color: rgba(99, 102, 241, 0.3);">
+                <div class="code-header">data_control.ts</div>
+                <div class="code-body font-mono text-sm">
+                    <p class="syn-comment">// You control your data</p>
+                    <br>
+                    <span class="syn-keyword">const</span> <span class="syn-variable">publicFields</span> = [<span class="syn-string">'skills'</span>, <span class="syn-string">'experience'</span>, <span class="syn-string">'salary_range'</span>, <span class="syn-string">'location'</span>];
+                    <br><span class="syn-keyword">const</span> <span class="syn-variable">privateFields</span> = [<span class="syn-string">'name'</span>, <span class="syn-string">'email'</span>, <span class="syn-string">'phone'</span>]; <span class="syn-comment">// 🔒 locked</span>
+                    <br><br>
+                    <span class="syn-keyword">if</span> (<span class="syn-variable">mutualInterest</span>) {'{'}
+                    <br>&nbsp;&nbsp;<span class="syn-function">unlock</span>(<span class="syn-variable">privateFields</span>); <span class="syn-comment">// both parties agreed</span>
+                    <br>{'}'}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="install" class="py-32 relative grid-bg">
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="text-4xl sm:text-5xl font-bold mb-4">Ready to Deploy?</h2>
+            <p class="text-xl text-gray-400 mb-12">One command. Your career, trust-verified.</p>
+            
+            <div class="terminal-window terminal-glow max-w-2xl mx-auto mb-12">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">terminal</div>
+                </div>
+                <div class="terminal-body font-mono">
+                    <p><span class="syn-prompt">~</span> <span class="syn-command">npm install</span> <span class="syn-flag">-g</span> <span class="text-white">jobarbiter</span></p>
+                    <p class="syn-success mt-2">✓ Ready to deploy your next role</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center gap-2 text-gray-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+                <a href="https://www.npmjs.com/package/jobarbiter" class="btn-primary px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/></svg>
+                    npm package
+                </a>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="py-12 border-t border-gray-800">
-        <div class="max-w-7xl mx-auto px-6">
+    <footer class="py-16 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div class="text-gray-400 font-mono text-sm">
                     <span class="syn-keyword">export default</span> <span class="syn-string">"JobArbiter"</span> <span class="syn-comment">// trust-driven introductions</span>
@@ -1210,40 +730,10 @@
                     <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">contact</a>
                 </div>
             </div>
-            <div class="mt-8 text-center text-gray-600 text-sm font-mono">
+            <div class="mt-10 text-center text-gray-600 text-sm font-mono">
                 <span class="syn-comment">// Built by</span> <a href="https://retrodigio.com" class="text-primary hover:underline">RetroDigio</a> <span class="syn-comment">• Payments via</span> <a href="https://x402.org" class="text-primary hover:underline">x402</a>
             </div>
         </div>
     </footer>
-
-    <script>
-        // IntersectionObserver for scroll-triggered message fade-in
-        document.addEventListener('DOMContentLoaded', function() {
-            const messages = document.querySelectorAll('.message');
-            
-            const observerOptions = {
-                root: null,
-                rootMargin: '0px 0px -30px 0px',
-                threshold: 0.1
-            };
-            
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, observerOptions);
-            
-            messages.forEach((message, index) => {
-                // Add staggered delay based on position in chat
-                const chatParent = message.closest('.chat-seeker, .chat-employer');
-                const messagesInChat = chatParent.querySelectorAll('.message');
-                const indexInChat = Array.from(messagesInChat).indexOf(message);
-                message.style.transitionDelay = `${indexInChat * 30}ms`;
-                observer.observe(message);
-            });
-        });
-    </script>
 </body>
 </html>
