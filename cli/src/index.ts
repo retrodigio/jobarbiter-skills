@@ -76,7 +76,7 @@ program
 // ============================================================
 
 program
-	.command("verify")
+	.command("verify-email")
 	.description("Verify email with code (if registration was interrupted)")
 	.requiredOption("--email <email>", "Email address")
 	.option("--code <code>", "6-digit verification code")
@@ -746,7 +746,7 @@ program
 // verify
 // ============================================================
 
-const verify = program.command("verify").description("Identity verification");
+const verify = program.command("identity").description("Identity verification (GitHub, LinkedIn, domain)");
 
 verify
 	.command("linkedin <url>")
