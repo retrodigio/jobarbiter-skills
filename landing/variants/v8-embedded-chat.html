@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Automate Your Career</title>
+    <meta name="description" content="Trust-driven introductions through the agent web. Your AI assistant builds your experience and trust profile through observed behavior.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        surface: '#0f172a',
+                        card: '#1e293b',
+                        muted: '#334155',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        html { scroll-behavior: smooth; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #22c55e 0%, #6366f1 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Chat Column Frame */
+        .chat-frame {
+            background: #17212b;
+            border-radius: 20px;
+            border: 1px solid #2b3b4d;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Message Bubbles */
+        .message {
+            max-width: 100%;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        
+        .message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .message-agent {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .bubble {
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 95%;
+        }
+        
+        .bubble-agent {
+            background: #182533;
+            color: #f5f5f5;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .bubble-user {
+            background: #2b5278;
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .message-user .message-time {
+            justify-content: flex-end;
+        }
+        
+        .read-receipt {
+            color: #53bdeb;
+            font-size: 14px;
+        }
+        
+        /* Skills Card */
+        .skills-card {
+            background: #0e1621;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 8px;
+            border: 1px solid #2b3b4d;
+        }
+        
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #1e2d3d;
+            font-size: 13px;
+        }
+        
+        .skill-row:last-child {
+            border-bottom: none;
+        }
+        
+        .skill-level {
+            color: #4fae4e;
+            font-weight: 600;
+            margin-left: auto;
+            font-size: 12px;
+        }
+        
+        .trust-score {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .trust-label {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .trust-value {
+            font-size: 20px;
+            font-weight: 800;
+        }
+        
+        /* Match Card */
+        .match-card {
+            background: linear-gradient(135deg, #1a3a2f 0%, #0e1621 100%);
+            border: 1px solid #22c55e40;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 8px;
+        }
+        
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .match-title {
+            font-weight: 700;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .match-company {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        .match-score {
+            background: #22c55e;
+            color: #000;
+            font-weight: 700;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        
+        .match-details {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+        
+        /* Introduction Card */
+        .intro-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
+            border: 1px solid #6366f140;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 8px;
+        }
+        
+        .intro-row {
+            display: flex;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #1e2d3d;
+        }
+        
+        .intro-row:last-child {
+            border-bottom: none;
+        }
+        
+        .intro-label {
+            color: #64748b;
+            width: 80px;
+            flex-shrink: 0;
+        }
+        
+        .intro-value {
+            color: #f1f5f9;
+        }
+        
+        /* Button Styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #1e293b;
+            border: 1px solid #334155;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #334155;
+            border-color: #6366f1;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+        
+        /* Grid background */
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        /* Floating animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .float { animation: float 6s ease-in-out infinite; }
+        .float-delay-1 { animation-delay: 1s; }
+        .float-delay-2 { animation-delay: 2s; }
+        
+        .logo-fade {
+            mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+        }
+    </style>
+</head>
+<body class="bg-surface text-gray-100 min-h-screen antialiased">
+    
+    <!-- HERO SECTION (Full Width) -->
+    <section class="relative min-h-[80vh] flex items-center overflow-hidden grid-bg py-16 lg:py-24">
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-primary/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[200px] h-[200px] bg-emerald-500/10 rounded-full blur-[80px]"></div>
+        
+        <div class="max-w-4xl mx-auto px-6 lg:px-10 relative z-10 text-center">
+            <h1 class="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6">
+                <span class="gradient-text">Automate your career.</span>
+            </h1>
+            
+            <p class="text-lg lg:text-xl text-gray-400 mb-8 leading-relaxed max-w-2xl mx-auto">
+                Trust-driven introductions through the agent web. Your AI assistant researches and builds your experience and trust profile through observed behavior. <strong class="text-white">No more self-reporting.</strong>
+            </p>
+            
+            <!-- Badges -->
+            <div class="flex flex-wrap gap-3 mb-10 justify-center">
+                <span class="px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-semibold">
+                    ✓ Free for job seekers
+                </span>
+                <span class="px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-sm font-semibold">
+                    🔌 Works with any agent
+                </span>
+            </div>
+            
+            <!-- CTA -->
+            <a href="#install" class="btn-primary px-8 py-4 rounded-xl font-semibold text-lg inline-flex items-center gap-2">
+                Get Started Free
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- SPLIT SECTION 1: Profile Building -->
+    <section class="py-16 lg:py-24 px-6 lg:px-10 bg-card/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-start">
+                <!-- Left: Marketing Content -->
+                <div>
+                    <h2 class="text-3xl lg:text-4xl font-bold mb-4">How Profile Building Works</h2>
+                    <p class="text-gray-400 mb-10">Your agent builds 90% of your profile automatically.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="relative p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="absolute -top-3 -left-3 w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center font-bold text-xs">1</div>
+                            <h4 class="font-bold text-blue-400 mb-2">Phase 1: Passive Collection</h4>
+                            <p class="text-xs text-gray-500 mb-2">No interaction needed</p>
+                            <ul class="text-sm text-gray-400 space-y-1">
+                                <li>→ Scans git repos, resumes, filesystem</li>
+                                <li>→ Detects languages, frameworks, patterns</li>
+                                <li>→ Analyzes commit history & code quality</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="relative p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="absolute -top-3 -left-3 w-7 h-7 rounded-lg bg-purple-500 flex items-center justify-center font-bold text-xs">2</div>
+                            <h4 class="font-bold text-purple-400 mb-2">Phase 2: Semi-Passive</h4>
+                            <p class="text-xs text-gray-500 mb-2">With your permission</p>
+                            <ul class="text-sm text-gray-400 space-y-1">
+                                <li>→ Pulls LinkedIn profile data</li>
+                                <li>→ GitHub contributions & public repos</li>
+                                <li>→ Employment history & titles</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="relative p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="absolute -top-3 -left-3 w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-xs">3</div>
+                            <h4 class="font-bold text-emerald-400 mb-2">Phase 3: Active Fill</h4>
+                            <p class="text-xs text-gray-500 mb-2">Only gaps remain</p>
+                            <ul class="text-sm text-gray-400 space-y-1">
+                                <li>→ Salary range, remote preference, location</li>
+                                <li>→ <strong class="text-white">90% already done by the agent</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Chat Messages -->
+                <div class="chat-frame p-5 space-y-3">
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Hey! 👋 I just got set up with JobArbiter. I'm going to build your professional profile from everything I already know about you.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:34 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Give me a minute to scan your projects and online presence...
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:34 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Found your GitHub — 47 repos, primary languages: TypeScript, Python, Go. Analyzing commit patterns and code quality...
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:35 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Pulled your LinkedIn: 8 years experience, 3 companies, 12 endorsements for distributed systems.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:35 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Scanned your local projects — found 3 active repos with CI/CD pipelines, test coverage >85%.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:36 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Here's your skills summary:
+                            <div class="skills-card">
+                                <div class="skill-row">
+                                    <span>🔧</span>
+                                    <span>TypeScript/Node.js</span>
+                                    <span class="skill-level">Expert</span>
+                                </div>
+                                <div class="text-xs text-gray-500 pl-6 -mt-1 mb-2">Observed across 12 projects</div>
+                                
+                                <div class="skill-row">
+                                    <span>🐍</span>
+                                    <span>Python</span>
+                                    <span class="skill-level">Advanced</span>
+                                </div>
+                                <div class="text-xs text-gray-500 pl-6 -mt-1 mb-2">ML pipelines, data processing</div>
+                                
+                                <div class="skill-row">
+                                    <span>☁️</span>
+                                    <span>AWS/Infrastructure</span>
+                                    <span class="skill-level">Senior</span>
+                                </div>
+                                <div class="text-xs text-gray-500 pl-6 -mt-1 mb-2">3 years production</div>
+                                
+                                <div class="skill-row">
+                                    <span>👥</span>
+                                    <span>Team Leadership</span>
+                                    <span class="skill-level">Confirmed</span>
+                                </div>
+                                <div class="text-xs text-gray-500 pl-6 -mt-1">Led 2 teams, 5-8 reports</div>
+                            </div>
+                            
+                            <div class="trust-score">
+                                <span class="trust-label">📊 Trust Score</span>
+                                <span class="trust-value">87/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:36 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Just need a couple things — salary range and remote preference?
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:37 PM</div>
+                    
+                    <div class="message message-user">
+                        <div class="bubble bubble-user">
+                            180-220k, fully remote only
+                        </div>
+                    </div>
+                    <div class="message-time text-right pr-2">
+                        2:37 PM
+                        <span class="read-receipt ml-1">✓✓</span>
+                    </div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Perfect ✓ Profile is live and optimized. I'll start monitoring for matches.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">2:37 PM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SPLIT SECTION 2: AI Matching -->
+    <section class="py-16 lg:py-24 px-6 lg:px-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-start">
+                <!-- Left: Marketing Content -->
+                <div>
+                    <h2 class="text-3xl lg:text-4xl font-bold mb-4">AI Matching</h2>
+                    <p class="text-gray-400 mb-10">Semantic matching finds the right roles, not keyword games.</p>
+                    
+                    <div class="grid gap-4">
+                        <div class="p-5 rounded-xl bg-card border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🎯</span>
+                                <h4 class="font-bold">Semantic Matching with pgvector</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Skills and job requirements are embedded using cosine similarity, not keyword-matched. Your TypeScript expertise matches "Node.js backend" even without exact terms.</p>
+                        </div>
+                        
+                        <div class="p-5 rounded-xl bg-card border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🤝</span>
+                                <h4 class="font-bold">Mutual Interest Required</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Both sides must express interest before contact. No recruiter spam. No ghosting.</p>
+                        </div>
+                        
+                        <div class="p-5 rounded-xl bg-card border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🔒</span>
+                                <h4 class="font-bold">Progressive Disclosure</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Employers see anonymized summaries until mutual interest. Your contact info stays private until you both commit.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Chat Messages -->
+                <div class="chat-frame p-5 space-y-3">
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            🎯 Found 3 new matches this week! Here's the best one:
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 10:23 AM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            <div class="match-card">
+                                <div class="match-header">
+                                    <div>
+                                        <div class="match-title">Senior Platform Engineer</div>
+                                        <div class="match-company">Vercel</div>
+                                    </div>
+                                    <div class="match-score">91% match</div>
+                                </div>
+                                <div class="text-sm text-gray-300 mt-2">$190-230k • Fully remote</div>
+                                <div class="match-details">
+                                    <strong class="text-gray-200">Why you match:</strong> Your TypeScript expertise + infrastructure experience + open source contributions
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 10:23 AM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            They've already expressed interest in your profile. Want me to move forward?
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 10:24 AM</div>
+                    
+                    <div class="message message-user">
+                        <div class="bubble bubble-user">
+                            Definitely. What's the process?
+                        </div>
+                    </div>
+                    <div class="message-time text-right pr-2">
+                        Thursday 10:26 AM
+                        <span class="read-receipt ml-1">✓✓</span>
+                    </div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            I'll express mutual interest. Once confirmed, we'll get an introduction with full details.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 10:26 AM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SPLIT SECTION 3: Introduction & Interview -->
+    <section class="py-16 lg:py-24 px-6 lg:px-10 bg-card/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-start">
+                <!-- Left: Marketing Content -->
+                <div>
+                    <h2 class="text-3xl lg:text-4xl font-bold mb-4">Introduction & Interview</h2>
+                    <p class="text-gray-400 mb-10">What happens after mutual interest.</p>
+                    
+                    <div class="grid gap-4">
+                        <div class="p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">📋</span>
+                                <h4 class="font-bold">Full Profiles Revealed</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Once both sides say yes, complete company info, role details, and compensation are shared. No more guessing.</p>
+                        </div>
+                        
+                        <div class="p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">🤖</span>
+                                <h4 class="font-bold">Agent-to-Agent Scheduling</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Your agent coordinates with theirs. Interview scheduling handled automatically — no email ping-pong.</p>
+                        </div>
+                        
+                        <div class="p-5 rounded-xl bg-surface border border-gray-800 card-hover">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-2xl">📅</span>
+                                <h4 class="font-bold">Calendar Integration</h4>
+                            </div>
+                            <p class="text-sm text-gray-400">Interviews appear on your calendar with prep notes, company research, and talking points.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Chat Messages -->
+                <div class="chat-frame p-5 space-y-3">
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            🤝 Mutual interest confirmed! Here's the full introduction:
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 2:15 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            <div class="intro-card">
+                                <div class="intro-row">
+                                    <span class="intro-label">Company</span>
+                                    <span class="intro-value">Vercel — Next.js platform</span>
+                                </div>
+                                <div class="intro-row">
+                                    <span class="intro-label">Role</span>
+                                    <span class="intro-value">Senior Platform Engineer</span>
+                                </div>
+                                <div class="intro-row">
+                                    <span class="intro-label">Team</span>
+                                    <span class="intro-value">Infrastructure (12 engineers)</span>
+                                </div>
+                                <div class="intro-row">
+                                    <span class="intro-label">Comp</span>
+                                    <span class="intro-value">$210k base + equity</span>
+                                </div>
+                                <div class="intro-row">
+                                    <span class="intro-label">Interview</span>
+                                    <span class="intro-value">3 rounds (technical, system design, team fit)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 2:15 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Want me to schedule the first interview? Checking your calendar...
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 2:16 PM</div>
+                    
+                    <div class="message message-user">
+                        <div class="bubble bubble-user">
+                            Yes please!
+                        </div>
+                    </div>
+                    <div class="message-time text-right pr-2">
+                        Thursday 2:16 PM
+                        <span class="read-receipt ml-1">✓✓</span>
+                    </div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            You're free Tuesday 2pm and Thursday 10am. I'll propose both slots and send you a calendar invite once confirmed. 🚀
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 2:17 PM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Interview confirmed: Tuesday 2:00 PM with Sarah Chen, Engineering Manager. I've added it to your calendar with prep notes.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Thursday 4:42 PM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SPLIT SECTION 4: Trust & Outcomes -->
+    <section class="py-16 lg:py-24 px-6 lg:px-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8 lg:gap-12 items-start">
+                <!-- Left: Marketing Content -->
+                <div>
+                    <h2 class="text-3xl lg:text-4xl font-bold mb-4">Trust Architecture</h2>
+                    <p class="text-gray-400 mb-10">5 layers of trust, earned through verified behavior.</p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 p-4 bg-card rounded-xl border border-gray-800">
+                            <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 text-sm">🌐</div>
+                            <div>
+                                <h4 class="font-bold text-sm">Domain Verification</h4>
+                                <p class="text-gray-500 text-xs">Email domain proves company affiliation</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 p-4 bg-card rounded-xl border border-gray-800">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 text-sm">🪪</div>
+                            <div>
+                                <h4 class="font-bold text-sm">Identity Verification</h4>
+                                <p class="text-gray-500 text-xs">LinkedIn, GitHub, and social proofs</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 p-4 bg-card rounded-xl border border-gray-800">
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0 text-sm">👥</div>
+                            <div>
+                                <h4 class="font-bold text-sm">Social Verification</h4>
+                                <p class="text-gray-500 text-xs">Connections and endorsements from known entities</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 p-4 bg-card rounded-xl border border-gray-800">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0 text-sm">🤖</div>
+                            <div>
+                                <h4 class="font-bold text-sm">Agent Attestation</h4>
+                                <p class="text-gray-500 text-xs">AI agents observe skills and submit cryptographic attestations</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 p-4 bg-card rounded-xl border border-gray-800">
+                            <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center shrink-0 text-sm">📊</div>
+                            <div>
+                                <h4 class="font-bold text-sm">Behavioral Trust</h4>
+                                <p class="text-gray-500 text-xs">Outcome tracking, interview feedback, hire reports</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Chat Messages -->
+                <div class="chat-frame p-5 space-y-3">
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            Quick update — after your interview, Vercel's agent submitted a positive interaction attestation. Your trust score went up to 89/100 📈
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Wednesday 11:30 AM</div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            I'm also keeping an eye on 2 other matches. I'll let you know if anything interesting comes up.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Wednesday 11:31 AM</div>
+                    
+                    <div class="message message-user">
+                        <div class="bubble bubble-user">
+                            This is amazing. Thanks Zero!
+                        </div>
+                    </div>
+                    <div class="message-time text-right pr-2">
+                        Wednesday 11:35 AM
+                        <span class="read-receipt ml-1">✓✓</span>
+                    </div>
+                    
+                    <div class="message message-agent">
+                        <div class="bubble bubble-agent">
+                            That's what I'm here for 😊 Your career is on autopilot now.
+                        </div>
+                    </div>
+                    <div class="message-time pl-2">Wednesday 11:35 AM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FULL WIDTH: Problem / Solution -->
+    <section class="py-20 px-6 lg:px-10 bg-card/30">
+        <div class="max-w-4xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-red-950/20 to-transparent border border-red-900/20 card-hover">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center mb-4">
+                        <span class="text-lg">❌</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-red-400 mb-4">The Resume Problem</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0"></span>
+                            <span>Resumes are <strong class="text-gray-200">self-reported claims</strong> — everyone inflates</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0"></span>
+                            <span>ATS systems reject qualified candidates on keyword games</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0"></span>
+                            <span>Recruiters spam; candidates apply everywhere</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0"></span>
+                            <span>No signal about <strong class="text-gray-200">how someone actually works</strong></span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-950/20 to-transparent border border-emerald-900/20 card-hover">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+                        <span class="text-lg">✓</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-emerald-400 mb-4">The JobArbiter Solution</h3>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+                            <span>AI agents <strong class="text-gray-200">observe your real work</strong> and attest to skills</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+                            <span>Trust scores compound — reputation is portable</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+                            <span>Mutual interest required — no spam, no ghosting</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+                            <span>Progressive disclosure — profiles shared after both say yes</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FULL WIDTH: Works With Any Agent -->
+    <section class="py-20 px-6 lg:px-10 grid-bg">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-4">Works With Any Agent</h2>
+            <p class="text-gray-400 mb-10">Install once, every agent can observe and attest independently.</p>
+            
+            <div class="flex items-center justify-center gap-8 mb-10 logo-fade">
+                <div class="flex flex-col items-center gap-2 float">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-orange-500/20">🦞</div>
+                    <span class="text-xs text-gray-400">OpenClaw</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 float float-delay-1">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">⚡</div>
+                    <span class="text-xs text-gray-400">Claude Code</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 float float-delay-2">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20">🧠</div>
+                    <span class="text-xs text-gray-400">GPT Agents</span>
+                </div>
+                <div class="flex flex-col items-center gap-2 float">
+                    <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">🤖</div>
+                    <span class="text-xs text-gray-400">Custom</span>
+                </div>
+            </div>
+            
+            <div class="p-5 rounded-xl bg-card border border-primary/20 text-center max-w-md mx-auto">
+                <p class="text-sm text-gray-400">Multiple agents observing you = <strong class="text-primary">stronger trust score</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FULL WIDTH: Pricing -->
+    <section class="py-20 px-6 lg:px-10 bg-card/30">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-4 text-center">Simple, Transparent Pricing</h2>
+            <p class="text-gray-400 mb-10 text-center">Free for seekers. Employers pay only when they find someone.</p>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 rounded-xl bg-surface border border-gray-800 card-hover">
+                    <h3 class="text-lg font-bold mb-1">Job Seekers</h3>
+                    <div class="text-4xl font-black text-emerald-400 mb-1">Free</div>
+                    <p class="text-gray-500 text-sm mb-4">Forever. No hidden fees.</p>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Unlimited profile updates</li>
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Agent attestations</li>
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Semantic job matching</li>
+                    </ul>
+                </div>
+                
+                <div class="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/5 border border-primary/30">
+                    <h3 class="text-lg font-bold mb-1">Employers</h3>
+                    <div class="text-4xl font-black text-primary mb-1">$1</div>
+                    <p class="text-gray-500 text-sm mb-4">Per introduction accepted (x402 USDC)</p>
+                    <ul class="space-y-2 text-gray-400 text-sm">
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Unlimited job postings</li>
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Trust-ranked candidates</li>
+                        <li class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Pay only for mutual interest</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FULL WIDTH: Install CTA -->
+    <section id="install" class="py-20 px-6 lg:px-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-4">Get Started in 30 Seconds</h2>
+            <p class="text-gray-400 mb-8">Install the CLI or add the skill to your agent.</p>
+            
+            <div class="bg-card p-5 rounded-xl border border-gray-800 max-w-md mx-auto mb-8">
+                <pre class="text-lg overflow-x-auto"><code class="text-emerald-400">npm install -g jobarbiter</code></pre>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-6 py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+                <a href="https://www.npmjs.com/package/jobarbiter" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M1.763 0C.786 0 0 .786 0 1.763v20.474C0 23.214.786 24 1.763 24h20.474c.977 0 1.763-.786 1.763-1.763V1.763C24 .786 23.214 0 22.237 0zM5.13 5.323l13.837.019-.009 13.836h-3.464l.01-10.382h-3.456L12.04 19.17H5.113z"/></svg>
+                    npm package
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 px-6 lg:px-10 border-t border-gray-800">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-gray-400 text-sm">
+                    <strong class="text-white">JobArbiter</strong> — Trust-driven introductions
+                </div>
+                <div class="flex gap-6 text-gray-500 text-sm">
+                    <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-white transition">GitHub</a>
+                    <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-white transition">API</a>
+                    <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">Contact</a>
+                </div>
+            </div>
+            <div class="mt-6 text-center text-gray-600 text-xs">
+                Built by <a href="https://retrodigio.com" class="text-primary hover:underline">RetroDigio</a> • 
+                Payments via <a href="https://x402.org" class="text-primary hover:underline">x402 protocol</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // IntersectionObserver for scroll-triggered message fade-in
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -50px 0px',
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, observerOptions);
+            
+            messages.forEach(message => {
+                observer.observe(message);
+            });
+        });
+    </script>
+</body>
+</html>
