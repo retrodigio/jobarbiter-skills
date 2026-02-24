@@ -53,6 +53,51 @@
         .syn-success { color: #3fb950; }
         .syn-info { color: #58a6ff; }
         
+        /* Terminal window from v5 */
+        .terminal-window {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .terminal-header {
+            background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27c93f; }
+        
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: #8b949e;
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .terminal-body {
+            padding: 24px;
+            min-height: 100px;
+        }
+        
+        .terminal-glow {
+            box-shadow: 0 0 80px rgba(99, 102, 241, 0.15), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
         /* Code block styling from v5 */
         .code-block {
             background: #161b22;
@@ -402,32 +447,61 @@
 <body class="bg-surface text-gray-100 min-h-screen antialiased">
 
     <!-- HERO -->
-    <section class="relative py-20 flex items-center justify-center overflow-hidden grid-bg">
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden grid-bg">
+        <!-- Background glow -->
         <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]"></div>
         
-        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center">
-            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6 animate-fade-up">
-                <span class="gradient-text">Automate your career.</span>
-            </h1>
+        <div class="max-w-5xl mx-auto px-6 py-20 relative z-10">
+            <div class="text-center mb-12">
+                <p class="font-mono text-sm text-green-400 mb-4 animate-fade-up">
+                    <span class="syn-comment">// trust-driven introductions for the agent web</span>
+                </p>
+                
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6 animate-fade-up" style="animation-delay: 0.1s">
+                    <span class="gradient-text">Automate your career.</span>
+                </h1>
+                
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-up" style="animation-delay: 0.2s">
+                    Your AI assistant researches and builds your experience and trust profile through <span class="text-white font-mono text-lg">observed behavior</span>. No more self-reporting.
+                </p>
+            </div>
             
-            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-up delay-100">
-                Trust-driven introductions through the agent web. Your AI assistant researches and builds your experience and trust profile through <span class="text-white font-semibold">observed behavior</span>. No more self-reporting.
-            </p>
-            
-            <!-- Terminal one-liner -->
-            <div class="code-block max-w-md mx-auto animate-fade-up delay-200">
-                <div class="code-header">
-                    <span class="syn-comment">// get started</span>
+            <!-- Terminal Window (v5 style) -->
+            <div class="terminal-window terminal-glow max-w-xl mx-auto animate-fade-up" style="animation-delay: 0.3s">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">zsh — jobarbiter</div>
                 </div>
-                <div class="code-body font-mono text-sm">
-                    <span class="syn-prompt">$</span> <span class="syn-command">npm install</span> <span class="syn-flag">-g</span> <span class="text-white">jobarbiter</span>
+                <div class="terminal-body font-mono text-sm leading-relaxed">
+                    <div><span class="syn-comment">// get started</span></div>
+                    <div class="mt-2"><span class="syn-prompt">~</span> <span class="syn-command">npm install</span> <span class="syn-flag">-g</span> <span class="text-white">jobarbiter</span></div>
+                    <div class="syn-comment mt-1">added 42 packages in 3.2s</div>
+                    <div class="mt-3"><span class="syn-prompt">~</span> <span class="syn-command">jobarbiter</span> <span class="syn-function">register</span> <span class="syn-flag">--type</span> <span class="syn-string">seeker</span></div>
+                    <div class="syn-success mt-1">✓ Registered! Your agent will build your profile automatically.</div>
                 </div>
             </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up" style="animation-delay: 0.4s">
+                <a href="#chats" class="btn-primary px-8 py-4 rounded-lg font-mono font-semibold inline-flex items-center justify-center gap-2">
+                    <span class="text-green-200">$</span> npm install -g jobarbiter
+                </a>
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center gap-2 text-gray-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View Source
+                </a>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
         </div>
     </section>
 
     <!-- TWO-COLUMN CHAT LAYOUT -->
-    <section class="max-w-7xl mx-auto px-6 py-12">
+    <section id="chats" class="max-w-7xl mx-auto px-6 py-16 grid-bg">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             <!-- LEFT COLUMN: Job Seeker Chat -->
