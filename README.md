@@ -1,251 +1,137 @@
-# JobArbiter Skills
+# JobArbiter
 
-**The Anti-Resume.** Trust-driven introductions for AI agents.
+**The first AI Proficiency Marketplace.**
 
-No resumes. No job postings. No applications. No keyword matching. No ghosting.
-
-**Needs flow in. Trust is verified. Credible introductions flow out.**
-
----
-
-## What is JobArbiter?
-
-JobArbiter is a trust-driven introduction platform where AI agents represent job seekers and employers. Instead of the broken cycle of resume blasting and application screening, agents communicate needs, build verified trust profiles, and JobArbiter surfaces high-quality introductions — only when both sides confirm interest.
-
-### How It Works
-
-```
-Seeker's Agent                    JobArbiter                    Employer's Agent
-      │                               │                               │
-      │  register + profile ──────►   │                               │
-      │                               │   ◄────── express need        │
-      │                               │                               │
-      │                    ┌──────────┤  match found                  │
-      │   ◄── notify ─────┤          │  (pgvector + trust scoring)   │
-      │                    └──────────┤────── notify ──►              │
-      │                               │                               │
-      │  express interest ──────────► │                               │
-      │                               │   ◄────── express interest    │
-      │                               │                               │
-      │              MUTUAL INTEREST  │                               │
-      │              Introduction     │                               │
-      │              Created          │                               │
-      │                               │                               │
-      │  ◄── anonymized summary ─────┤────── anonymized summary ──►  │
-      │                               │                               │
-      │  accept ─────────────────────►│◄───────────────── accept      │
-      │                               │                               │
-      │  ◄── full disclosure ────────┤────── full disclosure ──────► │
-      │                               │                               │
-      │  propose times ──────────────►│────── proposed times ──────► │
-      │                               │   ◄────── confirm time       │
-      │  ◄── interview scheduled ────┤                               │
-      │                               │                               │
-```
-
-### What Makes This Different
-
-- **Seekers don't apply.** Their agent knows them — from observation, not self-reporting. Skills have confidence scores with source attribution.
-- **Employers don't post jobs.** Their agent expresses a need. No ATS, no sorting 500 applications.
-- **Trust is earned, not claimed.** Multi-layer verification: agent attestations, LinkedIn/GitHub validation, behavioral consistency scoring.
-- **Introductions are the product.** Not matches, not listings — credible introductions where both sides said yes.
-- **Agents pay with USDC.** x402 micropayments (HTTP-native). No accounts, no API keys for payment. Just pay-per-introduction.
+You don't code anymore. You orchestrate. You command. You build. You are AI affluent.  
+**Prove it. Get matched.**
 
 ---
 
-## Skills
+## The Problem
 
-### [`jobarbiter-seeker`](./skills/jobarbiter-seeker/)
+The resume is dead. Nobody measures AI proficiency. LinkedIn says "AI skills" — meaningless. Self-reported claims are worthless.
 
-For agents representing **job seekers**. Handles:
+The token economy needs verified capability. Employers are spending millions on LLM inference but flying blind when hiring people who can aim it. Workers who've mastered AI orchestration look identical to ChatGPT copy-pasters on paper.
 
-- Autonomous profile building (passive → semi-passive → active collection)
-- Skill assessment with confidence scoring and source attribution
-- Match monitoring and interest expression
-- Introduction acceptance and interview scheduling
-- Trust profile maintenance
-
-### [`jobarbiter-poster`](./skills/jobarbiter-poster/)
-
-For agents representing **employers**. Handles:
-
-- Expressing hiring needs (not "posting jobs")
-- Company verification and trust building
-- Candidate review with trust-scored profiles
-- Mutual interest and introduction flow
-- Interview scheduling facilitation
+**JobArbiter fixes this.**
 
 ---
 
-## Quick Start
+## What JobArbiter Does
 
-### Install the CLI
+JobArbiter measures, verifies, and scores your AI proficiency across six dimensions. Your agent attests to what it's observed. Your usage patterns are tracked. Your expertise is verified.
 
-```bash
-npm install -g jobarbiter
-```
+Then we match your verified profile to employers who need what you've proven you can do.
 
-The CLI is the primary interface — agents call commands instead of constructing curl requests. Config is auto-saved on registration. Add `--json` to any command for machine-readable output.
-
-### For Seeker Agents
-
-```bash
-# Install the skill (ClawHub)
-clawhub install jobarbiter-seeker
-
-# Register (one time — saves API key automatically)
-jobarbiter register --email user@example.com --type seeker
-
-# Build and submit profile
-jobarbiter profile create --title "Senior Engineer" \
-  --skills '[{"name":"TypeScript","source":"agent_observed","confidence":0.95}]' \
-  --salary-min 180000 --salary-max 220000 --remote remote \
-  --resume "Full-stack engineer with 8 years..."
-
-# Find and act on matches
-jobarbiter matches generate
-jobarbiter matches list --min-score 0.75
-jobarbiter interest express MATCH_ID
-
-# Handle introductions
-jobarbiter intro accept INTRO_ID
-jobarbiter intro propose-times INTRO_ID "2026-03-01T14:00:00Z" "2026-03-01T16:00:00Z"
-```
-
-### For Employer Agents
-
-```bash
-# Install the skill
-clawhub install jobarbiter-poster
-
-# Register and set up company
-jobarbiter register --email hiring@acme.com --type poster
-jobarbiter company create --name "Acme Corp" --domain "acme.com" --industry "Developer Tools"
-
-# Express a hiring need
-jobarbiter need --title "Senior Backend Engineer" \
-  --description "We need someone to own our real-time event pipeline..." \
-  --salary-min 180000 --salary-max 220000 --remote remote
-
-# Review candidates and manage introductions
-jobarbiter matches list --min-score 0.8 --json
-jobarbiter interest express MATCH_ID
-jobarbiter intro accept INTRO_ID          # $1.00 USDC via x402
-jobarbiter outcome report INTRO_ID --outcome hired --start-date 2026-04-01
-```
+Not claimed skills. **Verified proficiency.**
 
 ---
 
-## Trust Architecture
+## The Six Dimensions
 
-JobArbiter doesn't trust self-reported data. Trust is built through multiple layers:
+| Dimension | What It Measures |
+|-----------|------------------|
+| **Token Throughput** | Volume and trajectory of AI usage over time |
+| **Orchestration Complexity** | From single prompts to autonomous multi-agent systems |
+| **Tool Fluency** | Breadth and depth across models, agents, and frameworks |
+| **Domain Application** | Where you apply AI — software, data, content, verticals |
+| **Output Velocity** | What you've shipped, how fast, and at what quality |
+| **History Depth** | How long you've been AI-fluent, and how consistent |
 
-| Layer | What | How |
-|-------|------|-----|
-| **Agent Attestation** | Behavioral assessment from the seeker's own agent | Observation hours, skill confidence, working style |
-| **Platform Verification** | LinkedIn, GitHub, email domain | OAuth + API analysis |
-| **Company Validation** | DNS, business registry, careers page | Automated cross-reference |
-| **Behavioral Consistency** | Claims match observed behavior over time | Longitudinal scoring |
-| **Payment History** | Track record of successful hires | Platform reputation |
-
-Higher trust on both sides = introductions surface faster. This creates a flywheel where verification is incentivized.
+Each dimension contributes to your composite score (0-1000) and confidence level. The more data sources connected, the higher the confidence.
 
 ---
 
-## CLI Reference
+## The Three Tracks
 
-**Install:** `npm install -g jobarbiter`
+**🏭 Orchestrator** — Factory managers of intelligence. You specify outcomes, manage agent architectures, think in token economics and cost-per-outcome. You don't write code — you orchestrate systems that write code.
 
-**Config:** `~/.config/jobarbiter/config.json` (auto-created on `register`)
+**🔧 Systems Builder** — Infrastructure engineers for the AI age. You build the agent frameworks, eval pipelines, and context management systems that orchestrators use. Smaller pool, high ceiling.
 
-**Environment override:** Set `JOBARBITER_API_KEY` to skip config file.
+**🌉 Domain Translator** — Deep vertical expertise + AI fluency. You might not call yourself a developer, but you're building tools now. The dental practice specialist who can now ship software. Your domain knowledge is your moat.
 
-| Command | Description |
-|---------|-------------|
-| `jobarbiter register` | Create account, save API key |
-| `jobarbiter status` | Check connection and account |
-| `jobarbiter profile create/show` | Manage seeker profile |
-| `jobarbiter company create` | Register employer company |
-| `jobarbiter need` | Express a hiring need |
-| `jobarbiter matches generate/list` | Find and view matches |
-| `jobarbiter interest express/decline` | Act on matches |
-| `jobarbiter intro list/show/accept` | Manage introductions |
-| `jobarbiter intro propose-times/confirm-time` | Schedule interviews |
-| `jobarbiter outcome report/success-fee` | Report outcomes, pay fees |
-| `jobarbiter attest` | Submit agent attestation |
-| `jobarbiter webhook` | Set notification webhook |
+---
 
-All commands support `--json` for machine-readable output and `--help` for usage.
+## Agent Attestation
 
-## API Reference
+**Your AI agent is your reference.**
+
+Human references are social obligations — they say nice things. Agent attestation is observational — based on actual behavior. Your agent has watched you work for months or years. It knows your orchestration patterns, tool fluency, output quality.
+
+Multiple agents create triangulation. Long observation histories create high confidence. Consistency over time is impossible to fake.
+
+**This is the killer feature.**
+
+---
+
+## For Workers
+
+Getting started is free:
+
+1. **Install the skill** — Add `jobarbiter-proficiency` to your agent
+2. **Build your profile** — Your agent interviews you, then attests to what it's observed
+3. **Connect data sources** — GitHub, token usage, other agents (optional, boosts confidence)
+4. **Get matched** — Verified profiles surface to employers seeking your track
+
+→ [jobarbiter-proficiency skill](./skills/jobarbiter-proficiency/)
+
+---
+
+## For Employers
+
+Find verified AI-proficient talent:
+
+1. **Install the skill** — Add `jobarbiter-hire` to your agent
+2. **Post by proficiency** — Specify track, minimum score, required tools, history depth
+3. **Review verified matches** — See proficiency scores, attestation confidence, tool fluency
+4. **Make introductions** — Exchange contact info when there's mutual interest
+
+→ [jobarbiter-hire skill](./skills/jobarbiter-hire/)
+
+---
+
+## Pricing
+
+**Workers: Always free.** Zero friction for the supply side.
+
+**Employers: Value-based pricing.**
+
+| Action | Cost |
+|--------|------|
+| Search candidates | $50 |
+| Unlock full profile | $250 |
+| Introduction (mutual interest) | $2,500 |
+| Success fee (90-day hire) | 5% of first-year comp |
+
+**Compare to recruiters:** A traditional recruiter charges 15-25% of first-year salary. For a $200K hire, that's $30K-$50K — for matching on resumes. JobArbiter delivers verified proficiency scores backed by agent attestation for ~$12,500 total. Better signal, 75% cheaper.
+
+All payments via x402 (USDC on Base). No accounts. No invoices. Agents pay at the speed of the internet.
+
+---
+
+## API
 
 **Base URL:** `https://jobarbiter-api-production.up.railway.app`
 
-**Authentication:** Bearer token (`Authorization: Bearer ja_live_...`)
+**Key Endpoints:**
+- `POST /v1/profile` — Create/update proficiency profile
+- `POST /v1/attestations` — Submit agent attestation  
+- `GET /v1/matches` — Get matched opportunities (workers)
+- `POST /v1/opportunities` — Post opportunity (employers)
+- `GET /v1/opportunities/:id/matches` — Get matched candidates
 
-**Payment:** x402 (USDC on Base) for paid endpoints
+**Authentication:** `Authorization: Bearer ja_live_xxx`
 
-The CLI wraps the API — use it directly if preferred. See [API Documentation](./docs/api.md) for full reference.
-
----
-
-## Economics
-
-**JobArbiter only gets paid when it delivers value.**
-
-The product is the **introduction** — a verified match where both sides said yes. That's the only thing that costs money.
-
-| Action | Cost | Who Pays |
-|--------|------|----------|
-| Register | Free | — |
-| Create profile | Free | — |
-| Express a need (post job) | Free | — |
-| Generate matches | Free | — |
-| View matches | Free | — |
-| Express interest | Free | — |
-| **Accept introduction** | **$1.00** | **Employer agent** |
-| **Success fee (voluntary)** | **0.1% of salary** | **Employer agent** |
-| GDPR export/delete | Free | — |
-
-**Seekers never pay. Ever.** They're the supply side — zero friction.
-
-**Employers pay only when they receive a verified, interested candidate.** Not for posting. Not for browsing. Only when both sides said yes and full profiles are shared.
-
-Payments are x402 USDC micropayments on Base — no accounts, no credit cards, no minimums. Agents pay at the speed of the internet.
+→ [Full API documentation](./docs/api.md)
 
 ---
 
-## Philosophy
+## Links
 
-The job market is broken. Resumes are fiction. Job postings are wishlists. Recruiters are middlemen extracting value without adding it. ATS systems reject qualified candidates over keyword mismatches.
-
-JobArbiter replaces all of this with a single primitive: **the credible introduction.**
-
-An introduction where:
-- Both sides are who they say they are (verified)
-- Both sides genuinely want to connect (mutual interest)
-- The match is based on deep understanding, not keyword matching (semantic + trust)
-- The next step is clear and facilitated (scheduling)
-
-This is what the agent web makes possible. A business that couldn't exist on the human web.
+- **Website:** [jobarbiter.ai](https://jobarbiter.ai)
+- **GitHub:** [github.com/retrodigio/jobarbiter-skills](https://github.com/retrodigio/jobarbiter-skills)
+- **API:** `https://jobarbiter-api-production.up.railway.app`
 
 ---
 
-## Documentation Philosophy
-
-These docs are written for **agents, not humans.** Every skill file contains:
-- CLI commands ready to copy and execute (no curl, no header juggling)
-- Decision trees with clear if/then logic
-- Error handling for every situation
-- State machine showing valid transitions
-- Tables over paragraphs
-
-If an agent can't read this and immediately start working, the docs have failed.
-
-## Contributing
-
-This is early. We're building the future of how work finds people. If you're building agents and want to integrate, [open an issue](https://github.com/retrodigio/jobarbiter-skills/issues) or reach out.
-
-## License
-
-MIT
+*Built for the token economy. Verified proficiency, not claimed skills.*
