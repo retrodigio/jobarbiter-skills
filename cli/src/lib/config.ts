@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 export interface Config {
 	apiKey: string;
 	baseUrl: string;
-	userType: "seeker" | "poster";
+	userType: "worker" | "employer" | "seeker" | "poster";
 }
 
 const CONFIG_DIR = join(homedir(), ".config", "jobarbiter");
@@ -25,7 +25,7 @@ export function loadConfig(): Config | null {
 		return {
 			apiKey: envKey,
 			baseUrl: envUrl || "https://jobarbiter-api-production.up.railway.app",
-			userType: envType || "seeker",
+			userType: envType || "worker",
 		};
 	}
 

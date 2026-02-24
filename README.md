@@ -68,10 +68,62 @@ Multiple agents create triangulation. Long observation histories create high con
 
 Getting started is free:
 
-1. **Install the skill** — Add `jobarbiter-proficiency` to your agent
-2. **Build your profile** — Your agent interviews you, then attests to what it's observed
-3. **Connect data sources** — GitHub, token usage, other agents (optional, boosts confidence)
-4. **Get matched** — Verified profiles surface to employers seeking your track
+### 1. Install the CLI
+
+```bash
+npm install -g @jobarbiter/cli
+```
+
+### 2. Register
+
+```bash
+jobarbiter register --email you@example.com --type worker
+```
+
+### 3. Create Your Profile
+
+```bash
+jobarbiter profile create \
+  --bio "Senior engineer specializing in AI orchestration" \
+  --domains "software-engineering,data-analytics" \
+  --tools '{"models":["claude","gpt-4"],"agents":["cursor"]}' \
+  --compensation-min 150000 \
+  --compensation-max 220000 \
+  --open-to "full-time,fractional" \
+  --remote remote \
+  --actively-seeking
+```
+
+### 4. Have Your Agent Attest
+
+Your AI agent submits an attestation based on what it's observed:
+
+```bash
+jobarbiter attest \
+  --agent openclaw \
+  --hours 500 \
+  --capabilities '[{"skill":"multi-agent-orchestration","level":"advanced","confidence":0.85,"evidence":"Built autonomous research pipelines with eval loops."}]' \
+  --patterns '{"orchestrationComplexity":4,"toolDiversity":5,"outputVelocity":0.8}'
+```
+
+### 5. Connect Data Sources (Optional, Boosts Confidence)
+
+```bash
+jobarbiter git connect --provider github --username yourusername
+jobarbiter tokens --provider anthropic --start 2026-01-01 --end 2026-02-24 --total-tokens 25000000
+```
+
+### 6. Browse Matched Opportunities
+
+```bash
+jobarbiter opportunities list
+```
+
+### 7. Express Interest
+
+```bash
+jobarbiter interest express <matchId>
+```
 
 → [jobarbiter-proficiency skill](./skills/jobarbiter-proficiency/)
 
@@ -81,10 +133,57 @@ Getting started is free:
 
 Find verified AI-proficient talent:
 
-1. **Install the skill** — Add `jobarbiter-hire` to your agent
-2. **Post by proficiency** — Specify track, minimum score, required tools, history depth
-3. **Review verified matches** — See proficiency scores, attestation confidence, tool fluency
-4. **Make introductions** — Exchange contact info when there's mutual interest
+### 1. Install the CLI
+
+```bash
+npm install -g @jobarbiter/cli
+```
+
+### 2. Register
+
+```bash
+jobarbiter register --email hiring@company.com --type employer
+```
+
+### 3. Post an Opportunity
+
+```bash
+jobarbiter opportunities create \
+  --title "AI Platform Lead" \
+  --description "Lead our AI infrastructure team" \
+  --type full-time \
+  --track systemsBuilder \
+  --min-score 600 \
+  --required-tools "claude,langchain" \
+  --compensation-min 200000 \
+  --compensation-max 280000 \
+  --token-budget high \
+  --remote
+```
+
+### 4. View Matched Candidates ($50)
+
+```bash
+jobarbiter opportunities matches <opportunityId>
+```
+
+### 5. Unlock Full Profile ($250)
+
+```bash
+jobarbiter unlock <matchId>
+```
+
+### 6. Express Interest
+
+```bash
+jobarbiter interest express <matchId>
+```
+
+### 7. Create Introduction on Mutual Interest ($2,500)
+
+```bash
+jobarbiter introduce <matchId>
+```
 
 → [jobarbiter-hire skill](./skills/jobarbiter-hire/)
 
@@ -109,20 +208,61 @@ All payments via x402 (USDC on Base). No accounts. No invoices. Agents pay at th
 
 ---
 
+## CLI Commands
+
+```bash
+# Account
+jobarbiter register --email <email> --type <worker|employer>
+jobarbiter status
+
+# Profile (Workers)
+jobarbiter profile show
+jobarbiter profile create [options]
+jobarbiter profile score
+jobarbiter profile delete
+
+# Attestation (Workers)
+jobarbiter attest --agent <name> --capabilities <json> [options]
+jobarbiter git connect --provider <github|gitlab> --username <user>
+jobarbiter tokens --provider <anthropic|openai> --start <date> --end <date>
+
+# Opportunities
+jobarbiter opportunities list
+jobarbiter opportunities show <id>
+jobarbiter opportunities create [options]     # Employers
+jobarbiter opportunities matches <id>         # Employers, $50
+
+# Matching
+jobarbiter interest express <matchId>
+jobarbiter interest decline <matchId>
+jobarbiter unlock <matchId>                   # Employers, $250
+jobarbiter introduce <matchId>                # $2,500
+
+# Introductions
+jobarbiter intro list
+jobarbiter intro show <id>
+
+# Credentials
+jobarbiter credentials list
+jobarbiter credentials mint                   # $25
+jobarbiter credentials show <id>
+
+# Verification
+jobarbiter verify github <username>
+jobarbiter verify linkedin <url>
+```
+
+Add `--json` to any command for machine-readable output.
+
+---
+
 ## API
 
 **Base URL:** `https://jobarbiter-api-production.up.railway.app`
 
-**Key Endpoints:**
-- `POST /v1/profile` — Create/update proficiency profile
-- `POST /v1/attestations` — Submit agent attestation  
-- `GET /v1/matches` — Get matched opportunities (workers)
-- `POST /v1/opportunities` — Post opportunity (employers)
-- `GET /v1/opportunities/:id/matches` — Get matched candidates
-
 **Authentication:** `Authorization: Bearer ja_live_xxx`
 
-→ [Full API documentation](./docs/api.md)
+The CLI wraps the REST API. For direct API access, see the [API documentation](./docs/api.md).
 
 ---
 
@@ -131,6 +271,7 @@ All payments via x402 (USDC on Base). No accounts. No invoices. Agents pay at th
 - **Website:** [jobarbiter.ai](https://jobarbiter.ai)
 - **GitHub:** [github.com/retrodigio/jobarbiter-skills](https://github.com/retrodigio/jobarbiter-skills)
 - **API:** `https://jobarbiter-api-production.up.railway.app`
+- **CLI:** `npm install -g @jobarbiter/cli`
 
 ---
 

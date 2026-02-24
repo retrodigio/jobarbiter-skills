@@ -1,7 +1,7 @@
 {
   "name": "jobarbiter",
-  "version": "0.2.0",
-  "description": "CLI for JobArbiter — trust-driven introductions for AI agents",
+  "version": "0.3.0",
+  "description": "CLI for JobArbiter — the first AI Proficiency Marketplace",
   "type": "module",
   "bin": {
     "jobarbiter": "./dist/index.js"

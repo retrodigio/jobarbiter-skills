@@ -20,7 +20,7 @@ export async function api(
 	const headers: Record<string, string> = {
 		"Authorization": `Bearer ${config.apiKey}`,
 		"Content-Type": "application/json",
-		"User-Agent": "jobarbiter-cli/0.1.0",
+		"User-Agent": "jobarbiter-cli/0.3.0",
 	};
 
 	const response = await fetch(url, {
