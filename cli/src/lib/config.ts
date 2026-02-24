@@ -47,7 +47,7 @@ export function saveConfig(config: Config): void {
 export function requireConfig(): Config {
 	const config = loadConfig();
 	if (!config) {
-		console.error("Not configured. Run: jobarbiter register --email YOUR_EMAIL --type seeker");
+		console.error("Not configured. Run: jobarbiter onboard");
 		console.error("Or set JOBARBITER_API_KEY environment variable.");
 		process.exit(1);
 	}

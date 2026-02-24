@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { loadConfig, saveConfig, requireConfig, getConfigPath, type Config } from "./lib/config.js";
 import { api, apiUnauthenticated, ApiError } from "./lib/api.js";
 import { output, outputList, success, error, setJsonMode } from "./lib/output.js";
+import { runOnboardWizard } from "./lib/onboard.js";
 
 const program = new Command();
 
@@ -18,57 +19,19 @@ program
 	});
 
 // ============================================================
-// register
+// onboard — Interactive setup wizard (primary entry point)
 // ============================================================
 
 program
-	.command("register")
-	.description("Register a new account and save API key")
-	.requiredOption("--email <email>", "Email address")
-	.requiredOption("--type <type>", "Account type: worker or employer")
+	.command("onboard")
+	.description("Interactive setup wizard — the only command you need to get started")
+	.option("--force", "Start fresh even if already configured")
 	.option("--base-url <url>", "API base URL", "https://jobarbiter-api-production.up.railway.app")
 	.action(async (opts) => {
-		try {
-			const userType = opts.type === "seeker" ? "worker" : opts.type;
-			if (!["worker", "employer"].includes(userType)) {
-				error("Type must be 'worker' or 'employer'");
-				process.exit(1);
-			}
-
-			// Step 1: Register and request verification code
-			const registerData = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/register", {
-				email: opts.email,
-				userType,
-			});
-
-			success(`Verification code sent to ${opts.email} (expires in 15 minutes)`);
-
-			// Step 2: Prompt for verification code
-			const code = await promptForCode();
-			if (!code) {
-				error("Verification cancelled.");
-				process.exit(1);
-			}
-
-			// Step 3: Verify the code
-			const verifyData = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/verify", {
-				email: opts.email,
-				code: code.trim(),
-			});
-
-			// Step 4: Save config with API key
-			saveConfig({
-				apiKey: verifyData.apiKey as string,
-				baseUrl: opts.baseUrl,
-				userType: userType as "worker" | "employer",
-			});
-
-			success(`Email verified! API key saved to ${getConfigPath()}`);
-			console.log(`  Key: ${(verifyData.apiKey as string).slice(0, 20)}... (save this — shown only once)`);
-			output({ id: verifyData.id, email: opts.email, userType });
-		} catch (e) {
-			handleError(e);
-		}
+		await runOnboardWizard({
+			force: opts.force,
+			baseUrl: opts.baseUrl,
+		});
 	});
 
 // ============================================================
