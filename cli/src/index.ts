@@ -35,10 +35,70 @@ program
 				process.exit(1);
 			}
 
-			const data = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/register", {
+			// Step 1: Register and request verification code
+			const registerData = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/register", {
 				email: opts.email,
 				userType,
 			});
+
+			success(`Verification code sent to ${opts.email} (expires in 15 minutes)`);
+
+			// Step 2: Prompt for verification code
+			const code = await promptForCode();
+			if (!code) {
+				error("Verification cancelled.");
+				process.exit(1);
+			}
+
+			// Step 3: Verify the code
+			const verifyData = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/verify", {
+				email: opts.email,
+				code: code.trim(),
+			});
+
+			// Step 4: Save config with API key
+			saveConfig({
+				apiKey: verifyData.apiKey as string,
+				baseUrl: opts.baseUrl,
+				userType: userType as "worker" | "employer",
+			});
+
+			success(`Email verified! API key saved to ${getConfigPath()}`);
+			console.log(`  Key: ${(verifyData.apiKey as string).slice(0, 20)}... (save this — shown only once)`);
+			output({ id: verifyData.id, email: opts.email, userType });
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+// ============================================================
+// verify (standalone verification for existing registrations)
+// ============================================================
+
+program
+	.command("verify")
+	.description("Verify email with code (if registration was interrupted)")
+	.requiredOption("--email <email>", "Email address")
+	.option("--code <code>", "6-digit verification code")
+	.option("--base-url <url>", "API base URL", "https://jobarbiter-api-production.up.railway.app")
+	.action(async (opts) => {
+		try {
+			let code = opts.code;
+			if (!code) {
+				code = await promptForCode();
+				if (!code) {
+					error("Verification cancelled.");
+					process.exit(1);
+				}
+			}
+
+			const data = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/verify", {
+				email: opts.email,
+				code: code.trim(),
+			});
+
+			// Determine user type from response or default
+			const userType = (data.userType as string) || "worker";
 
 			saveConfig({
 				apiKey: data.apiKey as string,
@@ -46,12 +106,53 @@ program
 				userType: userType as "worker" | "employer",
 			});
 
-			success(`Registered as ${userType}. API key saved to ${getConfigPath()}`);
+			success(`Email verified! API key saved to ${getConfigPath()}`);
+			console.log(`  Key: ${(data.apiKey as string).slice(0, 20)}... (save this — shown only once)`);
 			output({ id: data.id, email: opts.email, userType });
 		} catch (e) {
 			handleError(e);
 		}
 	});
+
+// ============================================================
+// resend-code
+// ============================================================
+
+program
+	.command("resend-code")
+	.description("Resend verification code to email")
+	.requiredOption("--email <email>", "Email address")
+	.option("--base-url <url>", "API base URL", "https://jobarbiter-api-production.up.railway.app")
+	.action(async (opts) => {
+		try {
+			const data = await apiUnauthenticated(opts.baseUrl, "POST", "/v1/auth/resend-code", {
+				email: opts.email,
+			});
+
+			success("If this email is registered and unverified, a new code has been sent.");
+			console.log("  Use: jobarbiter verify --email " + opts.email);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+/**
+ * Prompt user for verification code via stdin
+ */
+async function promptForCode(): Promise<string | null> {
+	const readline = await import("node:readline");
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+	});
+
+	return new Promise((resolve) => {
+		rl.question("\nEnter verification code: ", (answer) => {
+			rl.close();
+			resolve(answer || null);
+		});
+	});
+}
 
 // ============================================================
 // status
