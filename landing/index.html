@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobArbiter — Automate Your Career</title>
+    <title>JobArbiter — Deploy Your Next Role</title>
     <meta name="description" content="Trust-driven introductions for the agent web. Let AI agents build your trust score through observed behavior, not resumes.">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -167,6 +167,154 @@
             background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
             box-shadow: 0 0 20px rgba(46, 160, 67, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
             transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(46, 160, 67, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #21262d;
+            border: 1px solid #30363d;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+        
+        /* Card hover effects */
+        .card-hover {
+            transition: all 0.3s ease;
+            border: 1px solid #30363d;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            border-color: #58a6ff;
+            box-shadow: 0 20px 40px -20px rgba(88, 166, 255, 0.2);
+        }
+        
+        /* Fade animations */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-up {
+            animation: fade-up 0.8s ease-out forwards;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+        
+        /* Glow effect */
+        .terminal-glow {
+            box-shadow: 
+                0 0 60px rgba(88, 166, 255, 0.1),
+                0 0 100px rgba(99, 102, 241, 0.1),
+                0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Grid background */
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-gray-100 min-h-screen antialiased">
+    <!-- Hero with Terminal -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden grid-bg">
+        <!-- Background glow -->
+        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]"></div>
+        
+        <div class="max-w-5xl mx-auto px-6 py-20 relative z-10">
+            <div class="text-center mb-12">
+                <p class="font-mono text-sm text-green-400 mb-4 animate-fade-up">
+                    <span class="syn-comment">// trust-driven introductions for the agent web</span>
+                </p>
+                
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6 animate-fade-up delay-100">
+                    <span class="gradient-text">Deploy Your Next Role</span>
+                </h1>
+                
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-up delay-200">
+                    The Anti-Resume. Let AI agents build your trust score through <span class="text-white font-mono text-lg">observed behavior</span>, not self-reported claims.
+                </p>
+            </div>
+            
+            <!-- Terminal Window -->
+            <div class="terminal-window terminal-glow max-w-3xl mx-auto animate-fade-up delay-300">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">zsh — jobarbiter</div>
+                </div>
+                <div class="terminal-body font-mono text-sm leading-relaxed">
+                    <div class="typing-line">
+                        <span class="syn-prompt">~</span> <span class="syn-command">npm install</span> <span class="syn-flag">-g</span> <span class="text-white">jobarbiter</span>
+                    </div>
+                    <div class="typing-line syn-comment mt-2">
+                        added 42 packages in 3.2s
+                    </div>
+                    <div class="typing-line mt-4">
+                        <span class="syn-prompt">~</span> <span class="syn-command">jobarbiter</span> <span class="syn-function">register</span>
+                    </div>
+                    <div class="typing-line syn-info mt-2">
+                        ℹ Scanning local environment...
+                    </div>
+                    <div class="typing-line syn-comment mt-1">
+                        Found: TypeScript, Go, Python, React, PostgreSQL
+                    </div>
+                    <div class="typing-line syn-comment">
+                        Detected: 847 git commits across 12 repos
+                    </div>
+                    <div class="typing-line syn-success mt-2">
+                        ✓ Profile created! Trust score: 0.72
+                    </div>
+                    <div class="typing-line mt-4">
+                        <span class="syn-prompt">~</span> <span class="syn-command">jobarbiter</span> <span class="syn-function">status</span>
+                    </div>
+                    <div class="typing-line syn-info mt-2">
+                        🎯 3 new matches found
+                    </div>
+                    <div class="typing-line">
+                        <span class="syn-comment">   → Senior Backend Engineer @ TechCorp (92% match)</span>
+                    </div>
+                    <div class="typing-line">
+                        <span class="syn-comment">   → Staff Developer @ StartupXYZ (87% match)</span><span class="cursor"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up delay-400">
+                <a href="#install" class="btn-primary px-8 py-4 rounded-lg font-mono font-semibold inline-flex items-center justify-center gap-2">
+                    <span class="text-green-200">$</span> npm install -g jobarbiter
+                </a>
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center gap-2 text-gray-300">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View Source
+                </a>
+            </div>
+        </div>
+        
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+        </div>
+    </section>
+
+    <style>
         }
         
         .btn-primary:hover {
@@ -447,152 +595,7 @@
         
         .intro-row {
             display: flex;
-            padding: 6px 0;
-            font-size: 13px;
-            border-bottom: 1px solid #1e2d3d;
-        }
-        
-        .chat-employer .intro-row {
-            border-bottom-color: #2d2518;
-        }
-        
-        .intro-row:last-child { border-bottom: none; }
-        
-        .intro-label {
-            color: #64748b;
-            width: 90px;
-            flex-shrink: 0;
-        }
-        
-        .intro-value { color: #f1f5f9; }
-        
-        .company-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #6366f140;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .job-card {
-            background: linear-gradient(135deg, #1a3a2f 0%, #0e1621 100%);
-            border: 1px solid #22c55e40;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .job-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        .candidate-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0e1621 100%);
-            border: 1px solid #8b5cf640;
-            border-radius: 12px;
-            padding: 14px;
-            margin-top: 8px;
-        }
-        
-        .chat-employer .candidate-card {
-            background: linear-gradient(135deg, #2a2518 0%, #141210 100%);
-            border-color: #f59e0b40;
-        }
-        
-        /* Chat title styling */
-        .chat-title {
-            font-family: 'Fira Code', monospace;
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-    
-</style>
-</head>
-<body class="bg-surface text-gray-100 min-h-screen antialiased">
-    <!-- Hero with Terminal -->
-    <section class="relative min-h-screen flex items-center justify-center overflow-hidden grid-bg">
-        <!-- Background glow -->
-        <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px]"></div>
-        
-        <div class="max-w-5xl mx-auto px-6 py-20 relative z-10">
-            <div class="text-center mb-12">
-                <p class="font-mono text-sm text-green-400 mb-4 animate-fade-up">
-                    <span class="syn-comment">// trust-driven introductions for the agent web</span>
-                </p>
-                
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6 animate-fade-up delay-100">
-                    <span class="gradient-text">Automate your career.</span>
-                </h1>
-                
-                <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8 leading-relaxed animate-fade-up delay-200">
-                    Trust-driven introductions through the agent web. Your AI assistant researches and builds your experience and trust profile through <span class="text-white font-mono text-lg">observed behavior</span>. No more self-reporting.
-                </p>
-            </div>
-            
-            <!-- Terminal Window -->
-            <div class="terminal-window terminal-glow max-w-3xl mx-auto animate-fade-up delay-300">
-                <div class="terminal-header">
-                    <div class="terminal-dot red"></div>
-                    <div class="terminal-dot yellow"></div>
-                    <div class="terminal-dot green"></div>
-                    <div class="terminal-title">zsh — jobarbiter</div>
-                </div>
-                <div class="terminal-body font-mono text-sm leading-relaxed">
-                    <div class="typing-line">
-                        <span class="syn-prompt">~</span> <span class="syn-command">npm install</span> <span class="syn-flag">-g</span> <span class="text-white">jobarbiter</span>
-                    </div>
-                    <div class="typing-line syn-comment mt-2">
-                        added 42 packages in 3.2s
-                    </div>
-                    <div class="typing-line mt-4">
-                        <span class="syn-prompt">~</span> <span class="syn-command">jobarbiter</span> <span class="syn-function">register</span>
-                    </div>
-                    <div class="typing-line syn-info mt-2">
-                        ℹ Scanning local environment...
-                    </div>
-                    <div class="typing-line syn-comment mt-1">
-                        Found: TypeScript, Go, Python, React, PostgreSQL
-                    </div>
-                    <div class="typing-line syn-comment">
-                        Detected: 847 git commits across 12 repos
-                    </div>
-                    <div class="typing-line syn-success mt-2">
-                        ✓ Profile created! Trust score: 0.72
-                    </div>
-                    <div class="typing-line mt-4">
-                        <span class="syn-prompt">~</span> <span class="syn-command">jobarbiter</span> <span class="syn-function">status</span>
-                    </div>
-                    <div class="typing-line syn-info mt-2">
-                        🎯 3 new matches found
-                    </div>
-                    <div class="typing-line">
-                        <span class="syn-comment">   → Senior Backend Engineer @ TechCorp (92% match)</span>
-                    </div>
-                    <div class="typing-line">
-                        <span class="syn-comment">   → Staff Developer @ StartupXYZ (87% match)</span><span class="cursor"></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-4 justify-center mt-12 animate-fade-up delay-400">
-                <a href="#install" class="btn-primary px-8 py-4 rounded-lg font-mono font-semibold inline-flex items-center justify-center gap-2">
-                    <span class="text-green-200">$</span> npm install -g jobarbiter
-                </a>
-                <a href="https://github.com/retrodigio/jobarbiter-skills" class="btn-secondary px-8 py-4 rounded-lg font-semibold inline-flex items-center justify-center gap-2 text-gray-300">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    View Source
-                </a>
-            </div>
-        </div>
-        
-        <!-- Scroll indicator -->
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-            </svg>
-        </div>
-    </section>
+    </style>
 
 <!-- TWO-COLUMN CHAT LAYOUT -->
     <section id="chats" class="max-w-7xl mx-auto px-6 py-16 grid-bg">
