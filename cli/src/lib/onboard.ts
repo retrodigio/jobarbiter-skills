@@ -11,6 +11,7 @@
 import * as readline from "node:readline";
 import { loadConfig, saveConfig, getConfigPath, type Config } from "./config.js";
 import { apiUnauthenticated, api, ApiError } from "./api.js";
+import { detectAgents, installObservers, type DetectedAgent } from "./observe.js";
 
 // ── ANSI Colors ────────────────────────────────────────────────────────
 
@@ -111,7 +112,6 @@ interface OnboardState {
 	userId: string;
 	
 	// Worker-specific
-	track?: string;
 	tools?: string[];
 	domains?: string[];
 	githubUsername?: string;
@@ -297,28 +297,14 @@ async function handleEmailVerification(
 // ── Worker Flow ────────────────────────────────────────────────────────
 
 async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void> {
-	// Step 2: Choose Track
-	console.log(`${sym.target} ${c.bold("Step 2/5 — Choose Your Track")}\n`);
-	console.log(`How do you primarily use AI?\n`);
-	console.log(`  ${c.highlight("1.")} ${c.bold("Orchestrator")} — You coordinate multiple AI agents, design workflows,`);
-	console.log(`     and build systems where AIs collaborate\n`);
-	console.log(`  ${c.highlight("2.")} ${c.bold("Systems Builder")} — You use AI to build and ship software,`);
-	console.log(`     infrastructure, and technical systems\n`);
-	console.log(`  ${c.highlight("3.")} ${c.bold("Domain Translator")} — You apply AI to solve problems in specific`);
-	console.log(`     fields (finance, legal, healthcare, creative, etc.)\n`);
+	const config: Config = {
+		apiKey: state.apiKey,
+		baseUrl: state.baseUrl,
+		userType: "worker",
+	};
 
-	let track: string;
-	while (true) {
-		const answer = await prompt.question(`Your track ${c.dim("[1/2/3]")}: `);
-		if (answer === "1") { track = "orchestrator"; break; }
-		if (answer === "2") { track = "systemsBuilder"; break; }
-		if (answer === "3") { track = "domainTranslator"; break; }
-		console.log(c.error("Please enter 1, 2, or 3"));
-	}
-	state.track = track;
-
-	// Step 3: Profile Setup
-	console.log(`\n${sym.tools} ${c.bold("Step 3/5 — Your AI Stack")}\n`);
+	// Step 2: Profile Setup (tools + domains)
+	console.log(`${sym.tools} ${c.bold("Step 2/6 — Your AI Stack")}\n`);
 	
 	console.log(`What AI tools do you use? ${c.dim("(comma-separated)")}`);
 	console.log(c.dim("Examples: Claude Code, Cursor, OpenClaw, ChatGPT, Copilot, Midjourney\n"));
@@ -334,12 +320,6 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 
 	// Create/update profile
 	console.log(c.dim("\nSaving profile..."));
-	
-	const config: Config = {
-		apiKey: state.apiKey,
-		baseUrl: state.baseUrl,
-		userType: "worker",
-	};
 
 	try {
 		await api(config, "POST", "/v1/profile", {
@@ -350,12 +330,14 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 		});
 		console.log(`${sym.check} Profile saved\n`);
 	} catch (err) {
-		// Profile creation is best-effort
 		console.log(`${sym.warning} ${c.warning("Could not save profile details — you can update later with 'jobarbiter profile create'")}\n`);
 	}
 
+	// Step 3: Install Coding Agent Observers
+	await runObserverStep(prompt, state, 3, 6);
+
 	// Step 4: Connect GitHub (optional)
-	console.log(`${sym.link} ${c.bold("Step 4/5 — Connect GitHub")} ${c.dim("(optional)")}\n`);
+	console.log(`${sym.link} ${c.bold("Step 4/6 — Connect GitHub")} ${c.dim("(optional)")}\n`);
 	console.log(`Connecting your GitHub lets us analyze your AI-assisted work patterns.`);
 	console.log(`This significantly boosts your proficiency score.\n`);
 
@@ -377,24 +359,151 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 		console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter git connect'")}\n`);
 	}
 
-	// Step 5: Done!
+	// Step 5: Connect LinkedIn (optional)
+	console.log(`${sym.link} ${c.bold("Step 5/6 — Connect LinkedIn")} ${c.dim("(optional)")}\n`);
+	console.log(`Your LinkedIn profile strengthens identity verification.`);
+	console.log(c.dim("We never post on your behalf or access your connections.\n"));
+
+	const linkedinUrl = await prompt.question(`LinkedIn URL ${c.dim("(press Enter to skip)")}: `);
+	
+	if (linkedinUrl) {
+		console.log(c.dim("\nSubmitting for verification..."));
+		try {
+			await api(config, "POST", "/v1/verification/linkedin", {
+				linkedinUrl: linkedinUrl.trim(),
+			});
+			console.log(`${sym.check} LinkedIn submitted for verification\n`);
+		} catch (err) {
+			console.log(`${sym.warning} ${c.warning("Could not submit LinkedIn — you can try later with 'jobarbiter identity linkedin <url>'")}\n`);
+		}
+	} else {
+		console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter identity linkedin <url>'")}\n`);
+	}
+
+	// Step 6: Done!
 	showWorkerCompletion(state);
 }
 
+// ── Observer Installation Step ─────────────────────────────────────────
+
+async function runObserverStep(
+	prompt: Prompt,
+	state: OnboardState,
+	stepNum: number,
+	totalSteps: number,
+): Promise<void> {
+	console.log(`🔍 ${c.bold(`Step ${stepNum}/${totalSteps} — Coding Agent Observers`)}\n`);
+	console.log(c.dim("Scanning for coding agents...\n"));
+
+	const agents = detectAgents();
+	const detected = agents.filter((a) => a.installed);
+	const notDetected = agents.filter((a) => !a.installed);
+
+	// Show results
+	if (detected.length === 0) {
+		console.log(`  ${c.dim("No coding agents detected on this system.")}\n`);
+		console.log(c.dim("  You can install observers later with 'jobarbiter observe install'.\n"));
+		return;
+	}
+
+	console.log(`  Found on your system:`);
+	for (const agent of detected) {
+		if (agent.hookInstalled) {
+			console.log(`    ${sym.check} ${agent.name}  ${c.dim("(observer already installed)")}`);
+		} else {
+			console.log(`    ${c.success("✓")} ${agent.name}`);
+		}
+	}
+	for (const agent of notDetected) {
+		console.log(`    ${c.dim("⬚")} ${agent.name}  ${c.dim("(not found)")}`);
+	}
+
+	// Filter to agents that need installation
+	const needsInstall = detected.filter((a) => !a.hookInstalled);
+	
+	if (needsInstall.length === 0) {
+		console.log(`\n  ${c.dim("All detected agents already have observers installed.")}\n`);
+		return;
+	}
+
+	console.log(`\n  JobArbiter observes your coding sessions to build your`);
+	console.log(`  proficiency profile. ${c.bold("No code or prompts leave your machine")} —`);
+	console.log(`  only aggregate scores (tool usage, session counts, token volume).\n`);
+	console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
+	console.log(c.dim(`  Review anytime: jobarbiter observe status\n`));
+
+	const installAll = await prompt.confirm(
+		`  Install observers for all ${needsInstall.length} detected agent${needsInstall.length > 1 ? "s" : ""}?`,
+	);
+
+	let toInstall: string[];
+
+	if (installAll) {
+		toInstall = needsInstall.map((a) => a.id);
+	} else {
+		// Let user select individually
+		console.log(`\n  Select which agents to observe:\n`);
+		const selections: Record<string, boolean> = {};
+		
+		for (const agent of needsInstall) {
+			selections[agent.id] = await prompt.confirm(`    ${agent.name}?`, true);
+		}
+
+		toInstall = Object.entries(selections)
+			.filter(([, v]) => v)
+			.map(([k]) => k);
+
+		if (toInstall.length === 0) {
+			console.log(`\n  ${c.dim("No observers installed. You can add them later with 'jobarbiter observe install'.")}\n`);
+			return;
+		}
+	}
+
+	// Install
+	console.log(c.dim("\n  Installing observers..."));
+	const result = installObservers(toInstall);
+
+	for (const name of result.installed) {
+		console.log(`    ${sym.check} ${name}`);
+	}
+	for (const name of result.skipped) {
+		console.log(`    ${c.dim("—")} ${name} ${c.dim("(already installed)")}`);
+	}
+	for (const { agent, error: errMsg } of result.errors) {
+		console.log(`    ${sym.cross} ${agent}: ${c.error(errMsg)}`);
+	}
+
+	if (result.installed.length > 0) {
+		console.log(`\n  ${sym.check} ${c.success(`${result.installed.length} observer${result.installed.length > 1 ? "s" : ""} installed!`)}`);
+		console.log(c.dim(`  Your proficiency profile will start building automatically.\n`));
+	} else {
+		console.log();
+	}
+}
+
 function showWorkerCompletion(state: OnboardState): void {
-	console.log(`${sym.done} ${c.bold("Step 5/5 — You're In!")}\n`);
+	console.log(`${sym.done} ${c.bold("Step 6/6 — You're In!")}\n`);
 	console.log(`Your profile is live. Here's what happens next:\n`);
 	
-	console.log(`  📊 Your proficiency score will build over time as:`);
-	console.log(`     ${sym.bullet} Your AI agent submits attestations ${c.dim("(biggest factor — 35%)")}`);
-	console.log(`     ${sym.bullet} We analyze your GitHub activity ${c.dim("(20%)")}`);
-	console.log(`     ${sym.bullet} You sync your token usage ${c.dim("(15%)")}\n`);
+	console.log(`  📊 Your proficiency score builds automatically from:`);
+	console.log(`     ${sym.bullet} Coding agent observation ${c.dim("(biggest factor — 35%)")}`);
+	console.log(`     ${sym.bullet} GitHub contribution analysis ${c.dim("(20%)")}`);
+	console.log(`     ${sym.bullet} Token consumption patterns ${c.dim("(15%)")}`);
+	console.log(`     ${sym.bullet} Tool diversity & fluency ${c.dim("(15%)")}`);
+	console.log(`     ${sym.bullet} Outcome verification ${c.dim("(15%)")}\n`);
 	
-	console.log(`  🤖 Install the ${c.highlight("jobarbiter-proficiency")} skill in your AI agent`);
-	console.log(`     to start automatic attestation.\n`);
+	console.log(`  🎯 Your proficiency ${c.bold("track")} (Orchestrator, Systems Builder, or`);
+	console.log(`     Domain Translator) is determined automatically as we observe`);
+	console.log(`     how you work. No need to self-assess.\n`);
 	
-	console.log(`  Run ${c.highlight("jobarbiter profile score")} anytime to check your score.`);
-	console.log(`  Run ${c.highlight("jobarbiter status")} to see your account.\n`);
+	console.log(`  🤖 For deeper attestation, install the ${c.highlight("jobarbiter-proficiency")}`);
+	console.log(`     skill in your AI agent (OpenClaw, Claude Code, etc.)\n`);
+	
+	console.log(`  ${c.bold("Useful commands:")}`);
+	console.log(`    ${c.highlight("jobarbiter profile score")}    — Check your proficiency score`);
+	console.log(`    ${c.highlight("jobarbiter observe status")}   — See collected observation data`);
+	console.log(`    ${c.highlight("jobarbiter observe install")}  — Add observers to new agents`);
+	console.log(`    ${c.highlight("jobarbiter status")}           — Account overview\n`);
 	
 	console.log(`${c.bold("Welcome to the future of work.")} ${sym.rocket}\n`);
 	

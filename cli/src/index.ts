@@ -5,6 +5,7 @@ import { loadConfig, saveConfig, requireConfig, getConfigPath, type Config } fro
 import { api, apiUnauthenticated, ApiError } from "./lib/api.js";
 import { output, outputList, success, error, setJsonMode } from "./lib/output.js";
 import { runOnboardWizard } from "./lib/onboard.js";
+import { detectAgents, installObservers, removeObservers, getObservationStatus } from "./lib/observe.js";
 
 const program = new Command();
 
@@ -773,6 +774,187 @@ program
 			});
 			success("Token usage synced. Proficiency scores updated.");
 			output(data);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+// ============================================================
+// observe (manage coding agent observers)
+// ============================================================
+
+const observe = program.command("observe").description("Manage coding agent proficiency observers");
+
+observe
+	.command("status")
+	.description("Show observer status and accumulated data")
+	.action(async () => {
+		try {
+			const agents = detectAgents();
+			const status = getObservationStatus();
+
+			const detected = agents.filter((a) => a.installed);
+
+			console.log("\n🔍 Coding Agent Observers\n");
+			console.log("  Agents:");
+			for (const agent of agents) {
+				if (!agent.installed) {
+					console.log(`    ⬚ ${agent.name}  (not installed)`);
+				} else if (agent.hookInstalled) {
+					console.log(`    ✅ ${agent.name}  (observer active)`);
+				} else {
+					console.log(`    ⚠️  ${agent.name}  (detected, no observer)`);
+				}
+			}
+
+			console.log("\n  Accumulated Data:");
+			console.log(`    Sessions observed: ${status.totalSessions}`);
+			console.log(`    Total tokens:      ${status.totalTokens.toLocaleString()}`);
+			console.log(`    Agents seen:       ${status.agents.join(", ") || "none yet"}`);
+			console.log(`    Last submitted:    ${status.lastSubmitted || "never"}`);
+
+			if (status.topTools.length > 0) {
+				console.log("\n  Top Tools:");
+				for (const { tool, count } of status.topTools.slice(0, 5)) {
+					console.log(`    ${tool}: ${count} uses`);
+				}
+			}
+
+			console.log(`\n  Data file: ~/.config/jobarbiter/observer/observations.json\n`);
+
+			output({
+				detectedAgents: agents.map((a) => ({
+					id: a.id,
+					name: a.name,
+					installed: a.installed,
+					observerActive: a.hookInstalled,
+				})),
+				...status,
+			});
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+observe
+	.command("install")
+	.description("Install observers for detected coding agents")
+	.option("--agent <id>", "Install for specific agent (claude-code, cursor, opencode, codex, gemini)")
+	.option("--all", "Install for all detected agents")
+	.action(async (opts) => {
+		try {
+			const agents = detectAgents();
+			const detected = agents.filter((a) => a.installed);
+
+			if (detected.length === 0) {
+				error("No coding agents detected on this system.");
+				console.log("  Supported: Claude Code, Cursor, OpenCode, Codex CLI, Gemini CLI");
+				process.exit(1);
+			}
+
+			let toInstall: string[];
+
+			if (opts.agent) {
+				const agent = agents.find((a) => a.id === opts.agent);
+				if (!agent) {
+					error(`Unknown agent: ${opts.agent}. Available: ${agents.map((a) => a.id).join(", ")}`);
+					process.exit(1);
+				}
+				if (!agent.installed) {
+					error(`${agent.name} is not installed on this system.`);
+					process.exit(1);
+				}
+				toInstall = [opts.agent];
+			} else {
+				toInstall = detected.map((a) => a.id);
+			}
+
+			const result = installObservers(toInstall);
+
+			for (const name of result.installed) {
+				success(`Installed observer for ${name}`);
+			}
+			for (const name of result.skipped) {
+				console.log(`  — ${name} (already installed)`);
+			}
+			for (const { agent: a, error: errMsg } of result.errors) {
+				error(`${a}: ${errMsg}`);
+			}
+
+			output(result);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+observe
+	.command("remove")
+	.description("Remove observers from coding agents")
+	.option("--agent <id>", "Remove from specific agent")
+	.option("--all", "Remove from all agents")
+	.action(async (opts) => {
+		try {
+			const agents = detectAgents();
+			const withHooks = agents.filter((a) => a.hookInstalled);
+
+			if (withHooks.length === 0) {
+				console.log("No observers are currently installed.");
+				process.exit(0);
+			}
+
+			let toRemove: string[];
+
+			if (opts.agent) {
+				toRemove = [opts.agent];
+			} else {
+				toRemove = withHooks.map((a) => a.id);
+			}
+
+			const result = removeObservers(toRemove);
+
+			for (const name of result.removed) {
+				success(`Removed observer from ${name}`);
+			}
+			for (const name of result.notFound) {
+				console.log(`  — ${name} (no observer found)`);
+			}
+
+			output(result);
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+observe
+	.command("review")
+	.description("Review accumulated observation data before submission")
+	.action(async () => {
+		try {
+			const status = getObservationStatus();
+
+			if (!status.hasData) {
+				console.log("\nNo observation data collected yet.");
+				console.log("Use your coding agents normally — data accumulates automatically.\n");
+				process.exit(0);
+			}
+
+			console.log("\n📊 Observation Data Review\n");
+			console.log(`  Sessions: ${status.totalSessions}`);
+			console.log(`  Tokens:   ${status.totalTokens.toLocaleString()}`);
+			console.log(`  Agents:   ${status.agents.join(", ")}`);
+
+			if (status.topTools.length > 0) {
+				console.log("\n  Tool Usage:");
+				for (const { tool, count } of status.topTools) {
+					const bar = "█".repeat(Math.min(count, 30));
+					console.log(`    ${tool.padEnd(25)} ${bar} ${count}`);
+				}
+			}
+
+			console.log(`\n  This data will be submitted as an attestation when you run:`);
+			console.log(`    jobarbiter attest --agent observer --capabilities <auto-generated>\n`);
+
+			output(status);
 		} catch (e) {
 			handleError(e);
 		}
