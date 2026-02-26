@@ -530,10 +530,11 @@ async function runToolDetectionStep(
 		console.log(`  This is what makes your profile ${c.bold("verified")} and ${c.bold("valuable")}.`);
 		console.log(`  Your observer regularly records and reports your proven AI proficiency.\n`);
 		console.log(`  ${c.bold("Privacy:")} Analysis runs ${c.highlight("locally by your own AI agent.")}`);
-		console.log(`  Your agent reads your sessions to evaluate proficiency, but`);
-		console.log(`  ${c.bold("only derived scores and signals are submitted to JobArbiter.")}`);
-		console.log(`  Raw session data — prompts, responses, code — never leaves`);
-		console.log(`  your machine and is never stored on our servers.\n`);
+		console.log(`  Your agent reads your sessions and produces a proficiency`);
+		console.log(`  work report — an assessment of how you work with AI. This`);
+		console.log(`  report is submitted to JobArbiter to build your narrative`);
+		console.log(`  profile. ${c.bold("Your raw session data — prompts, responses, code —")}`);
+		console.log(`  ${c.bold("never leaves your machine.")}\n`);
 		console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
 		console.log(c.dim(`  Review anytime: jobarbiter observe review\n`));
 
@@ -563,9 +564,10 @@ async function runToolDetectionStep(
 			console.log(`  Observers activate each time you use your AI tools.`);
 			console.log(`  Just work normally — every session builds your profile.\n`);
 			console.log(`  ${sym.arrow} ${c.highlight("Your next AI session will begin your proficiency analysis.")}`);
-			console.log(`  Your own AI agent performs the analysis locally — evaluating`);
-			console.log(`  how you work, not just how much. Only derived scores are`);
-			console.log(`  submitted to JobArbiter. Raw session data never leaves your machine.\n`);
+			console.log(`  Your own AI agent analyzes each session locally, then submits`);
+			console.log(`  a work report to JobArbiter. Our agents interpret these reports`);
+			console.log(`  to build and evolve your narrative profile over time.`);
+			console.log(`  Raw session data never leaves your machine.\n`);
 			}
 		} else {
 			console.log(c.dim("\n  Skipped — you can install observers later with 'jobarbiter observe install'.\n"));
@@ -611,9 +613,9 @@ async function runConnectAIAccountsStep(prompt: Prompt): Promise<void> {
 	
 	console.log(`  ${c.bold("How your data stays safe:")}`);
 	console.log(`    ${sym.bullet} Analysis runs ${c.bold("locally on your machine")} by your own AI agent`);
-	console.log(`    ${sym.bullet} Only derived proficiency scores leave your machine — never raw`);
-	console.log(`      session data, prompts, responses, or conversation content`);
-	console.log(`    ${sym.bullet} ${c.bold("Nothing is stored on JobArbiter's servers")} except your scores\n`);
+	console.log(`    ${sym.bullet} Your agent submits work reports (proficiency assessments) to`);
+	console.log(`      JobArbiter — never raw session data, prompts, or code`);
+	console.log(`    ${sym.bullet} JobArbiter builds your narrative profile from these reports\n`);
 
 	// Check for already connected providers
 	const existingProviders = loadProviderKeys();
@@ -693,9 +695,10 @@ function showWorkerCompletion(state: OnboardState): void {
 	console.log(`${sym.done} ${c.bold("Step 7/7 — You're In!")}\n`);
 	console.log(`Your profile is live. Here's how it builds:\n`);
 	console.log(`  💡 ${c.bold("Your next AI session will begin your proficiency analysis.")}`);
-	console.log(`     Just use your tools normally. Your own AI agent analyzes each`);
-	console.log(`     session locally — evaluating how you work with AI, not just`);
-	console.log(`     how much. Only proficiency scores are sent to JobArbiter.\n`);
+	console.log(`     Just use your tools normally. Your AI agent analyzes each`);
+	console.log(`     session and submits work reports to JobArbiter, where our`);
+	console.log(`     agents build your evolving narrative profile — a rich,`);
+	console.log(`     verified picture of how you work with AI.\n`);
 	
 	console.log(`  📊 Your proficiency profile builds automatically from:`);
 	console.log(`     ${c.bold("How you use AI (qualitative):")}`);
