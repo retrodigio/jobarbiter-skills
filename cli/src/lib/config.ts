@@ -7,7 +7,7 @@ export interface Config {
 	baseUrl: string;
 	userType: "worker" | "employer" | "seeker" | "poster";
 	onboardingComplete?: boolean;
-	onboardingStep?: number; // last completed step (1-6)
+	onboardingStep?: number; // last completed step (1-7)
 }
 
 const CONFIG_DIR = join(homedir(), ".config", "jobarbiter");

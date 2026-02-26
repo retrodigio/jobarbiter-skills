@@ -20,6 +20,12 @@ import {
 	type DetectedTool,
 	type ToolCategory,
 } from "./detect-tools.js";
+import {
+	loadProviderKeys,
+	saveProviderKey,
+	validateProviderKey,
+	getSupportedProviders,
+} from "./providers.js";
 
 // ── ANSI Colors ────────────────────────────────────────────────────────
 
@@ -150,7 +156,7 @@ export async function runOnboardWizard(opts: { force?: boolean; baseUrl?: string
 		}
 		// Onboarding incomplete — resume
 		const resumeStep = (existingConfig.onboardingStep ?? 1) + 1;
-		console.log(`\n${sym.rocket}  ${c.bold("Resuming onboarding")} from step ${resumeStep}/6\n`);
+		console.log(`\n${sym.rocket}  ${c.bold("Resuming onboarding")} from step ${resumeStep}/7\n`);
 		console.log(c.dim(`   Account: ${existingConfig.userType} | API key configured`));
 		console.log(c.dim(`   Run ${c.highlight("jobarbiter onboard --force")} to start over.\n`));
 		
@@ -257,9 +263,9 @@ async function handleEmailVerification(
 	baseUrl: string,
 	userType: "worker" | "employer"
 ): Promise<{ email: string; apiKey: string; userId: string }> {
-	// Workers: 1) Account, 2) Tool Detection, 3) Domains, 4) GitHub, 5) LinkedIn, 6) Done
-	// Employers: 1) Account, 2) (skip verification), 3) Company, 4) Domain, 5) What You Need, 6) Done
-	const totalSteps = 6;
+	// Workers: 1) Account, 2) Tool Detection, 3) AI Accounts, 4) Domains, 5) GitHub, 6) LinkedIn, 7) Done
+	// Employers: 1) Account, 2) (skip verification), 3) Company, 4) Domain, 5) What You Need, 6) Done (stays at 6)
+	const totalSteps = userType === "employer" ? 6 : 7;
 	
 	console.log(`\n${sym.email} ${c.bold(`Step 1/${totalSteps} — Create Your Account`)}\n`);
 
@@ -357,9 +363,15 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState, startStep = 2)
 		saveProgress(2);
 	}
 
-	// Step 3: Domains
+	// Step 3: Connect AI Accounts (optional)
 	if (startStep <= 3) {
-		console.log(`${sym.target} ${c.bold("Step 3/6 — Your Domains")}\n`);
+		await runConnectAIAccountsStep(prompt);
+		saveProgress(3);
+	}
+
+	// Step 4: Domains
+	if (startStep <= 4) {
+		console.log(`${sym.target} ${c.bold("Step 4/7 — Your Domains")}\n`);
 		console.log(`What domains do you work in? ${c.dim("(comma-separated)")}`);
 		console.log(c.dim("Examples: full-stack dev, data engineering, trading, content creation\n"));
 		const domainsInput = await prompt.question(`${sym.arrow} `);
@@ -380,12 +392,12 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState, startStep = 2)
 		} catch (err) {
 			console.log(`${sym.warning} ${c.warning("Could not save profile details — you can update later with 'jobarbiter profile create'")}\n`);
 		}
-		saveProgress(3);
+		saveProgress(4);
 	}
 
-	// Step 4: Connect GitHub (optional)
-	if (startStep <= 4) {
-		console.log(`${sym.link} ${c.bold("Step 4/6 — Connect GitHub")} ${c.dim("(optional)")}\n`);
+	// Step 5: Connect GitHub (optional)
+	if (startStep <= 5) {
+		console.log(`${sym.link} ${c.bold("Step 5/7 — Connect GitHub")} ${c.dim("(optional)")}\n`);
 		console.log(`Connecting your GitHub lets us analyze your AI-assisted work patterns.`);
 		console.log(`This significantly boosts your proficiency score.\n`);
 
@@ -406,12 +418,12 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState, startStep = 2)
 		} else {
 			console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter git connect'")}\n`);
 		}
-		saveProgress(4);
+		saveProgress(5);
 	}
 
-	// Step 5: Connect LinkedIn (optional)
-	if (startStep <= 5) {
-		console.log(`${sym.link} ${c.bold("Step 5/6 — Connect LinkedIn")} ${c.dim("(optional)")}\n`);
+	// Step 6: Connect LinkedIn (optional)
+	if (startStep <= 6) {
+		console.log(`${sym.link} ${c.bold("Step 6/7 — Connect LinkedIn")} ${c.dim("(optional)")}\n`);
 		console.log(`Your LinkedIn profile strengthens identity verification.`);
 		console.log(c.dim("We never post on your behalf or access your connections.\n"));
 
@@ -430,11 +442,11 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState, startStep = 2)
 		} else {
 			console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter identity linkedin <url>'")}\n`);
 		}
-		saveProgress(5);
+		saveProgress(6);
 	}
 
-	// Step 6: Done!
-	saveConfig({ ...config, onboardingComplete: true, onboardingStep: 6 });
+	// Step 7: Done!
+	saveConfig({ ...config, onboardingComplete: true, onboardingStep: 7 });
 	showWorkerCompletion(state);
 }
 
@@ -444,15 +456,15 @@ async function runToolDetectionStep(
 	prompt: Prompt,
 	config: Config,
 ): Promise<{ tools: string[] }> {
-	console.log(`🔍 ${c.bold("Step 2/6 — Detecting AI Tools")}\n`);
+	console.log(`🔍 ${c.bold("Step 2/7 — Detecting AI Tools")}\n`);
 	console.log(c.dim("  Scanning your machine...\n"));
 
 	const allTools = detectAllTools();
 	const installed = allTools.filter((t) => t.installed);
-	const notInstalled = allTools.filter((t) => !t.installed && t.category === "coding-agent");
+	const notInstalled = allTools.filter((t) => !t.installed && t.category === "ai-agent");
 
 	// Group by category
-	const codingAgents = installed.filter((t) => t.category === "coding-agent");
+	const codingAgents = installed.filter((t) => t.category === "ai-agent");
 	const chatTools = installed.filter((t) => t.category === "chat");
 	const orchestration = installed.filter((t) => t.category === "orchestration");
 	const apiProviders = installed.filter((t) => t.category === "api-provider");
@@ -466,7 +478,7 @@ async function runToolDetectionStep(
 
 	console.log(`  ${c.bold("Found:")}`);
 
-	// Show coding agents with observer status
+	// Show AI agents with observer status
 	for (const tool of codingAgents) {
 		const display = formatToolDisplay(tool);
 		if (tool.observerAvailable) {
@@ -491,7 +503,7 @@ async function runToolDetectionStep(
 		console.log(`    ${sym.check} ${tool.name} ${c.dim("configured")}`);
 	}
 
-	// Show not-detected coding agents
+	// Show not-detected AI agents
 	if (notInstalled.length > 0) {
 		console.log(`\n  ${c.dim("Not detected (install to track):")}`);
 		for (const tool of notInstalled.slice(0, 5)) {
@@ -505,12 +517,12 @@ async function runToolDetectionStep(
 	// Collect tool names for profile
 	const toolNames = installed.map((t) => t.name);
 
-	// Observer installation for coding agents
+	// Observer installation for AI agents
 	const needsObserver = codingAgents.filter((t) => t.observerAvailable && !t.observerActive);
 
 	if (needsObserver.length > 0) {
 		console.log(`\n  ${c.bold("Observers")}`);
-		console.log(`  JobArbiter observes your coding sessions to build your`);
+		console.log(`  JobArbiter observes your AI sessions to build your`);
 		console.log(`  proficiency profile. ${c.bold("No code or prompts leave your machine")} —`);
 		console.log(`  only aggregate scores (tool usage, session counts, token volume).\n`);
 		console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
@@ -567,8 +579,99 @@ async function runToolDetectionStep(
 	return { tools: toolNames };
 }
 
+// ── Connect AI Accounts Step ───────────────────────────────────────────
+
+async function runConnectAIAccountsStep(prompt: Prompt): Promise<void> {
+	console.log(`${sym.link} ${c.bold("Step 3/7 — Connect AI Accounts")} ${c.dim("(optional)")}\n`);
+	
+	console.log(`  Connecting your AI provider accounts lets us analyze usage depth,`);
+	console.log(`  not just tool presence. The more we can see, the stronger your`);
+	console.log(`  verified proficiency profile.\n`);
+	
+	console.log(`  ${c.bold("What we can pull:")}`);
+	console.log(`    ${sym.bullet} Token usage volume and patterns ${c.dim("(how much you use AI)")}`);
+	console.log(`    ${sym.bullet} Model preferences ${c.dim("(which models you reach for)")}`);
+	console.log(`    ${sym.bullet} Session frequency and consistency over time`);
+	console.log(`    ${sym.bullet} API spend patterns ${c.dim("(demonstrates serious usage)")}\n`);
+	
+	console.log(`  ${c.bold("What we NEVER access:")}`);
+	console.log(`    ${sym.bullet} Your conversation content`);
+	console.log(`    ${sym.bullet} Prompts or responses`);
+	console.log(`    ${sym.bullet} Any proprietary or sensitive data\n`);
+
+	// Check for already connected providers
+	const existingProviders = loadProviderKeys();
+	if (existingProviders.length > 0) {
+		console.log(`  ${c.bold("Already connected:")}`);
+		for (const p of existingProviders) {
+			console.log(`    ${sym.check} ${p.provider}`);
+		}
+		console.log();
+	}
+
+	// Show available connections
+	let continueConnecting = true;
+	
+	while (continueConnecting) {
+		console.log(`  ${c.bold("Available connections:")}\n`);
+		console.log(`    ${c.highlight("1.")} Anthropic API key  — Pull Claude usage stats`);
+		console.log(`    ${c.highlight("2.")} OpenAI API key     — Pull GPT/ChatGPT usage stats`);
+		console.log(`    ${c.highlight("3.")} Skip for now\n`);
+		console.log(c.dim(`  You can connect accounts later with 'jobarbiter tokens connect'\n`));
+
+		const choice = await prompt.question(`  Your choice ${c.dim("[1/2/3]")}: `);
+		
+		if (choice === "3" || choice.toLowerCase() === "skip" || choice === "") {
+			console.log(`\n${c.dim("  Skipped — you can connect providers later with 'jobarbiter tokens connect'")}\n`);
+			continueConnecting = false;
+		} else if (choice === "1") {
+			await connectProvider(prompt, "anthropic", "Anthropic");
+			// Ask if they want to connect another
+			continueConnecting = await prompt.confirm(`\n  Connect another provider?`, false);
+			console.log();
+		} else if (choice === "2") {
+			await connectProvider(prompt, "openai", "OpenAI");
+			// Ask if they want to connect another
+			continueConnecting = await prompt.confirm(`\n  Connect another provider?`, false);
+			console.log();
+		} else {
+			console.log(c.error("  Please enter 1, 2, or 3"));
+		}
+	}
+}
+
+async function connectProvider(prompt: Prompt, providerId: string, providerName: string): Promise<void> {
+	console.log(`\n  ${sym.lock} ${c.bold("Privacy Notice")}`);
+	console.log(`  ${c.dim("─".repeat(50))}`);
+	console.log(`  Your API key is stored ${c.bold("locally only")} at:`);
+	console.log(`  ${c.dim("~/.config/jobarbiter/providers.json")}\n`);
+	console.log(`  ${sym.bullet} Keys are ${c.bold("NEVER")} sent to JobArbiter's servers`);
+	console.log(`  ${sym.bullet} Only aggregate stats (token counts, model usage) are submitted`);
+	console.log(`  ${sym.bullet} Revoke anytime: ${c.highlight(`jobarbiter tokens disconnect ${providerId}`)}`);
+	console.log(`  ${c.dim("─".repeat(50))}\n`);
+
+	const apiKey = await prompt.question(`  ${providerName} API key: `);
+	
+	if (!apiKey || apiKey.trim() === "") {
+		console.log(`  ${c.dim("Skipped")}`);
+		return;
+	}
+
+	console.log(c.dim("\n  Validating API key..."));
+	
+	const result = await validateProviderKey(providerId, apiKey.trim());
+	
+	if (result.valid) {
+		saveProviderKey(providerId, apiKey.trim());
+		console.log(`  ${sym.check} ${c.success(`${providerName} connected`)} — ${result.summary}`);
+	} else {
+		console.log(`  ${sym.cross} ${c.error(`Invalid key: ${result.error}`)}`);
+		console.log(`  ${c.dim("You can try again later with 'jobarbiter tokens connect'")}`);
+	}
+}
+
 function showWorkerCompletion(state: OnboardState): void {
-	console.log(`${sym.done} ${c.bold("Step 6/6 — You're In!")}\n`);
+	console.log(`${sym.done} ${c.bold("Step 7/7 — You're In!")}\n`);
 	console.log(`Your profile is live. Here's what happens next:\n`);
 	
 	console.log(`  📊 Your proficiency score builds automatically from:`);

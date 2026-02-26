@@ -781,10 +781,10 @@ program
 	});
 
 // ============================================================
-// observe (manage coding agent observers)
+// observe (manage AI agent observers)
 // ============================================================
 
-const observe = program.command("observe").description("Manage coding agent proficiency observers");
+const observe = program.command("observe").description("Manage AI tool proficiency observers");
 
 observe
 	.command("status")
@@ -796,7 +796,7 @@ observe
 
 			const detected = agents.filter((a) => a.installed);
 
-			console.log("\n🔍 Coding Agent Observers\n");
+			console.log("\n🔍 AI Agent Observers\n");
 			console.log("  Agents:");
 			for (const agent of agents) {
 				if (!agent.installed) {
@@ -839,7 +839,7 @@ observe
 
 observe
 	.command("install")
-	.description("Install observers for detected coding agents")
+	.description("Install observers for detected AI agents")
 	.option("--agent <id>", "Install for specific agent (claude-code, cursor, opencode, codex, gemini)")
 	.option("--all", "Install for all detected agents")
 	.action(async (opts) => {
@@ -848,7 +848,7 @@ observe
 			const detected = agents.filter((a) => a.installed);
 
 			if (detected.length === 0) {
-				error("No coding agents detected on this system.");
+				error("No AI agents detected on this system.");
 				console.log("  Supported: Claude Code, Cursor, OpenCode, Codex CLI, Gemini CLI");
 				process.exit(1);
 			}
@@ -890,7 +890,7 @@ observe
 
 observe
 	.command("remove")
-	.description("Remove observers from coding agents")
+	.description("Remove observers from AI agents")
 	.option("--agent <id>", "Remove from specific agent")
 	.option("--all", "Remove from all agents")
 	.action(async (opts) => {
@@ -935,7 +935,7 @@ observe
 
 			if (!status.hasData) {
 				console.log("\nNo observation data collected yet.");
-				console.log("Use your coding agents normally — data accumulates automatically.\n");
+				console.log("Use your AI agents normally — data accumulates automatically.\n");
 				process.exit(0);
 			}
 

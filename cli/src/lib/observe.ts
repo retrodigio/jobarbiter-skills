@@ -1,5 +1,5 @@
 /**
- * JobArbiter Observer — Hook installer for coding agent CLIs
+ * JobArbiter Observer — Hook installer for AI tools
  *
  * Installs observation hooks that extract proficiency signals from
  * session transcripts. Uses detect-tools.ts for agent detection.
@@ -98,7 +98,7 @@ function ensureObserverDirs(): void {
 // ── Core Observer Script ───────────────────────────────────────────────
 
 /**
- * The universal observer script. Runs as a hook in any coding agent.
+ * The universal observer script. Runs as a hook in any AI agent.
  * Reads session transcript data from stdin (JSON), extracts proficiency
  * signals, and appends them to the local observations file.
  *
@@ -109,7 +109,7 @@ function getObserverScript(): string {
 	return `#!/usr/bin/env node
 /**
  * JobArbiter Observer Hook
- * Extracts proficiency signals from coding agent sessions.
+ * Extracts proficiency signals from AI agent sessions.
  * 
  * Reads JSON from stdin, writes observations to:
  *   ~/.config/jobarbiter/observer/observations.json
@@ -139,7 +139,7 @@ process.stdin.on("end", () => {
     const observation = extractSignals(data);
     if (observation) appendObservation(observation);
   } catch (err) {
-    // Silent failure — never block the coding agent
+    // Silent failure — never block the AI agent
     fs.appendFileSync(
       path.join(os.homedir(), ".config", "jobarbiter", "observer", "errors.log"),
       \`[\${new Date().toISOString()}] \${err.message}\\n\`

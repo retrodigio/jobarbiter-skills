@@ -15,7 +15,7 @@ import { execSync } from "node:child_process";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export type ToolCategory = "coding-agent" | "chat" | "orchestration" | "api-provider";
+export type ToolCategory = "ai-agent" | "chat" | "orchestration" | "api-provider";
 
 export interface DetectedTool {
 	id: string;
@@ -46,11 +46,11 @@ interface ToolDefinition {
 // ── Tool Definitions ───────────────────────────────────────────────────
 
 const TOOL_DEFINITIONS: ToolDefinition[] = [
-	// AI Coding Agents
+	// AI AI Agents
 	{
 		id: "claude-code",
 		name: "Claude Code",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "claude",
 		configDir: join(homedir(), ".claude"),
 		observerAvailable: true,
@@ -58,7 +58,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "cursor",
 		name: "Cursor",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "cursor",
 		configDir: join(homedir(), ".cursor"),
 		macApp: "/Applications/Cursor.app",
@@ -67,7 +67,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "github-copilot",
 		name: "GitHub Copilot",
-		category: "coding-agent",
+		category: "ai-agent",
 		configDir: join(homedir(), ".config", "github-copilot"),
 		vscodeExtension: "github.copilot",
 		cursorExtension: "github.copilot",
@@ -76,7 +76,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "codex",
 		name: "Codex CLI",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "codex",
 		configDir: join(homedir(), ".codex"),
 		observerAvailable: true,
@@ -84,7 +84,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "opencode",
 		name: "OpenCode",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "opencode",
 		configDir: join(homedir(), ".config", "opencode"),
 		observerAvailable: true,
@@ -92,7 +92,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "aider",
 		name: "Aider",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "aider",
 		configDir: join(homedir(), ".aider"),
 		pipPackage: "aider-chat",
@@ -101,7 +101,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "continue",
 		name: "Continue",
-		category: "coding-agent",
+		category: "ai-agent",
 		vscodeExtension: "continue.continue",
 		cursorExtension: "continue.continue",
 		observerAvailable: false,
@@ -109,7 +109,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "cline",
 		name: "Cline",
-		category: "coding-agent",
+		category: "ai-agent",
 		vscodeExtension: "saoudrizwan.claude-dev",
 		cursorExtension: "saoudrizwan.claude-dev",
 		observerAvailable: false,
@@ -117,7 +117,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "windsurf",
 		name: "Windsurf",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "windsurf",
 		macApp: "/Applications/Windsurf.app",
 		observerAvailable: false,
@@ -125,7 +125,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "letta",
 		name: "Letta Code",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "letta",
 		configDir: join(homedir(), ".letta"),
 		pipPackage: "letta",
@@ -134,7 +134,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 	{
 		id: "gemini",
 		name: "Gemini CLI",
-		category: "coding-agent",
+		category: "ai-agent",
 		binary: "gemini",
 		configDir: join(homedir(), ".gemini"),
 		observerAvailable: true,
