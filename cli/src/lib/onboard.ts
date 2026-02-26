@@ -139,13 +139,44 @@ interface OnboardState {
 export async function runOnboardWizard(opts: { force?: boolean; baseUrl?: string }): Promise<void> {
 	const baseUrl = opts.baseUrl || "https://jobarbiter-api-production.up.railway.app";
 	
-	// Check for existing config
+	// Check for existing config — resume if onboarding incomplete
 	const existingConfig = loadConfig();
 	if (existingConfig && !opts.force) {
-		console.log(`\n${sym.warning}  ${c.warning("You already have a JobArbiter account configured.")}`);
-		console.log(`\n   Run ${c.highlight("jobarbiter status")} to check your account.`);
-		console.log(`   Run ${c.highlight("jobarbiter onboard --force")} to start fresh.\n`);
-		process.exit(0);
+		if (existingConfig.onboardingComplete) {
+			console.log(`\n${sym.check}  ${c.success("You're already onboarded!")}`);
+			console.log(`\n   Run ${c.highlight("jobarbiter status")} to check your account.`);
+			console.log(`   Run ${c.highlight("jobarbiter onboard --force")} to start fresh.\n`);
+			process.exit(0);
+		}
+		// Onboarding incomplete — resume
+		const resumeStep = (existingConfig.onboardingStep ?? 1) + 1;
+		console.log(`\n${sym.rocket}  ${c.bold("Resuming onboarding")} from step ${resumeStep}/6\n`);
+		console.log(c.dim(`   Account: ${existingConfig.userType} | API key configured`));
+		console.log(c.dim(`   Run ${c.highlight("jobarbiter onboard --force")} to start over.\n`));
+		
+		const prompt = new Prompt();
+		const state: Partial<OnboardState> = {
+			baseUrl,
+			apiKey: existingConfig.apiKey,
+			userType: existingConfig.userType as "worker" | "employer",
+			userId: "",
+			email: "",
+		};
+		try {
+			if (existingConfig.userType === "worker" || existingConfig.userType === "seeker") {
+				await runWorkerFlow(prompt, state as OnboardState, resumeStep);
+			} else {
+				await runEmployerFlow(prompt, state as OnboardState);
+			}
+			prompt.close();
+		} catch (err) {
+			prompt.close();
+			if (err instanceof Error) {
+				console.log(`\n${sym.cross} ${c.error(err.message)}`);
+			}
+			process.exit(1);
+		}
+		return;
 	}
 
 	const prompt = new Prompt();
@@ -163,11 +194,13 @@ export async function runOnboardWizard(opts: { force?: boolean; baseUrl?: string
 		state.apiKey = apiKey;
 		state.userId = userId;
 
-		// Save config immediately after verification
+		// Save config immediately after verification (with step progress)
 		saveConfig({
 			apiKey,
 			baseUrl,
 			userType,
+			onboardingStep: 1,
+			onboardingComplete: false,
 		});
 
 		if (userType === "worker") {
@@ -306,85 +339,102 @@ async function handleEmailVerification(
 
 // ── Worker Flow ────────────────────────────────────────────────────────
 
-async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void> {
+async function runWorkerFlow(prompt: Prompt, state: OnboardState, startStep = 2): Promise<void> {
 	const config: Config = {
 		apiKey: state.apiKey,
 		baseUrl: state.baseUrl,
 		userType: "worker",
 	};
 
+	const saveProgress = (step: number) => {
+		saveConfig({ ...config, onboardingStep: step });
+	};
+
 	// Step 2: Auto-detect AI Tools
-	const detectedToolsResult = await runToolDetectionStep(prompt, config);
-	state.tools = detectedToolsResult.tools;
+	if (startStep <= 2) {
+		const detectedToolsResult = await runToolDetectionStep(prompt, config);
+		state.tools = detectedToolsResult.tools;
+		saveProgress(2);
+	}
 
 	// Step 3: Domains
-	console.log(`${sym.target} ${c.bold("Step 3/6 — Your Domains")}\n`);
-	console.log(`What domains do you work in? ${c.dim("(comma-separated)")}`);
-	console.log(c.dim("Examples: full-stack dev, data engineering, trading, content creation\n"));
-	const domainsInput = await prompt.question(`${sym.arrow} `);
-	const domains = domainsInput.split(",").map(s => s.trim()).filter(Boolean);
-	state.domains = domains;
+	if (startStep <= 3) {
+		console.log(`${sym.target} ${c.bold("Step 3/6 — Your Domains")}\n`);
+		console.log(`What domains do you work in? ${c.dim("(comma-separated)")}`);
+		console.log(c.dim("Examples: full-stack dev, data engineering, trading, content creation\n"));
+		const domainsInput = await prompt.question(`${sym.arrow} `);
+		const domains = domainsInput.split(",").map(s => s.trim()).filter(Boolean);
+		state.domains = domains;
 
-	// Create/update profile
-	console.log(c.dim("\nSaving profile..."));
+		// Create/update profile
+		console.log(c.dim("\nSaving profile..."));
 
-	try {
-		await api(config, "POST", "/v1/profile", {
-			domains,
-			tools: {
-				primary: state.tools,
-			},
-		});
-		console.log(`${sym.check} Profile saved\n`);
-	} catch (err) {
-		console.log(`${sym.warning} ${c.warning("Could not save profile details — you can update later with 'jobarbiter profile create'")}\n`);
+		try {
+			await api(config, "POST", "/v1/profile", {
+				domains,
+				tools: {
+					primary: state.tools,
+				},
+			});
+			console.log(`${sym.check} Profile saved\n`);
+		} catch (err) {
+			console.log(`${sym.warning} ${c.warning("Could not save profile details — you can update later with 'jobarbiter profile create'")}\n`);
+		}
+		saveProgress(3);
 	}
 
 	// Step 4: Connect GitHub (optional)
-	console.log(`${sym.link} ${c.bold("Step 4/6 — Connect GitHub")} ${c.dim("(optional)")}\n`);
-	console.log(`Connecting your GitHub lets us analyze your AI-assisted work patterns.`);
-	console.log(`This significantly boosts your proficiency score.\n`);
+	if (startStep <= 4) {
+		console.log(`${sym.link} ${c.bold("Step 4/6 — Connect GitHub")} ${c.dim("(optional)")}\n`);
+		console.log(`Connecting your GitHub lets us analyze your AI-assisted work patterns.`);
+		console.log(`This significantly boosts your proficiency score.\n`);
 
-	const githubUsername = await prompt.question(`GitHub username ${c.dim("(press Enter to skip)")}: `);
-	
-	if (githubUsername) {
-		console.log(c.dim("\nConnecting GitHub..."));
-		try {
-			await api(config, "POST", "/v1/attestations/git/connect", {
-				provider: "github",
-				username: githubUsername,
-			});
-			console.log(`${sym.check} GitHub connected: ${c.highlight(githubUsername)}\n`);
-			state.githubUsername = githubUsername;
-		} catch (err) {
-			console.log(`${sym.warning} ${c.warning("Could not connect GitHub — you can try later with 'jobarbiter git connect'")}\n`);
+		const githubUsername = await prompt.question(`GitHub username ${c.dim("(press Enter to skip)")}: `);
+		
+		if (githubUsername) {
+			console.log(c.dim("\nConnecting GitHub..."));
+			try {
+				await api(config, "POST", "/v1/attestations/git/connect", {
+					provider: "github",
+					username: githubUsername,
+				});
+				console.log(`${sym.check} GitHub connected: ${c.highlight(githubUsername)}\n`);
+				state.githubUsername = githubUsername;
+			} catch (err) {
+				console.log(`${sym.warning} ${c.warning("Could not connect GitHub — you can try later with 'jobarbiter git connect'")}\n`);
+			}
+		} else {
+			console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter git connect'")}\n`);
 		}
-	} else {
-		console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter git connect'")}\n`);
+		saveProgress(4);
 	}
 
 	// Step 5: Connect LinkedIn (optional)
-	console.log(`${sym.link} ${c.bold("Step 5/6 — Connect LinkedIn")} ${c.dim("(optional)")}\n`);
-	console.log(`Your LinkedIn profile strengthens identity verification.`);
-	console.log(c.dim("We never post on your behalf or access your connections.\n"));
+	if (startStep <= 5) {
+		console.log(`${sym.link} ${c.bold("Step 5/6 — Connect LinkedIn")} ${c.dim("(optional)")}\n`);
+		console.log(`Your LinkedIn profile strengthens identity verification.`);
+		console.log(c.dim("We never post on your behalf or access your connections.\n"));
 
-	const linkedinUrl = await prompt.question(`LinkedIn URL ${c.dim("(press Enter to skip)")}: `);
-	
-	if (linkedinUrl) {
-		console.log(c.dim("\nSubmitting for verification..."));
-		try {
-			await api(config, "POST", "/v1/verification/linkedin", {
-				linkedinUrl: linkedinUrl.trim(),
-			});
-			console.log(`${sym.check} LinkedIn submitted for verification\n`);
-		} catch (err) {
-			console.log(`${sym.warning} ${c.warning("Could not submit LinkedIn — you can try later with 'jobarbiter identity linkedin <url>'")}\n`);
+		const linkedinUrl = await prompt.question(`LinkedIn URL ${c.dim("(press Enter to skip)")}: `);
+		
+		if (linkedinUrl) {
+			console.log(c.dim("\nSubmitting for verification..."));
+			try {
+				await api(config, "POST", "/v1/verification/linkedin", {
+					linkedinUrl: linkedinUrl.trim(),
+				});
+				console.log(`${sym.check} LinkedIn submitted for verification\n`);
+			} catch (err) {
+				console.log(`${sym.warning} ${c.warning("Could not submit LinkedIn — you can try later with 'jobarbiter identity linkedin <url>'")}\n`);
+			}
+		} else {
+			console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter identity linkedin <url>'")}\n`);
 		}
-	} else {
-		console.log(`${c.dim("Skipped — you can connect later with 'jobarbiter identity linkedin <url>'")}\n`);
+		saveProgress(5);
 	}
 
 	// Step 6: Done!
+	saveConfig({ ...config, onboardingComplete: true, onboardingStep: 6 });
 	showWorkerCompletion(state);
 }
 

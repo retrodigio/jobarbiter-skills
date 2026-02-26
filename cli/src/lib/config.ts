@@ -6,6 +6,8 @@ export interface Config {
 	apiKey: string;
 	baseUrl: string;
 	userType: "worker" | "employer" | "seeker" | "poster";
+	onboardingComplete?: boolean;
+	onboardingStep?: number; // last completed step (1-6)
 }
 
 const CONFIG_DIR = join(homedir(), ".config", "jobarbiter");
