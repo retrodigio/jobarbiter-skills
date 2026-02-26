@@ -557,7 +557,12 @@ async function runToolDetectionStep(
 
 			if (result.installed.length > 0) {
 				console.log(`\n  ${sym.check} ${c.success(`${result.installed.length} observer${result.installed.length > 1 ? "s" : ""} installed!`)}`);
-				console.log(c.dim(`  Your proficiency profile will start building automatically.\n`));
+				console.log(`\n  ${c.bold("What happens now?")}`);
+			console.log(`  Observers run automatically each time you use your AI tools.`);
+			console.log(`  Just work normally — every Claude Code session, every Gemini`);
+			console.log(`  conversation, every Codex task builds your profile.\n`);
+			console.log(`  ${sym.arrow} ${c.highlight("Your next AI session is your first proficiency data point.")}`);
+			console.log(c.dim(`  Tip: The more you use your tools, the richer your profile becomes.\n`));
 			}
 		} else {
 			console.log(c.dim("\n  Skipped — you can install observers later with 'jobarbiter observe install'.\n"));
@@ -679,7 +684,10 @@ async function connectProvider(prompt: Prompt, providerId: string, providerName:
 
 function showWorkerCompletion(state: OnboardState): void {
 	console.log(`${sym.done} ${c.bold("Step 7/7 — You're In!")}\n`);
-	console.log(`Your profile is live. Here's what happens next:\n`);
+	console.log(`Your profile is live. Here's how it builds:\n`);
+	console.log(`  💡 ${c.bold("Just use your AI tools normally.")} Every session is observed,`);
+	console.log(`     analyzed, and builds your verified proficiency profile.`);
+	console.log(`     Your next AI session is your first data point.\n`);
 	
 	console.log(`  📊 Your proficiency profile builds automatically from:`);
 	console.log(`     ${c.bold("How you use AI (qualitative):")}`);
