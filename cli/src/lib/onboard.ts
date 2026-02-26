@@ -675,7 +675,7 @@ function showWorkerCompletion(state: OnboardState): void {
 	console.log(`Your profile is live. Here's what happens next:\n`);
 	
 	console.log(`  📊 Your proficiency score builds automatically from:`);
-	console.log(`     ${sym.bullet} Coding agent observation ${c.dim("(biggest factor — 35%)")}`);
+	console.log(`     ${sym.bullet} AI tool observation ${c.dim("(biggest factor — 35%)")}`);
 	console.log(`     ${sym.bullet} GitHub contribution analysis ${c.dim("(20%)")}`);
 	console.log(`     ${sym.bullet} Token consumption patterns ${c.dim("(15%)")}`);
 	console.log(`     ${sym.bullet} Tool diversity & fluency ${c.dim("(15%)")}`);
@@ -683,10 +683,11 @@ function showWorkerCompletion(state: OnboardState): void {
 	
 	console.log(`  🎯 Your proficiency ${c.bold("track")} (Orchestrator, Systems Builder, or`);
 	console.log(`     Domain Translator) is determined automatically as we observe`);
-	console.log(`     how you work. No need to self-assess.\n`);
+	console.log(`     how you work — whether that's coding, research, automation,`);
+	console.log(`     content creation, or anything else. No need to self-assess.\n`);
 	
 	console.log(`  🤖 For deeper attestation, install the ${c.highlight("jobarbiter-proficiency")}`);
-	console.log(`     skill in your AI agent (OpenClaw, Claude Code, etc.)\n`);
+	console.log(`     skill in your AI tools (OpenClaw, Claude Code, etc.)\n`);
 	
 	console.log(`  ${c.bold("Useful commands:")}`);
 	console.log(`    ${c.highlight("jobarbiter profile score")}    — Check your proficiency score`);

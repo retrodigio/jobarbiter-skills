@@ -109,7 +109,7 @@ function getObserverScript(): string {
 	return `#!/usr/bin/env node
 /**
  * JobArbiter Observer Hook
- * Extracts proficiency signals from AI agent sessions.
+ * Extracts proficiency signals from AI tool sessions.
  * 
  * Reads JSON from stdin, writes observations to:
  *   ~/.config/jobarbiter/observer/observations.json
@@ -139,7 +139,7 @@ process.stdin.on("end", () => {
     const observation = extractSignals(data);
     if (observation) appendObservation(observation);
   } catch (err) {
-    // Silent failure — never block the AI agent
+    // Silent failure — never block the AI tool
     fs.appendFileSync(
       path.join(os.homedir(), ".config", "jobarbiter", "observer", "errors.log"),
       \`[\${new Date().toISOString()}] \${err.message}\\n\`
