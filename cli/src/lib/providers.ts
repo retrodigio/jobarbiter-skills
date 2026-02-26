@@ -181,12 +181,43 @@ export async function validateOpenAIKey(apiKey: string): Promise<ValidationResul
 }
 
 /**
+ * Validate a Google AI API key by making a test API call.
+ */
+export async function validateGoogleKey(apiKey: string): Promise<ValidationResult> {
+	try {
+		const response = await fetch(
+			`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+			{ method: "GET" },
+		);
+
+		if (response.status === 400 || response.status === 401 || response.status === 403) {
+			return { valid: false, error: "Invalid API key" };
+		}
+
+		if (!response.ok) {
+			return { valid: false, error: `API error: ${response.status}` };
+		}
+
+		return {
+			valid: true,
+			summary: "API key validated",
+		};
+	} catch (err) {
+		if (err instanceof Error) {
+			return { valid: false, error: `Connection error: ${err.message}` };
+		}
+		return { valid: false, error: "Unknown error" };
+	}
+}
+
+/**
  * Get list of supported providers.
  */
 export function getSupportedProviders(): Array<{ id: string; name: string }> {
 	return [
 		{ id: "anthropic", name: "Anthropic" },
 		{ id: "openai", name: "OpenAI" },
+		{ id: "google", name: "Google AI" },
 	];
 }
 
@@ -199,6 +230,8 @@ export async function validateProviderKey(provider: string, apiKey: string): Pro
 			return validateAnthropicKey(apiKey);
 		case "openai":
 			return validateOpenAIKey(apiKey);
+		case "google":
+			return validateGoogleKey(apiKey);
 		default:
 			return { valid: false, error: `Unknown provider: ${provider}` };
 	}
