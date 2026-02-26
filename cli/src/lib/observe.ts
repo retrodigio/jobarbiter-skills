@@ -1,14 +1,14 @@
 /**
  * JobArbiter Observer — Hook installer for coding agent CLIs
  *
- * Detects installed coding agents, installs observation hooks that
- * extract proficiency signals from session transcripts.
+ * Installs observation hooks that extract proficiency signals from
+ * session transcripts. Uses detect-tools.ts for agent detection.
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync, unlinkSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { homedir } from "node:os";
-import { execSync } from "node:child_process";
+import { getObservableTools, type DetectedTool } from "./detect-tools.js";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -25,107 +25,39 @@ interface HookConfig {
 	[key: string]: unknown;
 }
 
-// ── Agent Detection ────────────────────────────────────────────────────
+// ── Agent Config Directories ───────────────────────────────────────────
 
-const AGENT_DEFINITIONS = [
-	{
-		id: "claude-code",
-		name: "Claude Code",
-		configDir: join(homedir(), ".claude"),
-		hookFormat: "claude" as const,
-		detectBin: "claude",
-	},
-	{
-		id: "cursor",
-		name: "Cursor",
-		configDir: join(homedir(), ".cursor"),
-		hookFormat: "cursor" as const,
-		detectBin: null, // Cursor is an app, not a CLI
-		detectDir: join(homedir(), ".cursor"),
-	},
-	{
-		id: "opencode",
-		name: "OpenCode",
-		configDir: join(homedir(), ".config", "opencode"),
-		hookFormat: "opencode" as const,
-		detectBin: "opencode",
-	},
-	{
-		id: "codex",
-		name: "Codex CLI",
-		configDir: join(homedir(), ".codex"),
-		hookFormat: "codex" as const,
-		detectBin: "codex",
-	},
-	{
-		id: "gemini",
-		name: "Gemini CLI",
-		configDir: join(homedir(), ".gemini"),
-		hookFormat: "gemini" as const,
-		detectBin: "gemini",
-	},
-];
+const AGENT_CONFIG_DIRS: Record<string, string> = {
+	"claude-code": join(homedir(), ".claude"),
+	"cursor": join(homedir(), ".cursor"),
+	"opencode": join(homedir(), ".config", "opencode"),
+	"codex": join(homedir(), ".codex"),
+	"gemini": join(homedir(), ".gemini"),
+};
 
-function binExists(name: string): boolean {
-	try {
-		execSync(`which ${name}`, { stdio: "ignore" });
-		return true;
-	} catch {
-		return false;
-	}
-}
+const AGENT_HOOK_FORMATS: Record<string, "claude" | "cursor" | "opencode" | "codex" | "gemini"> = {
+	"claude-code": "claude",
+	"cursor": "cursor",
+	"opencode": "opencode",
+	"codex": "codex",
+	"gemini": "gemini",
+};
 
+/**
+ * Detect agents that support observation.
+ * Uses the shared detect-tools module for detection.
+ */
 export function detectAgents(): DetectedAgent[] {
-	return AGENT_DEFINITIONS.map((def) => {
-		const installed =
-			(def.detectBin && binExists(def.detectBin)) ||
-			existsSync(def.configDir);
-
-		return {
-			id: def.id,
-			name: def.name,
-			configDir: def.configDir,
-			hookFormat: def.hookFormat,
-			installed: !!installed,
-			hookInstalled: installed ? isHookInstalled(def.id, def.configDir, def.hookFormat) : false,
-		};
-	});
-}
-
-// ── Hook Detection ─────────────────────────────────────────────────────
-
-function isHookInstalled(agentId: string, configDir: string, format: string): boolean {
-	try {
-		switch (format) {
-			case "claude":
-			case "cursor": {
-				const hookFile = join(configDir, "hooks.json");
-				if (!existsSync(hookFile)) return false;
-				const content = readFileSync(hookFile, "utf-8");
-				return content.includes("jobarbiter");
-			}
-			case "opencode": {
-				const pluginDir = join(configDir, "plugins");
-				return existsSync(join(pluginDir, "jobarbiter-observer.ts"));
-			}
-			case "codex": {
-				const configFile = join(configDir, "config.toml");
-				if (!existsSync(configFile)) return false;
-				const content = readFileSync(configFile, "utf-8");
-				return content.includes("jobarbiter");
-			}
-			case "gemini": {
-				const settingsFile = join(configDir, "settings.json");
-				if (!existsSync(settingsFile)) return false;
-				const content = readFileSync(settingsFile, "utf-8");
-				return content.includes("jobarbiter");
-			}
-			default:
-				return false;
-		}
-	} catch {
-		return false;
-	}
+	const observableTools = getObservableTools();
+	
+	return observableTools.map((tool) => ({
+		id: tool.id,
+		name: tool.name,
+		configDir: AGENT_CONFIG_DIRS[tool.id] || tool.configDir || "",
+		hookFormat: AGENT_HOOK_FORMATS[tool.id] || "claude",
+		installed: tool.installed,
+		hookInstalled: tool.observerActive,
+	}));
 }
 
 // ── Observer Data Directory ────────────────────────────────────────────
@@ -576,6 +508,53 @@ function installGeminiHook(configDir: string, scriptPath: string): void {
 
 // ── Public API ─────────────────────────────────────────────────────────
 
+// ── Agent Name Mapping ─────────────────────────────────────────────────
+
+const AGENT_NAMES: Record<string, string> = {
+	"claude-code": "Claude Code",
+	"cursor": "Cursor",
+	"opencode": "OpenCode",
+	"codex": "Codex CLI",
+	"gemini": "Gemini CLI",
+};
+
+/**
+ * Check if observer hook is installed for an agent.
+ */
+function isHookInstalled(agentId: string, configDir: string, format: string): boolean {
+	try {
+		switch (format) {
+			case "claude":
+			case "cursor": {
+				const hookFile = join(configDir, "hooks.json");
+				if (!existsSync(hookFile)) return false;
+				const content = readFileSync(hookFile, "utf-8");
+				return content.includes("jobarbiter");
+			}
+			case "opencode": {
+				const pluginDir = join(configDir, "plugins");
+				return existsSync(join(pluginDir, "jobarbiter-observer.js"));
+			}
+			case "codex": {
+				const configFile = join(configDir, "config.toml");
+				if (!existsSync(configFile)) return false;
+				const content = readFileSync(configFile, "utf-8");
+				return content.includes("jobarbiter");
+			}
+			case "gemini": {
+				const settingsFile = join(configDir, "settings.json");
+				if (!existsSync(settingsFile)) return false;
+				const content = readFileSync(settingsFile, "utf-8");
+				return content.includes("jobarbiter");
+			}
+			default:
+				return false;
+		}
+	} catch {
+		return false;
+	}
+}
+
 /**
  * Install observer hooks for the specified agents.
  * Returns a summary of what was installed.
@@ -591,40 +570,43 @@ export function installObservers(
 	};
 
 	for (const agentId of agentIds) {
-		const def = AGENT_DEFINITIONS.find((d) => d.id === agentId);
-		if (!def) {
+		const configDir = AGENT_CONFIG_DIRS[agentId];
+		const hookFormat = AGENT_HOOK_FORMATS[agentId];
+		const agentName = AGENT_NAMES[agentId] || agentId;
+
+		if (!configDir || !hookFormat) {
 			result.errors.push({ agent: agentId, error: "Unknown agent" });
 			continue;
 		}
 
 		// Check if already installed
-		if (isHookInstalled(def.id, def.configDir, def.hookFormat)) {
-			result.skipped.push(def.name);
+		if (isHookInstalled(agentId, configDir, hookFormat)) {
+			result.skipped.push(agentName);
 			continue;
 		}
 
 		try {
-			switch (def.hookFormat) {
+			switch (hookFormat) {
 				case "claude":
-					installClaudeCodeHook(def.configDir, scriptPath);
+					installClaudeCodeHook(configDir, scriptPath);
 					break;
 				case "cursor":
-					installCursorHook(def.configDir, scriptPath);
+					installCursorHook(configDir, scriptPath);
 					break;
 				case "opencode":
-					installOpenCodeHook(def.configDir, scriptPath);
+					installOpenCodeHook(configDir, scriptPath);
 					break;
 				case "codex":
-					installCodexHook(def.configDir, scriptPath);
+					installCodexHook(configDir, scriptPath);
 					break;
 				case "gemini":
-					installGeminiHook(def.configDir, scriptPath);
+					installGeminiHook(configDir, scriptPath);
 					break;
 			}
-			result.installed.push(def.name);
+			result.installed.push(agentName);
 		} catch (err) {
 			result.errors.push({
-				agent: def.name,
+				agent: agentName,
 				error: err instanceof Error ? err.message : String(err),
 			});
 		}
@@ -640,17 +622,20 @@ export function removeObservers(agentIds: string[]): { removed: string[]; notFou
 	const result = { removed: [] as string[], notFound: [] as string[] };
 
 	for (const agentId of agentIds) {
-		const def = AGENT_DEFINITIONS.find((d) => d.id === agentId);
-		if (!def) {
+		const configDir = AGENT_CONFIG_DIRS[agentId];
+		const hookFormat = AGENT_HOOK_FORMATS[agentId];
+		const agentName = AGENT_NAMES[agentId] || agentId;
+
+		if (!configDir || !hookFormat) {
 			result.notFound.push(agentId);
 			continue;
 		}
 
 		try {
-			switch (def.hookFormat) {
+			switch (hookFormat) {
 				case "claude":
 				case "cursor": {
-					const hookFile = join(def.configDir, "hooks.json");
+					const hookFile = join(configDir, "hooks.json");
 					if (existsSync(hookFile)) {
 						const config = JSON.parse(readFileSync(hookFile, "utf-8"));
 						for (const [key, hooks] of Object.entries(config.hooks || {})) {
@@ -661,24 +646,24 @@ export function removeObservers(agentIds: string[]): { removed: string[]; notFou
 							}
 						}
 						writeFileSync(hookFile, JSON.stringify(config, null, 2) + "\n");
-						result.removed.push(def.name);
+						result.removed.push(agentName);
 					} else {
-						result.notFound.push(def.name);
+						result.notFound.push(agentName);
 					}
 					break;
 				}
 				case "opencode": {
-					const pluginFile = join(def.configDir, "plugins", "jobarbiter-observer.js");
+					const pluginFile = join(configDir, "plugins", "jobarbiter-observer.js");
 					if (existsSync(pluginFile)) {
-							unlinkSync(pluginFile);
-						result.removed.push(def.name);
+						unlinkSync(pluginFile);
+						result.removed.push(agentName);
 					} else {
-						result.notFound.push(def.name);
+						result.notFound.push(agentName);
 					}
 					break;
 				}
 				case "codex": {
-					const configFile = join(def.configDir, "config.toml");
+					const configFile = join(configDir, "config.toml");
 					if (existsSync(configFile)) {
 						let content = readFileSync(configFile, "utf-8");
 						content = content
@@ -686,14 +671,14 @@ export function removeObservers(agentIds: string[]): { removed: string[]; notFou
 							.filter((line) => !line.includes("jobarbiter"))
 							.join("\n");
 						writeFileSync(configFile, content);
-						result.removed.push(def.name);
+						result.removed.push(agentName);
 					} else {
-						result.notFound.push(def.name);
+						result.notFound.push(agentName);
 					}
 					break;
 				}
 				case "gemini": {
-					const settingsFile = join(def.configDir, "settings.json");
+					const settingsFile = join(configDir, "settings.json");
 					if (existsSync(settingsFile)) {
 						const settings = JSON.parse(readFileSync(settingsFile, "utf-8"));
 						for (const [key, hookGroups] of Object.entries(settings.hooks || {})) {
@@ -704,15 +689,15 @@ export function removeObservers(agentIds: string[]): { removed: string[]; notFou
 							}
 						}
 						writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
-						result.removed.push(def.name);
+						result.removed.push(agentName);
 					} else {
-						result.notFound.push(def.name);
+						result.notFound.push(agentName);
 					}
 					break;
 				}
 			}
 		} catch {
-			result.notFound.push(def.name);
+			result.notFound.push(agentName);
 		}
 	}
 

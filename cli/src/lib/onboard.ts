@@ -11,7 +11,15 @@
 import * as readline from "node:readline";
 import { loadConfig, saveConfig, getConfigPath, type Config } from "./config.js";
 import { apiUnauthenticated, api, ApiError } from "./api.js";
-import { detectAgents, installObservers, type DetectedAgent } from "./observe.js";
+import { installObservers } from "./observe.js";
+import {
+	detectAllTools,
+	getInstalledTools,
+	getToolsNeedingObserver,
+	formatToolDisplay,
+	type DetectedTool,
+	type ToolCategory,
+} from "./detect-tools.js";
 
 // ── ANSI Colors ────────────────────────────────────────────────────────
 
@@ -216,7 +224,9 @@ async function handleEmailVerification(
 	baseUrl: string,
 	userType: "worker" | "employer"
 ): Promise<{ email: string; apiKey: string; userId: string }> {
-	const totalSteps = userType === "worker" ? 5 : 6;
+	// Workers: 1) Account, 2) Tool Detection, 3) Domains, 4) GitHub, 5) LinkedIn, 6) Done
+	// Employers: 1) Account, 2) (skip verification), 3) Company, 4) Domain, 5) What You Need, 6) Done
+	const totalSteps = 6;
 	
 	console.log(`\n${sym.email} ${c.bold(`Step 1/${totalSteps} — Create Your Account`)}\n`);
 
@@ -303,16 +313,13 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 		userType: "worker",
 	};
 
-	// Step 2: Profile Setup (tools + domains)
-	console.log(`${sym.tools} ${c.bold("Step 2/6 — Your AI Stack")}\n`);
-	
-	console.log(`What AI tools do you use? ${c.dim("(comma-separated)")}`);
-	console.log(c.dim("Examples: Claude Code, Cursor, OpenClaw, ChatGPT, Copilot, Midjourney\n"));
-	const toolsInput = await prompt.question(`${sym.arrow} `);
-	const tools = toolsInput.split(",").map(s => s.trim()).filter(Boolean);
-	state.tools = tools;
+	// Step 2: Auto-detect AI Tools
+	const detectedToolsResult = await runToolDetectionStep(prompt, config);
+	state.tools = detectedToolsResult.tools;
 
-	console.log(`\nWhat domains do you work in? ${c.dim("(comma-separated)")}`);
+	// Step 3: Domains
+	console.log(`${sym.target} ${c.bold("Step 3/6 — Your Domains")}\n`);
+	console.log(`What domains do you work in? ${c.dim("(comma-separated)")}`);
 	console.log(c.dim("Examples: full-stack dev, data engineering, trading, content creation\n"));
 	const domainsInput = await prompt.question(`${sym.arrow} `);
 	const domains = domainsInput.split(",").map(s => s.trim()).filter(Boolean);
@@ -325,16 +332,13 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 		await api(config, "POST", "/v1/profile", {
 			domains,
 			tools: {
-				primary: tools,
+				primary: state.tools,
 			},
 		});
 		console.log(`${sym.check} Profile saved\n`);
 	} catch (err) {
 		console.log(`${sym.warning} ${c.warning("Could not save profile details — you can update later with 'jobarbiter profile create'")}\n`);
 	}
-
-	// Step 3: Install Coding Agent Observers
-	await runObserverStep(prompt, state, 3, 6);
 
 	// Step 4: Connect GitHub (optional)
 	console.log(`${sym.link} ${c.bold("Step 4/6 — Connect GitHub")} ${c.dim("(optional)")}\n`);
@@ -384,101 +388,133 @@ async function runWorkerFlow(prompt: Prompt, state: OnboardState): Promise<void>
 	showWorkerCompletion(state);
 }
 
-// ── Observer Installation Step ─────────────────────────────────────────
+// ── Tool Detection Step ────────────────────────────────────────────────
 
-async function runObserverStep(
+async function runToolDetectionStep(
 	prompt: Prompt,
-	state: OnboardState,
-	stepNum: number,
-	totalSteps: number,
-): Promise<void> {
-	console.log(`🔍 ${c.bold(`Step ${stepNum}/${totalSteps} — Coding Agent Observers`)}\n`);
-	console.log(c.dim("Scanning for coding agents...\n"));
+	config: Config,
+): Promise<{ tools: string[] }> {
+	console.log(`🔍 ${c.bold("Step 2/6 — Detecting AI Tools")}\n`);
+	console.log(c.dim("  Scanning your machine...\n"));
 
-	const agents = detectAgents();
-	const detected = agents.filter((a) => a.installed);
-	const notDetected = agents.filter((a) => !a.installed);
+	const allTools = detectAllTools();
+	const installed = allTools.filter((t) => t.installed);
+	const notInstalled = allTools.filter((t) => !t.installed && t.category === "coding-agent");
 
-	// Show results
-	if (detected.length === 0) {
-		console.log(`  ${c.dim("No coding agents detected on this system.")}\n`);
-		console.log(c.dim("  You can install observers later with 'jobarbiter observe install'.\n"));
-		return;
+	// Group by category
+	const codingAgents = installed.filter((t) => t.category === "coding-agent");
+	const chatTools = installed.filter((t) => t.category === "chat");
+	const orchestration = installed.filter((t) => t.category === "orchestration");
+	const apiProviders = installed.filter((t) => t.category === "api-provider");
+
+	// Display found tools
+	if (installed.length === 0) {
+		console.log(`  ${c.dim("No AI tools detected on this system.")}\n`);
+		console.log(c.dim("  You can add tools later with 'jobarbiter observe install'.\n"));
+		return { tools: [] };
 	}
 
-	console.log(`  Found on your system:`);
-	for (const agent of detected) {
-		if (agent.hookInstalled) {
-			console.log(`    ${sym.check} ${agent.name}  ${c.dim("(observer already installed)")}`);
+	console.log(`  ${c.bold("Found:")}`);
+
+	// Show coding agents with observer status
+	for (const tool of codingAgents) {
+		const display = formatToolDisplay(tool);
+		if (tool.observerAvailable) {
+			if (tool.observerActive) {
+				console.log(`    ${sym.check} ${display} ${c.dim("(observer active)")}`);
+			} else {
+				console.log(`    ${sym.check} ${display} ${c.success("(observer available)")}`);
+			}
 		} else {
-			console.log(`    ${c.success("✓")} ${agent.name}`);
+			console.log(`    ${sym.check} ${display} ${c.dim("(detected)")}`);
 		}
 	}
-	for (const agent of notDetected) {
-		console.log(`    ${c.dim("⬚")} ${agent.name}  ${c.dim("(not found)")}`);
+
+	// Show other tools
+	for (const tool of chatTools) {
+		console.log(`    ${sym.check} ${formatToolDisplay(tool)} ${c.dim("(detected)")}`);
+	}
+	for (const tool of orchestration) {
+		console.log(`    ${sym.check} ${formatToolDisplay(tool)} ${c.dim("(detected)")}`);
+	}
+	for (const tool of apiProviders) {
+		console.log(`    ${sym.check} ${tool.name} ${c.dim("configured")}`);
 	}
 
-	// Filter to agents that need installation
-	const needsInstall = detected.filter((a) => !a.hookInstalled);
+	// Show not-detected coding agents
+	if (notInstalled.length > 0) {
+		console.log(`\n  ${c.dim("Not detected (install to track):")}`);
+		for (const tool of notInstalled.slice(0, 5)) {
+			console.log(`    ${c.dim("⬚")} ${tool.name}`);
+		}
+		if (notInstalled.length > 5) {
+			console.log(`    ${c.dim(`... and ${notInstalled.length - 5} more`)}`);
+		}
+	}
+
+	// Collect tool names for profile
+	const toolNames = installed.map((t) => t.name);
+
+	// Observer installation for coding agents
+	const needsObserver = codingAgents.filter((t) => t.observerAvailable && !t.observerActive);
+
+	if (needsObserver.length > 0) {
+		console.log(`\n  ${c.bold("Observers")}`);
+		console.log(`  JobArbiter observes your coding sessions to build your`);
+		console.log(`  proficiency profile. ${c.bold("No code or prompts leave your machine")} —`);
+		console.log(`  only aggregate scores (tool usage, session counts, token volume).\n`);
+		console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
+		console.log(c.dim(`  Review anytime: jobarbiter observe status\n`));
+
+		const observerNames = needsObserver.map((t) => t.name).join(", ");
+		const installAll = await prompt.confirm(
+			`  Install observers for detected tools? (${observerNames})`,
+		);
+
+		if (installAll) {
+			const toInstall = needsObserver.map((t) => t.id);
+			console.log(c.dim("\n  Installing observers..."));
+			const result = installObservers(toInstall);
+
+			for (const name of result.installed) {
+				console.log(`    ${sym.check} ${name}`);
+			}
+			for (const name of result.skipped) {
+				console.log(`    ${c.dim("—")} ${name} ${c.dim("(already installed)")}`);
+			}
+			for (const { agent, error: errMsg } of result.errors) {
+				console.log(`    ${sym.cross} ${agent}: ${c.error(errMsg)}`);
+			}
+
+			if (result.installed.length > 0) {
+				console.log(`\n  ${sym.check} ${c.success(`${result.installed.length} observer${result.installed.length > 1 ? "s" : ""} installed!`)}`);
+				console.log(c.dim(`  Your proficiency profile will start building automatically.\n`));
+			}
+		} else {
+			console.log(c.dim("\n  Skipped — you can install observers later with 'jobarbiter observe install'.\n"));
+		}
+	} else if (codingAgents.length > 0) {
+		const hasActiveObservers = codingAgents.some((t) => t.observerActive);
+		if (hasActiveObservers) {
+			console.log(`\n  ${c.dim("All detected agents already have observers installed.")}\n`);
+		} else {
+			console.log();
+		}
+	}
+
+	// "Did we miss anything?" prompt
+	console.log(`  ${c.dim("Did we miss anything?")}`);
+	const additionalTools = await prompt.question(`  Other AI tools you use ${c.dim("(comma-separated, or press Enter)")}: `);
 	
-	if (needsInstall.length === 0) {
-		console.log(`\n  ${c.dim("All detected agents already have observers installed.")}\n`);
-		return;
-	}
-
-	console.log(`\n  JobArbiter observes your coding sessions to build your`);
-	console.log(`  proficiency profile. ${c.bold("No code or prompts leave your machine")} —`);
-	console.log(`  only aggregate scores (tool usage, session counts, token volume).\n`);
-	console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
-	console.log(c.dim(`  Review anytime: jobarbiter observe status\n`));
-
-	const installAll = await prompt.confirm(
-		`  Install observers for all ${needsInstall.length} detected agent${needsInstall.length > 1 ? "s" : ""}?`,
-	);
-
-	let toInstall: string[];
-
-	if (installAll) {
-		toInstall = needsInstall.map((a) => a.id);
-	} else {
-		// Let user select individually
-		console.log(`\n  Select which agents to observe:\n`);
-		const selections: Record<string, boolean> = {};
-		
-		for (const agent of needsInstall) {
-			selections[agent.id] = await prompt.confirm(`    ${agent.name}?`, true);
-		}
-
-		toInstall = Object.entries(selections)
-			.filter(([, v]) => v)
-			.map(([k]) => k);
-
-		if (toInstall.length === 0) {
-			console.log(`\n  ${c.dim("No observers installed. You can add them later with 'jobarbiter observe install'.")}\n`);
-			return;
-		}
-	}
-
-	// Install
-	console.log(c.dim("\n  Installing observers..."));
-	const result = installObservers(toInstall);
-
-	for (const name of result.installed) {
-		console.log(`    ${sym.check} ${name}`);
-	}
-	for (const name of result.skipped) {
-		console.log(`    ${c.dim("—")} ${name} ${c.dim("(already installed)")}`);
-	}
-	for (const { agent, error: errMsg } of result.errors) {
-		console.log(`    ${sym.cross} ${agent}: ${c.error(errMsg)}`);
-	}
-
-	if (result.installed.length > 0) {
-		console.log(`\n  ${sym.check} ${c.success(`${result.installed.length} observer${result.installed.length > 1 ? "s" : ""} installed!`)}`);
-		console.log(c.dim(`  Your proficiency profile will start building automatically.\n`));
+	if (additionalTools.trim()) {
+		const additional = additionalTools.split(",").map((s) => s.trim()).filter(Boolean);
+		toolNames.push(...additional);
+		console.log(`  ${sym.check} Added: ${additional.join(", ")}\n`);
 	} else {
 		console.log();
 	}
+
+	return { tools: toolNames };
 }
 
 function showWorkerCompletion(state: OnboardState): void {

@@ -1,6 +1,6 @@
 {
   "name": "jobarbiter",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "description": "CLI for JobArbiter — the first AI Proficiency Marketplace",
   "type": "module",
   "bin": {
@@ -12,7 +12,14 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": ["jobarbiter", "ai", "agents", "jobs", "matching", "x402"],
+  "keywords": [
+    "jobarbiter",
+    "ai",
+    "agents",
+    "jobs",
+    "matching",
+    "x402"
+  ],
   "author": "RetroDigio",
   "license": "MIT",
   "dependencies": {

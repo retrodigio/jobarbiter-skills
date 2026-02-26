@@ -6,6 +6,7 @@ import { api, apiUnauthenticated, ApiError } from "./lib/api.js";
 import { output, outputList, success, error, setJsonMode } from "./lib/output.js";
 import { runOnboardWizard } from "./lib/onboard.js";
 import { detectAgents, installObservers, removeObservers, getObservationStatus } from "./lib/observe.js";
+import { getObservableTools, formatToolDisplay } from "./lib/detect-tools.js";
 
 const program = new Command();
 
