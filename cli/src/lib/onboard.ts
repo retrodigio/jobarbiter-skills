@@ -521,12 +521,19 @@ async function runToolDetectionStep(
 	const needsObserver = codingAgents.filter((t) => t.observerAvailable && !t.observerActive);
 
 	if (needsObserver.length > 0) {
-		console.log(`\n  ${c.bold("Observers")}`);
-		console.log(`  JobArbiter observes your AI sessions to build your`);
-		console.log(`  proficiency profile. ${c.bold("No code or prompts leave your machine")} —`);
-		console.log(`  only aggregate scores (tool usage, session counts, token volume).\n`);
+		console.log(`\n  ${c.bold("Observers — How You Use AI, Not Just How Much")}`);
+		console.log(`  JobArbiter observers go beyond token counts. We analyze ${c.bold("how")}`);
+		console.log(`  you work with AI to build a rich proficiency profile:\n`);
+		console.log(`    ${c.bold("Quantitative")} — session frequency, token volume, tool diversity`);
+		console.log(`    ${c.bold("Qualitative")}  — orchestration complexity, problem-solving approach,`);
+		console.log(`                  communication clarity, iteration patterns, tool fluency\n`);
+		console.log(`  This is what makes your profile ${c.bold("verified")} — not self-reported.`);
+		console.log(`  Anyone can claim "advanced AI skills." Your observer ${c.bold("proves")} it.\n`);
+		console.log(`  ${c.bold("Privacy:")} ${c.highlight("No code, prompts, or content leave your machine.")}`);
+		console.log(`  Only derived proficiency signals (scores, patterns, dimensions)`);
+		console.log(`  are submitted — never raw session data.\n`);
 		console.log(c.dim(`  Data stored locally: ~/.config/jobarbiter/observer/observations.json`));
-		console.log(c.dim(`  Review anytime: jobarbiter observe status\n`));
+		console.log(c.dim(`  Review anytime: jobarbiter observe review\n`));
 
 		const observerNames = needsObserver.map((t) => t.name).join(", ");
 		const installAll = await prompt.confirm(
@@ -674,12 +681,17 @@ function showWorkerCompletion(state: OnboardState): void {
 	console.log(`${sym.done} ${c.bold("Step 7/7 — You're In!")}\n`);
 	console.log(`Your profile is live. Here's what happens next:\n`);
 	
-	console.log(`  📊 Your proficiency score builds automatically from:`);
-	console.log(`     ${sym.bullet} AI tool observation ${c.dim("(biggest factor — 35%)")}`);
-	console.log(`     ${sym.bullet} GitHub contribution analysis ${c.dim("(20%)")}`);
-	console.log(`     ${sym.bullet} Token consumption patterns ${c.dim("(15%)")}`);
-	console.log(`     ${sym.bullet} Tool diversity & fluency ${c.dim("(15%)")}`);
-	console.log(`     ${sym.bullet} Outcome verification ${c.dim("(15%)")}\n`);
+	console.log(`  📊 Your proficiency profile builds automatically from:`);
+	console.log(`     ${c.bold("How you use AI (qualitative):")}`);
+	console.log(`     ${sym.bullet} Orchestration complexity ${c.dim("— single prompts vs multi-agent pipelines")}`);
+	console.log(`     ${sym.bullet} Problem-solving approach ${c.dim("— how you break down and iterate")}`);
+	console.log(`     ${sym.bullet} Communication clarity ${c.dim("— precision of your instructions")}`);
+	console.log(`     ${sym.bullet} Tool fluency ${c.dim("— depth across different AI tools")}\n`);
+	console.log(`     ${c.bold("How much you use AI (quantitative):")}`);
+	console.log(`     ${sym.bullet} Session frequency & consistency over time`);
+	console.log(`     ${sym.bullet} Token consumption patterns`);
+	console.log(`     ${sym.bullet} GitHub AI-assisted contributions`);
+	console.log(`     ${sym.bullet} Tool diversity across providers\n`);
 	
 	console.log(`  🎯 Your proficiency ${c.bold("track")} (Orchestrator, Systems Builder, or`);
 	console.log(`     Domain Translator) is determined automatically as we observe`);
