@@ -527,8 +527,8 @@ async function runToolDetectionStep(
 		console.log(`    ${c.bold("Quantitative")} — session frequency, token volume, tool diversity`);
 		console.log(`    ${c.bold("Qualitative")}  — orchestration complexity, problem-solving approach,`);
 		console.log(`                  communication clarity, iteration patterns, tool fluency\n`);
-		console.log(`  This is what makes your profile ${c.bold("verified")} — not self-reported.`);
-		console.log(`  Anyone can claim "advanced AI skills." Your observer ${c.bold("proves")} it.\n`);
+		console.log(`  This is what makes your profile ${c.bold("verified")} and ${c.bold("valuable")}.`);
+		console.log(`  Your observer regularly records and reports your proven AI proficiency.\n`);
 		console.log(`  ${c.bold("Privacy:")} ${c.highlight("No code, prompts, or content leave your machine.")}`);
 		console.log(`  Only derived proficiency signals (scores, patterns, dimensions)`);
 		console.log(`  are submitted — never raw session data.\n`);
