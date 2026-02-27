@@ -1,6 +1,6 @@
 {
   "name": "jobarbiter",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "CLI for JobArbiter — the first AI Proficiency Marketplace",
   "type": "module",
   "bin": {
@@ -23,6 +23,7 @@
   "author": "RetroDigio",
   "license": "MIT",
   "dependencies": {
+    "@clack/prompts": "^1.0.1",
     "commander": "^13.0.0"
   },
   "devDependencies": {

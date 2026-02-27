@@ -9,6 +9,7 @@
  */
 
 import * as readline from "node:readline";
+import * as clack from "@clack/prompts";
 import { loadConfig, saveConfig, getConfigPath, type Config } from "./config.js";
 import { apiUnauthenticated, api, ApiError } from "./api.js";
 import { installObservers } from "./observe.js";
@@ -627,36 +628,36 @@ async function runConnectAIAccountsStep(prompt: Prompt): Promise<void> {
 		console.log();
 	}
 
-	// Show available connections
-	let continueConnecting = true;
-	
-	while (continueConnecting) {
-		console.log(`  ${c.bold("Available connections:")}\n`);
-		console.log(`    ${c.highlight("1.")} Anthropic API key  — Pull Claude usage stats`);
-		console.log(`    ${c.highlight("2.")} OpenAI API key     — Pull GPT/ChatGPT usage stats`);
-		console.log(`    ${c.highlight("3.")} Google AI API key   — Pull Gemini usage stats`);
-		console.log(`    ${c.highlight("4.")} Skip for now\n`);
-		console.log(c.dim(`  You can connect accounts later with 'jobarbiter tokens connect'\n`));
+	// Build provider options, excluding already-connected ones
+	const connectedIds = new Set(existingProviders.map((p) => p.provider));
+	const allProviders = [
+		{ value: "anthropic", label: "Anthropic", hint: "Pull Claude usage stats" },
+		{ value: "openai", label: "OpenAI", hint: "Pull GPT/ChatGPT usage stats" },
+		{ value: "google", label: "Google AI", hint: "Pull Gemini usage stats" },
+	];
+	const availableProviders = allProviders.filter((p) => !connectedIds.has(p.value));
 
-		const choice = await prompt.question(`  Your choice ${c.dim("[1/2/3/4]")}: `);
-		
-		if (choice === "4" || choice.toLowerCase() === "skip" || choice === "") {
-			console.log(`\n${c.dim("  Skipped — you can connect providers later with 'jobarbiter tokens connect'")}\n`);
-			continueConnecting = false;
-		} else if (choice === "1") {
-			await connectProvider(prompt, "anthropic", "Anthropic");
-			continueConnecting = await prompt.confirm(`\n  Connect another provider?`, false);
+	if (availableProviders.length === 0) {
+		console.log(`  ${c.dim("All providers already connected!")}\n`);
+		return;
+	}
+
+	const selected = await clack.multiselect({
+		message: "Select providers to connect (space to toggle, enter to confirm)",
+		options: availableProviders,
+		required: false,
+	});
+
+	if (clack.isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
+		console.log(`\n${c.dim("  Skipped — you can connect providers later with 'jobarbiter tokens connect'")}\n`);
+		return;
+	}
+
+	for (const providerId of selected) {
+		const provider = allProviders.find((p) => p.value === providerId);
+		if (provider) {
+			await connectProvider(prompt, provider.value, provider.label);
 			console.log();
-		} else if (choice === "2") {
-			await connectProvider(prompt, "openai", "OpenAI");
-			continueConnecting = await prompt.confirm(`\n  Connect another provider?`, false);
-			console.log();
-		} else if (choice === "3") {
-			await connectProvider(prompt, "google", "Google AI");
-			continueConnecting = await prompt.confirm(`\n  Connect another provider?`, false);
-			console.log();
-		} else {
-			console.log(c.error("  Please enter 1, 2, 3, or 4"));
 		}
 	}
 }
