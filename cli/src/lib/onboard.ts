@@ -96,6 +96,25 @@ class Prompt {
 		});
 	}
 
+	reset(): void {
+		// Recreate readline interface (needed after clack prompts take over stdin)
+		if (!this.closed) {
+			this.rl.removeAllListeners();
+			this.rl.close();
+		}
+		this.closed = false;
+		this.rl = readline.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+		});
+		this.rl.on("close", () => {
+			if (!this.closed) {
+				console.log("\n\n" + c.dim("Onboarding cancelled. Run 'jobarbiter onboard' anytime to continue."));
+				process.exit(0);
+			}
+		});
+	}
+
 	async question(prompt: string): Promise<string> {
 		return new Promise((resolve) => {
 			this.rl.question(prompt, (answer) => {
@@ -647,6 +666,9 @@ async function runConnectAIAccountsStep(prompt: Prompt): Promise<void> {
 		options: availableProviders,
 		required: false,
 	});
+
+	// Recreate readline after clack took over stdin
+	prompt.reset();
 
 	if (clack.isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
 		console.log(`\n${c.dim("  Skipped — you can connect providers later with 'jobarbiter tokens connect'")}\n`);
