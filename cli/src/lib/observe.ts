@@ -279,6 +279,21 @@ function appendObservation(obs) {
       },
     }, null, 2) + "\\n");
   }
+
+  // Fire-and-forget: trigger analysis pipeline via CLI
+  // Spawns detached process so the AI tool is never blocked
+  try {
+    const { spawn } = require("child_process");
+    // Try npx jobarbiter first, fall back to direct node invocation
+    const child = spawn("jobarbiter", ["analyze", "--auto"], {
+      detached: true,
+      stdio: "ignore",
+      shell: true,
+    });
+    child.unref();
+  } catch {
+    // Silent — analysis is best-effort
+  }
 }
 `;
 }
