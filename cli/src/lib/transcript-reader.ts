@@ -15,6 +15,19 @@
  * - Zed AI: ~/Library/Application Support/Zed/ (best-effort)
  * - Amazon Q Developer CLI: ~/.aws/amazonq/ (best-effort)
  * - Warp AI: ~/Library/Application Support/dev.warp.Warp-Stable/ (best-effort)
+ * - OpenCode/Crush: ~/.local/share/opencode/ or ~/.local/share/crush/ (SQLite — best-effort)
+ * - Letta: ~/.letta/ (server-based, SQLite backend — best-effort)
+ * - Goose: ~/.config/goose/sessions/ (JSONL)
+ * - Google IDX: Cloud-only (no local files — TODO: API-based access)
+ *
+ * TODO: Other notable coding agents to consider adding:
+ * - Amp (Sourcegraph) — CLI coding agent, check ~/.amp/ or ~/.config/amp/
+ * - Augment CLI — check ~/.augment/ or ~/.config/augment/
+ * - Kiro (AWS) — AWS's coding agent, check ~/.kiro/
+ * - Droid (Factory) — check session storage format
+ * - Kilo (formerly Kilocode) — VS Code extension, check globalStorage
+ * - Devin (Cognition) — cloud-based, likely needs API access
+ * - Replit Agent — cloud-based, likely needs API access
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -154,6 +167,51 @@ const TRANSCRIPT_SOURCES: Array<{
 		],
 		maxDepth: 2,
 	},
+	{
+		// OpenCode / Crush (charmbracelet) — stores sessions in SQLite at ~/.local/share/opencode/
+		// or ~/.local/share/crush/ (after rename). Config at ~/.config/opencode/ or ~/.config/crush/
+		// Primary storage is SQLite (opencode.db / crush.db), but may export JSONL session files.
+		// TODO: Add SQLite reader for full support — currently only picks up exported JSON/JSONL files
+		source: "opencode",
+		dirs: [
+			join(home, ".local", "share", "opencode"),
+			join(home, ".local", "share", "crush"),
+			join(home, ".config", "opencode"),
+			join(home, ".config", "crush"),
+		],
+		maxDepth: 2,
+	},
+	{
+		// Letta (formerly MemGPT) — server-based agent platform with SQLite/PostgreSQL backend
+		// Local dev stores SQLite at ~/.letta/sqlite.db with agent state, messages, memory blocks
+		// TODO: Add SQLite reader or Letta API client for full transcript extraction
+		// For now, check for any exported JSON/JSONL session files
+		source: "letta",
+		dirs: [
+			join(home, ".letta"),
+			join(home, ".letta", "agents"),
+		],
+		maxDepth: 3,
+	},
+	{
+		// Goose (Block) — stores session transcripts as JSONL under ~/.config/goose/sessions/
+		// Each session is a .jsonl file with message objects
+		source: "goose",
+		dirs: [
+			join(home, ".config", "goose", "sessions"),
+		],
+	},
+	{
+		// Google IDX / Project IDX — purely cloud-based IDE with Gemini integration
+		// No local session storage; all data lives on Google's servers
+		// TODO: Add API-based access when Google provides session export/API
+		// Including placeholder dirs in case future versions add local caching
+		source: "idx",
+		dirs: [
+			join(home, ".idx"),
+		],
+		maxDepth: 2,
+	},
 ];
 
 // ── Public API ─────────────────────────────────────────────────────────
@@ -235,6 +293,16 @@ export function parseTranscriptFile(filePath: string, source: TranscriptSource):
 				return parseGenericJsonTranscript(filePath, content, "amazon-q");
 			case "warp":
 				return parseGenericJsonTranscript(filePath, content, "warp");
+			case "opencode":
+				return parseGenericJsonTranscript(filePath, content, "opencode");
+			case "letta":
+				return parseLettaTranscript(filePath, content);
+			case "goose": {
+				const lines = content.split("\n").filter((l) => l.trim());
+				return parseGooseTranscript(filePath, lines);
+			}
+			case "idx":
+				return parseGenericJsonTranscript(filePath, content, "idx");
 			default:
 				return null;
 		}
@@ -954,6 +1022,163 @@ function parseMarkdownTranscript(
 		messages,
 		startTime: null,
 		endTime: null,
+	};
+}
+
+// ── Goose Parser ───────────────────────────────────────────────────────
+// Goose (Block) stores sessions as JSONL at ~/.config/goose/sessions/<id>.jsonl
+// Each line is a message object with role, content, and optional tool info.
+// Uses a format similar to OpenAI chat completions.
+
+function parseGooseTranscript(filePath: string, lines: string[]): ParsedTranscript {
+	const messages: TranscriptMessage[] = [];
+	let startTime: string | null = null;
+	let endTime: string | null = null;
+
+	for (const line of lines) {
+		try {
+			const obj = JSON.parse(line);
+
+			const timestamp = obj.timestamp || obj.ts || obj.created_at || null;
+			if (timestamp) {
+				if (!startTime) startTime = timestamp;
+				endTime = timestamp;
+			}
+
+			const role = mapOpenAIRole(obj.role);
+			if (!role) continue;
+
+			const msg: TranscriptMessage = {
+				role,
+				text: extractText(obj),
+				timestamp,
+			};
+
+			// Goose tool calls
+			if (Array.isArray(obj.tool_calls)) {
+				for (const tc of obj.tool_calls) {
+					const fn = tc.function || tc;
+					messages.push({
+						role: "tool",
+						text: "",
+						timestamp,
+						toolName: fn.name,
+						toolInput: typeof fn.arguments === "string"
+							? safeParseJson(fn.arguments)
+							: fn.arguments,
+					});
+				}
+			}
+
+			if (obj.role === "tool" && obj.tool_call_id) {
+				msg.toolName = obj.name || undefined;
+			}
+
+			if (obj.model) msg.model = obj.model;
+
+			messages.push(msg);
+		} catch {
+			// skip malformed lines
+		}
+	}
+
+	return {
+		source: "goose",
+		sessionId: deriveSessionId(filePath),
+		filePath,
+		messages,
+		startTime,
+		endTime,
+	};
+}
+
+// ── Letta Parser ───────────────────────────────────────────────────────
+// Letta (formerly MemGPT) stores agent state in SQLite with memory blocks.
+// This parser handles any exported JSON files that may contain conversation data.
+// TODO: Full support requires SQLite reader or Letta REST API client.
+// Letta's message format includes inner_thoughts, function_call, function_return fields.
+
+function parseLettaTranscript(filePath: string, content: string): ParsedTranscript {
+	const messages: TranscriptMessage[] = [];
+
+	try {
+		const data = JSON.parse(content);
+		// Letta may export as array of messages or object with messages field
+		const items = Array.isArray(data) ? data : (data.messages || data.history || data.conversation || []);
+
+		for (const item of items) {
+			// Letta uses "inner_thoughts" for assistant thinking and "function_call" for tool use
+			if (item.inner_thoughts || item.assistant_message) {
+				const text = item.assistant_message || item.inner_thoughts || "";
+				messages.push({
+					role: "assistant",
+					text,
+					timestamp: item.created_at || item.timestamp || undefined,
+					isThinking: !!item.inner_thoughts && !item.assistant_message,
+				});
+			}
+
+			if (item.function_call) {
+				messages.push({
+					role: "tool",
+					text: "",
+					timestamp: item.created_at || item.timestamp || undefined,
+					toolName: item.function_call.name || item.function_call,
+					toolInput: item.function_call.arguments
+						? (typeof item.function_call.arguments === "string"
+							? safeParseJson(item.function_call.arguments)
+							: item.function_call.arguments)
+						: undefined,
+				});
+			}
+
+			if (item.function_return) {
+				messages.push({
+					role: "tool",
+					text: typeof item.function_return === "string" ? item.function_return : JSON.stringify(item.function_return),
+					timestamp: item.created_at || item.timestamp || undefined,
+					isError: item.status === "error",
+				});
+			}
+
+			// Standard role-based messages
+			if (item.role) {
+				const role = mapOpenAIRole(item.role);
+				if (role) {
+					messages.push({
+						role,
+						text: extractText(item),
+						timestamp: item.created_at || item.timestamp || undefined,
+					});
+				}
+			}
+		}
+	} catch {
+		// Try JSONL
+		const lines = content.split("\n").filter((l) => l.trim());
+		for (const line of lines) {
+			try {
+				const obj = JSON.parse(line);
+				const role = mapOpenAIRole(obj.role);
+				if (!role) continue;
+				messages.push({
+					role,
+					text: extractText(obj),
+					timestamp: obj.created_at || obj.timestamp || undefined,
+				});
+			} catch {
+				// skip
+			}
+		}
+	}
+
+	return {
+		source: "letta",
+		sessionId: deriveSessionId(filePath),
+		filePath,
+		messages,
+		startTime: messages[0]?.timestamp || null,
+		endTime: messages[messages.length - 1]?.timestamp || null,
 	};
 }
 

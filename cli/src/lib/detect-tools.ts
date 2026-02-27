@@ -164,6 +164,22 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		observerAvailable: false,
 	},
 	{
+		id: "goose",
+		name: "Goose",
+		category: "ai-agent",
+		binary: "goose",
+		configDir: join(homedir(), ".config", "goose"),
+		observerAvailable: false,
+	},
+	{
+		id: "idx",
+		name: "Google IDX",
+		category: "ai-agent",
+		// IDX is cloud-based; no local binary. Detect via config dir if any local cache exists.
+		configDir: join(homedir(), ".idx"),
+		observerAvailable: false,
+	},
+	{
 		id: "gemini",
 		name: "Gemini CLI",
 		category: "ai-agent",

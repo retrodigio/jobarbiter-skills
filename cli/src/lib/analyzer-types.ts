@@ -17,7 +17,11 @@ export type TranscriptSource =
 	| "windsurf"
 	| "zed"
 	| "amazon-q"
-	| "warp";
+	| "warp"
+	| "opencode"
+	| "letta"
+	| "goose"
+	| "idx";
 
 export interface TranscriptMessage {
 	role: "user" | "assistant" | "system" | "tool";
