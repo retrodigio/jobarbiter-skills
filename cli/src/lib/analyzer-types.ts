@@ -4,7 +4,20 @@
 
 // ── Transcript Types ───────────────────────────────────────────────────
 
-export type TranscriptSource = "claude-code" | "openclaw" | "gemini";
+export type TranscriptSource =
+	| "claude-code"
+	| "openclaw"
+	| "gemini"
+	| "codex"
+	| "aider"
+	| "continue"
+	| "cline"
+	| "copilot-chat"
+	| "cursor"
+	| "windsurf"
+	| "zed"
+	| "amazon-q"
+	| "warp";
 
 export interface TranscriptMessage {
 	role: "user" | "assistant" | "system" | "tool";
