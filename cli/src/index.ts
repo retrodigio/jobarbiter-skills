@@ -9,6 +9,18 @@ import { detectAgents, installObservers, removeObservers, getObservationStatus }
 import { getObservableTools, formatToolDisplay } from "./lib/detect-tools.js";
 import { runAutoPipeline, analyzeFile, analyzeRecent } from "./lib/analysis-pipeline.js";
 
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
+
+const __cliDirname = dirname(fileURLToPath(import.meta.url));
+let CLI_VERSION = "0.0.0";
+try {
+	const pkg = JSON.parse(readFileSync(join(__cliDirname, "..", "package.json"), "utf-8"));
+	CLI_VERSION = pkg.version || "0.0.0";
+} catch { /* fallback */ }
+
 const program = new Command();
 
 program
@@ -1053,6 +1065,74 @@ program
 			}
 
 			output({ sessions: result.reports.length, submitted: result.submitted, errors: result.errors });
+		} catch (e) {
+			handleError(e);
+		}
+	});
+
+// ============================================================
+// update (CLI auto-update)
+// ============================================================
+
+program
+	.command("update")
+	.description("Check for and install CLI updates")
+	.option("--check", "Just check for updates, don't install")
+	.action(async (opts) => {
+		try {
+			console.log(`\nCurrent version: v${CLI_VERSION}`);
+			console.log("Checking for updates...\n");
+
+			let latestVersion: string;
+			try {
+				latestVersion = execSync("npm view jobarbiter version", { encoding: "utf-8" }).trim();
+			} catch {
+				error("Failed to check npm registry for latest version.");
+				process.exit(1);
+			}
+
+			// Compare versions
+			const pa = latestVersion.split(".").map(Number);
+			const pb = CLI_VERSION.split(".").map(Number);
+			let isNewer = false;
+			for (let i = 0; i < 3; i++) {
+				const diff = (pa[i] || 0) - (pb[i] || 0);
+				if (diff > 0) { isNewer = true; break; }
+				if (diff < 0) break;
+			}
+
+			if (!isNewer) {
+				success(`You're on the latest version (v${CLI_VERSION}).`);
+				process.exit(0);
+			}
+
+			console.log(`  Latest version: v${latestVersion}`);
+			console.log(`  Changelog: https://github.com/retrodigio/jobarbiter-skills/releases\n`);
+
+			if (opts.check) {
+				console.log(`Run 'jobarbiter update' to install.\n`);
+				process.exit(0);
+			}
+
+			console.log("Installing update...\n");
+			try {
+				execSync("npm update -g jobarbiter", { stdio: "inherit" });
+			} catch {
+				error("Update failed. Try manually: npm update -g jobarbiter");
+				process.exit(1);
+			}
+
+			success(`Updated to v${latestVersion}!`);
+
+			// Check if observer hooks might need reinstalling
+			const majorMinorChanged =
+				pa[0] !== pb[0] || pa[1] !== pb[1];
+
+			if (majorMinorChanged) {
+				console.log("\n⚠️  Major/minor version changed. You may want to reinstall observers:");
+				console.log("   jobarbiter observe remove --all");
+				console.log("   jobarbiter observe install --all\n");
+			}
 		} catch (e) {
 			handleError(e);
 		}

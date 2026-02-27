@@ -4,7 +4,7 @@
  * Provides both automatic (fire-and-forget from observer) and manual entry points.
  */
 
-import { appendFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { discoverTranscripts, parseTranscriptFile, readAllTranscripts } from "./transcript-reader.js";
@@ -12,9 +12,12 @@ import { analyzeSession, analyzeMultipleSessions } from "./session-analyzer.js";
 import { submitWorkReport, retryQueuedReports } from "./report-submitter.js";
 import type { WorkReport, ParsedTranscript } from "./analyzer-types.js";
 
-const OBSERVER_DIR = join(homedir(), ".config", "jobarbiter", "observer");
+const CONFIG_DIR = join(homedir(), ".config", "jobarbiter");
+const OBSERVER_DIR = join(CONFIG_DIR, "observer");
 const ERROR_LOG = join(OBSERVER_DIR, "errors.log");
-const CONFIG_FILE = join(homedir(), ".config", "jobarbiter", "config.json");
+const CONFIG_FILE = join(CONFIG_DIR, "config.json");
+const UPDATE_STATUS_FILE = join(CONFIG_DIR, "update-status.json");
+const VERSION_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function logError(msg: string): void {
 	try {
@@ -36,11 +39,68 @@ function isAnalyzeEnabled(): boolean {
 }
 
 /**
+ * Periodic version check — queries npm registry at most once per 24h.
+ */
+async function checkVersionPeriodically(): Promise<void> {
+	try {
+		let status: Record<string, unknown> = {};
+		if (existsSync(UPDATE_STATUS_FILE)) {
+			status = JSON.parse(readFileSync(UPDATE_STATUS_FILE, "utf-8"));
+		}
+
+		const lastCheck = (status.lastVersionCheck as number) || 0;
+		if (Date.now() - lastCheck < VERSION_CHECK_INTERVAL_MS) return;
+
+		const res = await fetch("https://registry.npmjs.org/jobarbiter/latest", {
+			signal: AbortSignal.timeout(5000),
+		});
+		if (!res.ok) return;
+
+		const data = (await res.json()) as { version?: string };
+		if (!data.version) return;
+
+		// Read current version
+		const { dirname } = await import("node:path");
+		const { fileURLToPath } = await import("node:url");
+		const __dirname = dirname(fileURLToPath(import.meta.url));
+		let currentVersion = "0.0.0";
+		try {
+			const pkg = JSON.parse(readFileSync(join(__dirname, "..", "..", "package.json"), "utf-8"));
+			currentVersion = pkg.version || "0.0.0";
+		} catch { /* fallback */ }
+
+		const pa = data.version.split(".").map(Number);
+		const pb = currentVersion.split(".").map(Number);
+		let updateAvailable = false;
+		for (let i = 0; i < 3; i++) {
+			const diff = (pa[i] || 0) - (pb[i] || 0);
+			if (diff > 0) { updateAvailable = true; break; }
+			if (diff < 0) break;
+		}
+
+		mkdirSync(CONFIG_DIR, { recursive: true });
+		writeFileSync(UPDATE_STATUS_FILE, JSON.stringify({
+			...status,
+			latestCliVersion: data.version,
+			currentVersion,
+			updateAvailable,
+			lastVersionCheck: Date.now(),
+			checkedAt: new Date().toISOString(),
+		}, null, 2) + "\n");
+	} catch {
+		// non-critical
+	}
+}
+
+/**
  * Run the full pipeline for recent transcripts (fire-and-forget from observer).
  * Non-blocking: catches all errors internally.
  */
 export async function runAutoPipeline(): Promise<void> {
 	try {
+		// Lightweight daily version check
+		await checkVersionPeriodically();
+
 		if (!isAnalyzeEnabled()) return;
 
 		// Find transcripts from last 2 hours

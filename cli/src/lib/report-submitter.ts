@@ -4,10 +4,21 @@
  * Handles auth, error recovery, local queuing, and submission logging.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, appendFileSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
 import type { WorkReport } from "./analyzer-types.js";
+
+// Read CLI version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let CLI_VERSION = "0.0.0";
+try {
+	const pkg = JSON.parse(readFileSync(join(__dirname, "..", "..", "package.json"), "utf-8"));
+	CLI_VERSION = pkg.version || "0.0.0";
+} catch {
+	// fallback
+}
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -129,7 +140,6 @@ function logError(msg: string): void {
 	try {
 		mkdirSync(OBSERVER_DIR, { recursive: true });
 		const line = `[${new Date().toISOString()}] ${msg}\n`;
-		const { appendFileSync } = require("node:fs") as typeof import("node:fs");
 		appendFileSync(ERROR_LOG, line);
 	} catch {
 		// truly silent
@@ -171,6 +181,61 @@ function saveQueue(queue: QueuedReport[]): void {
 	}
 }
 
+// ── Version Meta Handling ──────────────────────────────────────────────
+
+interface VersionMeta {
+	latestCliVersion: string | null;
+	minimumCliVersion: string;
+	updateAvailable: boolean;
+	changelogUrl: string;
+}
+
+const UPDATE_STATUS_FILE = join(CONFIG_DIR, "update-status.json");
+
+function compareSemver(a: string, b: string): number {
+	const pa = a.split(".").map(Number);
+	const pb = b.split(".").map(Number);
+	for (let i = 0; i < 3; i++) {
+		const diff = (pa[i] || 0) - (pb[i] || 0);
+		if (diff !== 0) return diff;
+	}
+	return 0;
+}
+
+function handleVersionMeta(meta: VersionMeta | undefined): void {
+	if (!meta) return;
+
+	try {
+		// Store update status for other components
+		mkdirSync(CONFIG_DIR, { recursive: true });
+		writeFileSync(UPDATE_STATUS_FILE, JSON.stringify({
+			latestCliVersion: meta.latestCliVersion,
+			minimumCliVersion: meta.minimumCliVersion,
+			updateAvailable: meta.updateAvailable,
+			changelogUrl: meta.changelogUrl,
+			currentVersion: CLI_VERSION,
+			checkedAt: new Date().toISOString(),
+			lastVersionCheck: Date.now(),
+		}, null, 2) + "\n");
+	} catch {
+		// non-critical
+	}
+
+	// Only log if not in auto mode (check env or process args)
+	const isAuto = process.argv.includes("--auto");
+
+	if (meta.updateAvailable && meta.latestCliVersion) {
+		if (!isAuto) {
+			console.log(`\n📦 JobArbiter v${meta.latestCliVersion} available. Run 'jobarbiter update' to upgrade.\n`);
+		}
+	}
+
+	// Warn if current version is below minimum
+	if (meta.minimumCliVersion && compareSemver(meta.minimumCliVersion, CLI_VERSION) > 0) {
+		console.warn(`\n⚠️  WARNING: Your JobArbiter CLI v${CLI_VERSION} is below the minimum required version v${meta.minimumCliVersion}. Please run 'jobarbiter update' immediately.\n`);
+	}
+}
+
 // ── Public API ─────────────────────────────────────────────────────────
 
 /**
@@ -192,7 +257,8 @@ export async function submitWorkReport(report: WorkReport): Promise<SubmitResult
 			headers: {
 				"Authorization": `Bearer ${config.apiKey}`,
 				"Content-Type": "application/json",
-				"User-Agent": "jobarbiter-cli/0.3.10",
+				"User-Agent": `jobarbiter-cli/${CLI_VERSION}`,
+				"x-jobarbiter-version": CLI_VERSION,
 			},
 			body: JSON.stringify(sanitized),
 			signal: AbortSignal.timeout(15000),
@@ -215,6 +281,9 @@ export async function submitWorkReport(report: WorkReport): Promise<SubmitResult
 
 		const data = await response.json() as Record<string, unknown>;
 		const reportId = data.reportId as string | undefined;
+
+		// Handle version update notifications from server
+		handleVersionMeta(data.meta as VersionMeta | undefined);
 
 		logSubmission({ timestamp: new Date().toISOString(), sessionId: report.sessionId, reportId, success: true });
 		return { success: true, reportId };
