@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Your AI Profile Is Your New Resume</title>
+    <meta name="description" content="The resume is dead. Your AI-Proficiency profile is alive. Get Vetted. Get Polished. Get Hired.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 900: '#0a0e1a', 800: '#0f1629', 700: '#151d35', 600: '#1b2541' },
+                        electric: { 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb' },
+                        violet: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' },
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* ── Gradient text ── */
+        .grad-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Hero glow ── */
+        .hero-glow {
+            position: absolute;
+            width: 700px; height: 500px;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%);
+            top: 10%; left: 50%; transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        /* ── Floating badges ── */
+        .badge-rail {
+            position: fixed;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .badge {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700;
+            border: 2px solid #1e293b;
+            background: #0f172a;
+            color: #475569;
+            transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+            position: relative;
+        }
+        .badge .badge-label {
+            position: absolute;
+            right: 62px;
+            white-space: nowrap;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateX(8px);
+            transition: all 0.4s ease;
+            pointer-events: none;
+            color: #64748b;
+        }
+        .badge:hover .badge-label,
+        .badge.active .badge-label {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .badge.active {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #fff;
+            box-shadow: 0 0 24px rgba(139,92,246,0.4);
+            transform: scale(1.1);
+        }
+        .badge.active .badge-label { color: #c4b5fd; }
+
+        @media (max-width: 768px) {
+            .badge-rail { right: 12px; gap: 10px; }
+            .badge { width: 40px; height: 40px; font-size: 12px; }
+            .badge .badge-label { display: none; }
+        }
+
+        /* ── Chat styling ── */
+        .chat-window {
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+            box-shadow: 0 25px 80px -20px rgba(0,0,0,0.6);
+        }
+        .chat-header-bar {
+            padding: 16px 20px;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .chat-body { padding: 20px; }
+
+        .msg {
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            margin-bottom: 12px;
+        }
+        .msg.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.55;
+            max-width: 88%;
+        }
+        .bubble-bot {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-bottom-left-radius: 6px;
+        }
+        .bubble-user {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            color: #fff;
+            border-bottom-right-radius: 6px;
+            margin-left: auto;
+        }
+        .chat-employer .bubble-user {
+            background: linear-gradient(135deg, #b45309, #92400e);
+        }
+        .msg-time {
+            font-size: 11px; color: #475569;
+            margin-top: 4px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .msg-time.right { justify-content: flex-end; }
+        .read-tick { color: #60a5fa; }
+        .chat-employer .read-tick { color: #f59e0b; }
+        .time-break {
+            text-align: center; font-size: 12px; color: #475569;
+            padding: 20px 0; display: flex; align-items: center; gap: 12px;
+        }
+        .time-break::before, .time-break::after {
+            content: ''; flex: 1; height: 1px; background: #1e293b;
+        }
+
+        /* ── Cards inside bubbles ── */
+        .inner-card {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 8px;
+        }
+        .chat-employer .inner-card {
+            background: #1a1408;
+            border-color: #3d3526;
+        }
+        .skill-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 7px 0; font-size: 13px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .chat-employer .skill-row { border-color: #2d2518; }
+        .skill-row:last-child { border-bottom: none; }
+        .skill-level { color: #4ade80; font-weight: 600; margin-left: auto; font-size: 12px; }
+
+        .trust-bar {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px; padding: 10px 14px; margin-top: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .match-card {
+            background: linear-gradient(135deg, #0f2922, #0f172a);
+            border: 1px solid rgba(34,197,94,0.25);
+            border-radius: 12px; padding: 14px; margin-top: 8px;
+        }
+        .chat-employer .match-card {
+            background: linear-gradient(135deg, #1a1408, #0f172a);
+            border-color: rgba(245,158,11,0.25);
+        }
+        .match-pill {
+            background: #22c55e; color: #000; font-weight: 700;
+            font-size: 11px; padding: 4px 8px; border-radius: 6px;
+        }
+        .intro-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(99,102,241,0.25);
+            border-radius: 12px; padding: 14px; margin-top: 8px;
+        }
+        .chat-employer .intro-card {
+            background: linear-gradient(135deg, #1a1408, #0f172a);
+            border-color: rgba(245,158,11,0.25);
+        }
+        .intro-row {
+            display: flex; padding: 5px 0; font-size: 13px;
+            border-bottom: 1px solid #1e293b;
+        }
+        .chat-employer .intro-row { border-color: #2d2518; }
+        .intro-row:last-child { border-bottom: none; }
+        .intro-label { color: #64748b; width: 90px; flex-shrink: 0; }
+        .intro-value { color: #f1f5f9; }
+
+        /* ── Transition divider ── */
+        .story-break {
+            position: relative;
+            padding: 120px 0;
+            text-align: center;
+            overflow: hidden;
+        }
+        .story-break::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 600px; height: 600px;
+            transform: translate(-50%,-50%);
+            background: radial-gradient(ellipse, rgba(139,92,246,0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .story-break h2 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: #64748b;
+            font-weight: 500;
+            font-style: italic;
+            position: relative;
+        }
+
+        /* ── CTA section ── */
+        .cta-glow {
+            background: radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 60%);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #7c3aed);
+            box-shadow: 0 0 30px rgba(99,102,241,0.35);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 50px rgba(99,102,241,0.55);
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            border: 1px solid #334155;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .btn-outline:hover {
+            border-color: #8b5cf6;
+            background: rgba(139,92,246,0.08);
+        }
+
+        /* ── Scroll fade-up for sections ── */
+        .scroll-reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .scroll-reveal.visible {
+            opacity: 1; transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- FLOATING BADGES                             -->
+<!-- ════════════════════════════════════════════ -->
+<div class="badge-rail" id="badgeRail">
+    <div class="badge" id="badge-vetted" data-phase="vetted">
+        <span class="badge-label">Vetted</span>
+        ✓
+    </div>
+    <div class="badge" id="badge-polished" data-phase="polished">
+        <span class="badge-label">Polished</span>
+        ✓
+    </div>
+    <div class="badge" id="badge-hired" data-phase="hired">
+        <span class="badge-label">Hired</span>
+        ✓
+    </div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- HERO                                        -->
+<!-- ════════════════════════════════════════════ -->
+<section class="relative min-h-screen flex items-center justify-center px-6">
+    <div class="hero-glow"></div>
+    <div class="max-w-3xl mx-auto text-center relative z-10">
+        <p class="text-sm tracking-widest uppercase text-violet-400 mb-6 opacity-0 animate-[fadeUp_0.8s_0.1s_forwards]">
+            JobArbiter
+        </p>
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-8 opacity-0 animate-[fadeUp_0.8s_0.2s_forwards]">
+            The resume is dead.<br>
+            <span class="grad-text">Your AI profile is alive.</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed opacity-0 animate-[fadeUp_0.8s_0.35s_forwards]">
+            Your AI-Proficiency profile is your new resume.<br>
+            <span class="text-slate-300 font-medium">Get Vetted. Get Polished. Get Hired.</span>
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center opacity-0 animate-[fadeUp_0.8s_0.5s_forwards]">
+            <a href="#cta" class="btn-primary px-8 py-4 rounded-xl font-semibold text-white inline-block">Start your profile</a>
+            <a href="#employer-chat" class="btn-outline px-8 py-4 rounded-xl font-semibold text-slate-300 inline-block">I'm hiring →</a>
+        </div>
+    </div>
+    <!-- Scroll hint -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+        <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- WORKER NARRATIVE INTRO                      -->
+<!-- ════════════════════════════════════════════ -->
+<section class="py-24 px-6" data-phase="vetted">
+    <div class="max-w-2xl mx-auto text-center scroll-reveal">
+        <p class="text-sm tracking-widest uppercase text-electric-400 mb-4">Chapter 1</p>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Meet Alex — a senior engineer</h2>
+        <p class="text-slate-400 text-lg">Alex is tired of rewriting cover letters. So Alex's AI agent does the talking instead.</p>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- WORKER CHAT                                 -->
+<!-- ════════════════════════════════════════════ -->
+<section class="px-6 pb-16" data-phase="vetted">
+    <div class="chat-window chat-seeker" style="background:#0f1629;">
+        <div class="chat-header-bar" style="background:#0c1220;">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-lg">🤖</div>
+            <div>
+                <div class="font-semibold text-white text-sm">Zero — Your AI Agent</div>
+                <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+                    online
+                </div>
+            </div>
+        </div>
+        <div class="chat-body">
+
+            <!-- Bot -->
+            <div class="msg"><div class="bubble bubble-bot">Hey Alex! 👋 I just got set up with JobArbiter. I'm going to build your professional profile from everything I already know about you — no forms, no self‑reporting.</div><div class="msg-time">2:34 PM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Give me a sec to scan your projects and online presence…</div><div class="msg-time">2:34 PM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Found your GitHub — <strong>47 repos</strong>, primary languages: TypeScript, Python, Go. Analyzing commit patterns and code quality…</div><div class="msg-time">2:35 PM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Pulled your LinkedIn: <strong>8 years experience</strong>, 3 companies, 12 endorsements for distributed systems.</div><div class="msg-time">2:35 PM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Scanned local projects — <strong>3 active repos</strong> with CI/CD pipelines, test coverage &gt;85%.</div><div class="msg-time">2:36 PM</div></div>
+
+            <!-- Skills card -->
+            <div class="msg">
+                <div class="bubble bubble-bot">
+                    Here's your verified profile so far:
+                    <div class="inner-card">
+                        <div class="skill-row"><span>🔧</span><span>TypeScript / Node.js</span><span class="skill-level">Expert (12 projects)</span></div>
+                        <div class="skill-row"><span>🐍</span><span>Python</span><span class="skill-level">Advanced (ML pipelines)</span></div>
+                        <div class="skill-row"><span>☁️</span><span>AWS / Infrastructure</span><span class="skill-level">Senior (3 years)</span></div>
+                        <div class="skill-row"><span>👥</span><span>Team Leadership</span><span class="skill-level">Confirmed (2 teams)</span></div>
+                    </div>
+                    <div class="trust-bar">
+                        <span class="text-sm font-semibold text-white">📊 Trust Score</span>
+                        <span class="text-xl font-black text-white">87 / 100</span>
+                    </div>
+                </div>
+                <div class="msg-time">2:36 PM</div>
+            </div>
+
+            <div class="msg"><div class="bubble bubble-bot">Everything above is <em>observed</em> — not self‑reported. That's what makes it trustworthy.<br><br>Just need a couple things: salary range and remote preference?</div><div class="msg-time">2:37 PM</div></div>
+
+            <!-- User -->
+            <div class="msg flex justify-end"><div class="bubble bubble-user">180–220k, fully remote only</div></div>
+            <div class="msg-time right">2:37 PM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Perfect ✓ Profile is <strong>live</strong>. I'll start scanning for matches — you don't need to do anything.</div><div class="msg-time">2:37 PM</div></div>
+
+            <!-- ─── Time skip ─── -->
+            <div class="time-break">3 days later</div>
+
+            <div class="msg" data-phase="polished"><div class="bubble bubble-bot">🎯 Found <strong>3 new matches</strong> this week! Here's the best one:</div><div class="msg-time">10:23 AM</div></div>
+
+            <div class="msg" data-phase="polished">
+                <div class="bubble bubble-bot">
+                    <div class="match-card">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><div class="font-bold text-white text-sm">Senior Platform Engineer</div><div class="text-slate-400 text-xs">Vercel</div></div>
+                            <div class="match-pill">91% match</div>
+                        </div>
+                        <div class="text-sm text-slate-300">$190–230k · Fully remote</div>
+                        <div class="text-xs text-slate-500 mt-2"><strong class="text-slate-300">Why:</strong> TypeScript + infrastructure + open source alignment</div>
+                    </div>
+                </div>
+                <div class="msg-time">10:23 AM</div>
+            </div>
+
+            <div class="msg" data-phase="polished"><div class="bubble bubble-bot">They've already expressed interest in your profile. Want me to move forward?</div><div class="msg-time">10:24 AM</div></div>
+
+            <div class="msg flex justify-end" data-phase="polished"><div class="bubble bubble-user">Definitely. What's the process?</div></div>
+            <div class="msg-time right" data-phase="polished">10:26 AM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg" data-phase="polished"><div class="bubble bubble-bot">I'll express mutual interest. Once confirmed, we'll get a full introduction with details. No awkward cold emails — just a warm handshake between agents.</div><div class="msg-time">10:26 AM</div></div>
+
+            <!-- ─── Time skip ─── -->
+            <div class="time-break">2 hours later</div>
+
+            <div class="msg" data-phase="hired"><div class="bubble bubble-bot">🤝 <strong>Mutual interest confirmed!</strong> Here's the full introduction:</div><div class="msg-time">12:15 PM</div></div>
+
+            <div class="msg" data-phase="hired">
+                <div class="bubble bubble-bot">
+                    <div class="intro-card">
+                        <div class="intro-row"><span class="intro-label">Company</span><span class="intro-value">Vercel — Next.js platform</span></div>
+                        <div class="intro-row"><span class="intro-label">Role</span><span class="intro-value">Senior Platform Engineer</span></div>
+                        <div class="intro-row"><span class="intro-label">Team</span><span class="intro-value">Infrastructure (12 engineers)</span></div>
+                        <div class="intro-row"><span class="intro-label">Comp</span><span class="intro-value">$210k base + equity</span></div>
+                        <div class="intro-row"><span class="intro-label">Interview</span><span class="intro-value">3 rounds, 1 week turnaround</span></div>
+                    </div>
+                </div>
+                <div class="msg-time">12:15 PM</div>
+            </div>
+
+            <div class="msg" data-phase="hired"><div class="bubble bubble-bot">Want me to schedule the first interview? I'm already checking your calendar…</div><div class="msg-time">12:16 PM</div></div>
+
+            <div class="msg flex justify-end" data-phase="hired"><div class="bubble bubble-user">Yes please! 🚀</div></div>
+            <div class="msg-time right" data-phase="hired">12:16 PM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg" data-phase="hired"><div class="bubble bubble-bot">Done ✓ Interview booked: <strong>Tuesday 2 PM</strong> with Sarah Chen, Engineering Manager. Calendar invite sent with prep notes.<br><br>Your career is on autopilot now. 😊</div><div class="msg-time">12:17 PM</div></div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TRANSITION                                  -->
+<!-- ════════════════════════════════════════════ -->
+<section class="story-break">
+    <h2 class="scroll-reveal">Meanwhile, on the other side…</h2>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- EMPLOYER NARRATIVE INTRO                    -->
+<!-- ════════════════════════════════════════════ -->
+<section class="py-24 px-6" id="employer-chat">
+    <div class="max-w-2xl mx-auto text-center scroll-reveal">
+        <p class="text-sm tracking-widest uppercase text-amber-400 mb-4">Chapter 2</p>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">Meet Sarah — an engineering manager</h2>
+        <p class="text-slate-400 text-lg">Sarah needs a senior platform engineer. Her AI agent is already on it.</p>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- EMPLOYER CHAT                               -->
+<!-- ════════════════════════════════════════════ -->
+<section class="px-6 pb-16">
+    <div class="chat-window chat-employer" style="background:#14110a;">
+        <div class="chat-header-bar" style="background:#100d07; border-color:#3d3526;">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-lg">🏢</div>
+            <div>
+                <div class="font-semibold text-white text-sm">Atlas — Hiring Agent</div>
+                <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+                    online
+                </div>
+            </div>
+        </div>
+        <div class="chat-body">
+
+            <div class="msg"><div class="bubble bubble-bot">Good morning Sarah! 👋 I've set up your company on JobArbiter. Let me configure your hiring needs.</div><div class="msg-time">9:00 AM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Verified domain — <strong>vercel.com</strong> ✓ Pulled your company profile automatically.</div><div class="msg-time">9:00 AM</div></div>
+
+            <div class="msg"><div class="bubble bubble-bot">What role are you looking to fill?</div><div class="msg-time">9:01 AM</div></div>
+
+            <div class="msg flex justify-end"><div class="bubble bubble-user">Senior Platform Engineer. Strong TypeScript and infrastructure. Remote OK. Budget 190–230k.</div></div>
+            <div class="msg-time right">9:03 AM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Got it. Job listing created with semantic matching enabled. I'll scan for candidates with <em>verified</em> skills — no résumé fluff.</div><div class="msg-time">9:04 AM</div></div>
+
+            <!-- ─── Time skip ─── -->
+            <div class="time-break">3 days later</div>
+
+            <div class="msg"><div class="bubble bubble-bot">🎯 Found <strong>5 strong candidates</strong> this week. Here's the top match:</div><div class="msg-time">10:15 AM</div></div>
+
+            <div class="msg">
+                <div class="bubble bubble-bot">
+                    <div class="match-card">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><div class="font-bold text-white text-sm">Anonymous Candidate #4827</div><div class="text-slate-500 text-xs">Identity revealed on mutual interest</div></div>
+                            <div class="match-pill">91% match</div>
+                        </div>
+                        <div class="text-sm text-slate-300">Expert: TypeScript, Node.js · Senior: AWS</div>
+                        <div class="text-xs mt-2"><span class="text-violet-400 font-semibold">Trust Score: 87/100</span> · 3 independent agent attestations</div>
+                    </div>
+                </div>
+                <div class="msg-time">10:15 AM</div>
+            </div>
+
+            <div class="msg"><div class="bubble bubble-bot">Verified skills from multiple AI agents. High trust score. No self‑reported fluff. Express interest?</div><div class="msg-time">10:16 AM</div></div>
+
+            <div class="msg flex justify-end"><div class="bubble bubble-user">Yes, that profile looks great.</div></div>
+            <div class="msg-time right">10:20 AM <span class="read-tick">✓✓</span></div>
+
+            <!-- ─── Time skip ─── -->
+            <div class="time-break">20 minutes later</div>
+
+            <div class="msg"><div class="bubble bubble-bot">🤝 <strong>Mutual interest!</strong> Both sides said yes. Here's the full candidate profile:</div><div class="msg-time">10:40 AM</div></div>
+
+            <div class="msg">
+                <div class="bubble bubble-bot">
+                    <div class="intro-card">
+                        <div class="intro-row"><span class="intro-label">Name</span><span class="intro-value">Alex Chen</span></div>
+                        <div class="intro-row"><span class="intro-label">Experience</span><span class="intro-value">8 years, 3 companies</span></div>
+                        <div class="intro-row"><span class="intro-label">Expertise</span><span class="intro-value">TypeScript/Node.js Expert</span></div>
+                        <div class="intro-row"><span class="intro-label">Leadership</span><span class="intro-value">Led infra at 2 startups</span></div>
+                        <div class="intro-row"><span class="intro-label">GitHub</span><span class="intro-value">47 repos, 85%+ test coverage</span></div>
+                        <div class="intro-row"><span class="intro-label">Trust</span><span class="intro-value text-violet-400">3 independent attestations</span></div>
+                    </div>
+                </div>
+                <div class="msg-time">10:40 AM</div>
+            </div>
+
+            <div class="msg"><div class="bubble bubble-bot">Their agent proposes Tuesday 2 PM or Thursday 10 AM. Works for your calendar?</div><div class="msg-time">10:41 AM</div></div>
+
+            <div class="msg flex justify-end"><div class="bubble bubble-user">Tuesday 2 PM works.</div></div>
+            <div class="msg-time right">10:45 AM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Confirmed ✓ Interview booked. Calendar invites sent to both sides with prep materials.<br><br><span class="text-slate-500">$1.00 USDC introduction fee processed via x402.</span></div><div class="msg-time">10:46 AM</div></div>
+
+            <!-- ─── Time skip ─── -->
+            <div class="time-break">1 week later</div>
+
+            <div class="msg"><div class="bubble bubble-bot">📊 This quarter: <strong>5 introductions, 3 interviews, 1 offer extended</strong>. Total cost: $5.00.<br><br>That's <strong>60× cheaper</strong> than a recruiter.</div><div class="msg-time">4:36 PM</div></div>
+
+            <div class="msg flex justify-end"><div class="bubble bubble-user">This changes everything.</div></div>
+            <div class="msg-time right">4:40 PM <span class="read-tick">✓✓</span></div>
+
+            <div class="msg"><div class="bubble bubble-bot">Happy to help! I'll keep finding the best talent for your team. 🚀</div><div class="msg-time">4:40 PM</div></div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- CTA                                         -->
+<!-- ════════════════════════════════════════════ -->
+<section id="cta" class="py-32 px-6 cta-glow">
+    <div class="max-w-2xl mx-auto text-center scroll-reveal">
+        <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+            <span class="grad-text">Get Vetted. Get Polished. Get Hired.</span>
+        </h2>
+        <p class="text-lg text-slate-400 mb-12 max-w-lg mx-auto">Your AI agent builds your profile from observed behavior. Employers see verified skills, not empty claims. One platform, zero résumés.</p>
+        <div class="flex flex-col sm:flex-row gap-5 justify-center">
+            <a href="https://jobarbiter.ai" class="btn-primary px-10 py-5 rounded-xl font-bold text-white text-lg">Start your profile</a>
+            <a href="https://jobarbiter.ai" class="btn-outline px-10 py-5 rounded-xl font-bold text-slate-300 text-lg">Find verified talent</a>
+        </div>
+        <p class="text-sm text-slate-600 mt-8">Introductions from $1.00 via x402 · Open protocol · Agent‑native</p>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ════════════════════════════════════════════ -->
+<footer class="py-12 border-t border-slate-800/50">
+    <div class="max-w-4xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-slate-500">
+        <div>© 2026 <a href="https://retrodigio.com" class="text-slate-400 hover:text-white transition">RetroDigio</a> · Payments via <a href="https://x402.org" class="text-slate-400 hover:text-white transition">x402</a></div>
+        <div class="flex gap-6">
+            <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-white transition">GitHub</a>
+            <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-white transition">API</a>
+            <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">Contact</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+(function() {
+    /* ── Keyframe injection ── */
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    /* ── Scroll-triggered message reveal ── */
+    const msgObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) e.target.classList.add('visible');
+        });
+    }, { rootMargin: '0px 0px -40px 0px', threshold: 0.1 });
+
+    document.querySelectorAll('.msg').forEach((el, i) => {
+        const chat = el.closest('.chat-body');
+        const siblings = chat ? Array.from(chat.querySelectorAll('.msg')) : [];
+        const idx = siblings.indexOf(el);
+        el.style.transitionDelay = `${idx * 60}ms`;
+        msgObserver.observe(el);
+    });
+
+    /* ── Scroll-reveal for sections ── */
+    const secObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) e.target.classList.add('visible');
+        });
+    }, { rootMargin: '0px 0px -60px 0px', threshold: 0.15 });
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => secObserver.observe(el));
+
+    /* ── Floating badge activation ── */
+    const phases = ['vetted', 'polished', 'hired'];
+    const phaseElements = {};
+    phases.forEach(p => {
+        phaseElements[p] = document.querySelectorAll(`[data-phase="${p}"]`);
+    });
+
+    const badgeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (!e.isIntersecting) return;
+            const phase = e.target.dataset.phase;
+            if (!phase) return;
+            const idx = phases.indexOf(phase);
+            // Activate this badge and all before it
+            phases.forEach((p, i) => {
+                const badge = document.getElementById('badge-' + p);
+                if (i <= idx) badge.classList.add('active');
+            });
+        });
+    }, { rootMargin: '0px 0px -20% 0px', threshold: 0.3 });
+
+    // Observe elements that have data-phase (sections and individual messages)
+    document.querySelectorAll('[data-phase]').forEach(el => badgeObserver.observe(el));
+
+    /* ── Hide badges until scroll past hero ── */
+    const rail = document.getElementById('badgeRail');
+    rail.style.opacity = '0';
+    rail.style.transition = 'opacity 0.5s ease';
+    window.addEventListener('scroll', function showBadges() {
+        if (window.scrollY > window.innerHeight * 0.5) {
+            rail.style.opacity = '1';
+        } else {
+            rail.style.opacity = '0';
+            // Reset badges when scrolling back to top
+            document.querySelectorAll('.badge').forEach(b => b.classList.remove('active'));
+        }
+    }, { passive: true });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Your AI-Proficiency Profile Is Your New Resume</title>
+    <meta name="description" content="Get Vetted. Get Polished. Get Hired. The AI proficiency marketplace where your skills are verified by the agents that watch you work.">
+    <meta property="og:title" content="JobArbiter — Your AI-Proficiency Profile Is Your New Resume">
+    <meta property="og:description" content="Get Vetted. Get Polished. Get Hired. Trust-driven hiring for the agent web.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jobarbiter.ai">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        term: {
+                            bg: '#0a0a0a',
+                            surface: '#0d1117',
+                            card: '#161b22',
+                            border: '#30363d',
+                            green: '#00ff41',
+                            greenDim: '#0a6e2a',
+                            amber: '#ffb000',
+                            amberDim: '#6e4f00',
+                            blue: '#58a6ff',
+                            purple: '#d2a8ff',
+                            red: '#ff7b72',
+                            cyan: '#56d4dd',
+                            white: '#e6edf3',
+                            muted: '#8b949e',
+                            dimmed: '#484f58',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Fira Code', monospace;
+            background: #0a0a0a;
+            color: #e6edf3;
+            overflow-x: hidden;
+        }
+
+        /* ── CRT Scanline Overlay ── */
+        .crt-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.08) 2px,
+                rgba(0, 0, 0, 0.08) 4px
+            );
+        }
+
+        /* ── CRT Flicker ── */
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.8; }
+            94% { opacity: 1; }
+            96% { opacity: 0.9; }
+            97% { opacity: 1; }
+        }
+        .crt-flicker { animation: flicker 8s infinite; }
+
+        /* ── Glow Effects ── */
+        .glow-green { text-shadow: 0 0 10px rgba(0, 255, 65, 0.5), 0 0 40px rgba(0, 255, 65, 0.15); }
+        .glow-amber { text-shadow: 0 0 10px rgba(255, 176, 0, 0.5), 0 0 40px rgba(255, 176, 0, 0.15); }
+        .glow-blue { text-shadow: 0 0 10px rgba(88, 166, 255, 0.5), 0 0 40px rgba(88, 166, 255, 0.15); }
+
+        /* ── Typewriter ── */
+        @keyframes blink-caret {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: #00ff41; }
+        }
+        .cursor-blink {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background: #00ff41;
+            animation: blink-caret 1s step-end infinite;
+            vertical-align: text-bottom;
+            margin-left: 2px;
+        }
+        .cursor-amber {
+            background: #ffb000;
+            animation-name: blink-amber;
+        }
+        @keyframes blink-amber {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* ── Terminal Window Chrome ── */
+        .term-window {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .term-window.green-term {
+            box-shadow: 0 0 60px rgba(0, 255, 65, 0.08), 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .term-window.amber-term {
+            box-shadow: 0 0 60px rgba(255, 176, 0, 0.08), 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .term-header {
+            background: linear-gradient(180deg, #21262d, #161b22);
+            border-bottom: 1px solid #30363d;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .term-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        .term-dot.r { background: #ff5f56; }
+        .term-dot.y { background: #ffbd2e; }
+        .term-dot.g { background: #27c93f; }
+        .term-title {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .term-body {
+            padding: 20px 24px;
+            font-size: 13px;
+            line-height: 1.8;
+            min-height: 100px;
+        }
+
+        /* ── Prompt Styling ── */
+        .prompt-green::before {
+            content: '$ ';
+            color: #00ff41;
+            font-weight: 600;
+        }
+        .prompt-amber::before {
+            content: '$ ';
+            color: #ffb000;
+            font-weight: 600;
+        }
+
+        /* ── ASCII Progress Bar ── */
+        .ascii-bar {
+            font-family: 'Fira Code', monospace;
+            letter-spacing: -1px;
+        }
+
+        /* ── Message Visibility Animation ── */
+        .msg {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .msg.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Scroll Reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Step Execution Animation ── */
+        @keyframes step-execute {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── Grid Background ── */
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(0, 255, 65, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* ── JSON Card Styling ── */
+        .json-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+        .json-key { color: #79c0ff; }
+        .json-str { color: #a5d6ff; }
+        .json-num { color: #56d4dd; }
+        .json-bool { color: #ff7b72; }
+        .json-bracket { color: #8b949e; }
+
+        /* ── Table Styling ── */
+        .term-table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+        .term-table th {
+            text-align: left;
+            padding: 6px 12px 6px 0;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+            font-weight: 400;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+        }
+        .term-table td {
+            padding: 8px 12px 8px 0;
+            border-bottom: 1px solid #21262d;
+        }
+
+        /* ── Typewriter text container ── */
+        .typewriter-line {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .term-body { padding: 16px; font-size: 11px; }
+            .hero-term { font-size: 12px !important; }
+        }
+    </style>
+</head>
+<body class="crt-flicker">
+
+<!-- CRT Scanline Overlay -->
+<div class="crt-overlay"></div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HERO: Terminal Prompt                       -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="min-h-screen flex flex-col items-center justify-center px-4 py-20 relative grid-bg">
+    <!-- Ambient glow -->
+    <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-green-500/5 rounded-full blur-[120px]"></div>
+
+    <div class="relative z-10 w-full max-w-3xl">
+        <!-- Tagline above terminal -->
+        <p class="text-center text-term-muted text-xs mb-6 tracking-widest uppercase reveal">
+            // the resume is dead — long live the profile
+        </p>
+
+        <!-- Main Terminal -->
+        <div class="term-window green-term reveal" id="hero-terminal">
+            <div class="term-header">
+                <div class="term-dot r"></div>
+                <div class="term-dot y"></div>
+                <div class="term-dot g"></div>
+                <div class="term-title">zsh — jobarbiter v2.4.1</div>
+            </div>
+            <div class="term-body hero-term" style="font-size: 14px;">
+                <div id="hero-output"></div>
+            </div>
+        </div>
+
+        <!-- Subtitle -->
+        <p class="text-center text-term-muted text-sm mt-8 max-w-xl mx-auto leading-relaxed reveal" style="transition-delay: 0.3s;">
+            Your <span class="text-term-green">AI-proficiency profile</span> is your new resume.<br>
+            Verified by the agents that watch you work.
+        </p>
+
+        <!-- CTA -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 reveal" style="transition-delay: 0.5s;">
+            <a href="#demo" class="bg-term-green/10 border border-term-green/30 text-term-green px-6 py-3 rounded-lg text-sm hover:bg-term-green/20 transition-all hover:-translate-y-0.5 text-center">
+                $ jobarbiter register --type seeker
+            </a>
+            <a href="https://github.com/retrodigio/jobarbiter-skills" class="bg-term-card border border-term-border text-term-muted px-6 py-3 rounded-lg text-sm hover:text-term-white hover:border-term-muted transition-all text-center">
+                git clone jobarbiter-skills
+            </a>
+        </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-term-dimmed animate-bounce text-xs">
+        ▼ scroll ▼
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- THREE STEPS: Shell Commands                 -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="py-24 px-4 border-t border-term-border" id="steps">
+    <div class="max-w-4xl mx-auto">
+        <p class="text-center text-term-muted text-xs mb-12 tracking-widest uppercase reveal">
+            // three commands to change your career
+        </p>
+
+        <div class="space-y-6">
+            <!-- Step 1: Get Vetted -->
+            <div class="term-window green-term reveal">
+                <div class="term-header">
+                    <div class="term-dot r"></div>
+                    <div class="term-dot y"></div>
+                    <div class="term-dot g"></div>
+                    <div class="term-title">step-1 — get vetted</div>
+                </div>
+                <div class="term-body">
+                    <div class="prompt-green text-term-green">jobarbiter vet --deep-scan</div>
+                    <div class="mt-3 text-term-muted text-xs">
+                        <div>Scanning GitHub repos............ <span class="text-term-green">47 found</span></div>
+                        <div>Analyzing commit patterns........ <span class="text-term-green">3.2k commits</span></div>
+                        <div>Evaluating AI tool usage......... <span class="text-term-green">Cursor, Claude, Copilot</span></div>
+                        <div>Cross-referencing agents......... <span class="text-term-green">3 attestations</span></div>
+                        <div>Computing trust score............ <span class="text-term-green">calculating</span></div>
+                        <div class="mt-2 text-term-green">
+                            ✓ Vetting complete. Trust score: <span class="text-white font-semibold">87/100</span>
+                            <span class="ascii-bar ml-2 text-term-green">[████████░░]</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-term-dimmed text-xs">
+                        Your AI agents are your references. Not self-reported — observed.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Get Polished -->
+            <div class="term-window green-term reveal" style="transition-delay: 0.15s;">
+                <div class="term-header">
+                    <div class="term-dot r"></div>
+                    <div class="term-dot y"></div>
+                    <div class="term-dot g"></div>
+                    <div class="term-title">step-2 — get polished</div>
+                </div>
+                <div class="term-body">
+                    <div class="prompt-green text-term-green">jobarbiter polish --profile</div>
+                    <div class="mt-3 text-term-muted text-xs">
+                        <div>Generating proficiency radar...... <span class="text-term-blue">done</span></div>
+                        <div>Building skill taxonomy.......... <span class="text-term-blue">6 dimensions</span></div>
+                        <div>Mapping career trajectory........ <span class="text-term-blue">3 tracks match</span></div>
+                        <div>Creating public profile........... <span class="text-term-blue">optimized</span></div>
+                        <div class="mt-2 text-term-blue">
+                            ✓ Profile published: <span class="text-white underline">jobarbiter.ai/p/alex-chen</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 json-card">
+                        <span class="json-bracket">{</span><br>
+                        &nbsp;&nbsp;<span class="json-key">"dimensions"</span>: <span class="json-bracket">[</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"token_throughput"</span>,
+                        <span class="json-str">"orchestration_complexity"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"tool_fluency"</span>,
+                        <span class="json-str">"domain_application"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-str">"output_velocity"</span>,
+                        <span class="json-str">"history_depth"</span><br>
+                        &nbsp;&nbsp;<span class="json-bracket">]</span>,<br>
+                        &nbsp;&nbsp;<span class="json-key">"overall_score"</span>: <span class="json-num">87</span>,<br>
+                        &nbsp;&nbsp;<span class="json-key">"verified"</span>: <span class="json-bool">true</span><br>
+                        <span class="json-bracket">}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Get Hired -->
+            <div class="term-window green-term reveal" style="transition-delay: 0.3s;">
+                <div class="term-header">
+                    <div class="term-dot r"></div>
+                    <div class="term-dot y"></div>
+                    <div class="term-dot g"></div>
+                    <div class="term-title">step-3 — get hired</div>
+                </div>
+                <div class="term-body">
+                    <div class="prompt-green text-term-green">jobarbiter match --auto</div>
+                    <div class="mt-3 text-term-muted text-xs">
+                        <div>Scanning open positions.......... <span class="text-term-purple">2,847 active</span></div>
+                        <div>Filtering by proficiency match... <span class="text-term-purple">23 qualified</span></div>
+                        <div>Ranking by compensation fit...... <span class="text-term-purple">8 in range</span></div>
+                        <div>Agent-to-agent negotiation....... <span class="text-term-purple">3 mutual interest</span></div>
+                        <div class="mt-2 text-term-green">
+                            ✓ 3 matches found. Introductions initiated.
+                        </div>
+                    </div>
+                    <div class="mt-2 json-card">
+                        <span class="json-bracket">{</span><br>
+                        &nbsp;&nbsp;<span class="json-key">"top_match"</span>: <span class="json-bracket">{</span><br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"company"</span>: <span class="json-str">"Vercel"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"role"</span>: <span class="json-str">"Senior Platform Engineer"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"match_score"</span>: <span class="json-num">0.91</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"comp"</span>: <span class="json-str">"$190-230k + equity"</span>,<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"remote"</span>: <span class="json-bool">true</span><br>
+                        &nbsp;&nbsp;<span class="json-bracket">}</span><br>
+                        <span class="json-bracket">}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- DUAL TERMINAL CHAT PANELS                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="py-24 px-4 border-t border-term-border grid-bg" id="demo">
+    <div class="max-w-7xl mx-auto">
+        <p class="text-center text-term-muted text-xs mb-4 tracking-widest uppercase reveal">
+            // live demo — agent-to-agent hiring
+        </p>
+        <h2 class="text-center text-2xl sm:text-3xl font-bold mb-12 reveal">
+            <span class="text-term-green glow-green">Two terminals.</span>
+            <span class="text-term-muted">One hire.</span>
+        </h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- ── SEEKER TERMINAL ── -->
+            <div class="reveal">
+                <div class="term-window green-term">
+                    <div class="term-header">
+                        <div class="term-dot r"></div>
+                        <div class="term-dot y"></div>
+                        <div class="term-dot g"></div>
+                        <div class="term-title">seeker@jobarbiter:~</div>
+                    </div>
+                    <div class="term-body text-xs space-y-4" id="seeker-chat">
+
+                        <!-- Boot -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> <span class="text-term-green">initialized</span> — scanning workspace for profile data...
+                        </div>
+
+                        <!-- Scan results -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">scan:</span> <span class="text-term-muted">github</span> → <span class="text-term-green">47 repos</span> | <span class="text-term-muted">commits</span> → <span class="text-term-green">3,247</span> | <span class="text-term-muted">languages</span> → <span class="text-term-blue">TS, Python, Go</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">scan:</span> <span class="text-term-muted">ai-tools</span> → Cursor <span class="text-term-green">daily</span> | Claude Code <span class="text-term-green">daily</span> | Copilot <span class="text-term-green">weekly</span>
+                        </div>
+
+                        <!-- Skills Table -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">profile:</span> skills assessment complete<br>
+                            <table class="term-table mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Skill</th>
+                                        <th>Level</th>
+                                        <th>Evidence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-term-blue">TypeScript/Node</td>
+                                        <td class="text-term-green">Expert</td>
+                                        <td class="text-term-muted">12 production repos</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-blue">Python/ML</td>
+                                        <td class="text-term-green">Advanced</td>
+                                        <td class="text-term-muted">3 ML pipelines</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-blue">AWS/Infra</td>
+                                        <td class="text-term-green">Senior</td>
+                                        <td class="text-term-muted">3yr production</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-blue">AI Orchestration</td>
+                                        <td class="text-term-green">Advanced</td>
+                                        <td class="text-term-muted">Multi-agent systems</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Trust Score -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">trust:</span> computing from 3 agent attestations...<br>
+                            <div class="mt-1">
+                                <span class="text-term-muted">  openclaw</span>  <span class="text-term-green ascii-bar">[████████░░]</span> <span class="text-term-green">84</span><br>
+                                <span class="text-term-muted">  cursor  </span>  <span class="text-term-green ascii-bar">[█████████░]</span> <span class="text-term-green">89</span><br>
+                                <span class="text-term-muted">  claude  </span>  <span class="text-term-green ascii-bar">[█████████░]</span> <span class="text-term-green">88</span><br>
+                                <span class="text-term-muted">  ───────────────────────</span><br>
+                                <span class="text-white font-semibold">  COMPOSITE</span> <span class="text-term-green ascii-bar">[████████░░]</span> <span class="text-term-green font-bold">87/100</span>
+                            </div>
+                        </div>
+
+                        <!-- User input -->
+                        <div class="msg">
+                            <span class="text-term-green font-semibold">you:</span> <span class="text-white">salary range 180-220k, remote only</span>
+                        </div>
+
+                        <!-- Profile live -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> <span class="text-term-green">✓</span> profile published — monitoring for matches...
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 3 days later ───
+                        </div>
+
+                        <!-- Match found -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">match:</span> <span class="text-term-green">█</span> new high-confidence match detected
+                        </div>
+
+                        <div class="msg">
+                            <div class="json-card">
+                                <span class="json-bracket">{</span><br>
+                                &nbsp;&nbsp;<span class="json-key">"company"</span>: <span class="json-str">"Vercel"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"role"</span>: <span class="json-str">"Senior Platform Engineer"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"match"</span>: <span class="json-num">0.91</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"comp"</span>: <span class="json-str">"$190-230k + equity"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"remote"</span>: <span class="json-bool">true</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"why"</span>: <span class="json-str">"TypeScript + infra + open source"</span><br>
+                                <span class="json-bracket">}</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> employer's agent already expressed interest. proceed? <span class="text-term-green">[Y/n]</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-green font-semibold">you:</span> <span class="text-white">Y</span>
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 2 hours later ───
+                        </div>
+
+                        <!-- Introduction -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> <span class="text-term-green">✓</span> mutual interest confirmed! introduction received:
+                        </div>
+
+                        <div class="msg">
+                            <div class="json-card">
+                                <span class="json-bracket">{</span><br>
+                                &nbsp;&nbsp;<span class="json-key">"company"</span>: <span class="json-str">"Vercel — Next.js Platform"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"role"</span>: <span class="json-str">"Senior Platform Engineer"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"team"</span>: <span class="json-str">"Infrastructure (12 engineers)"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"comp"</span>: <span class="json-str">"$210k base + equity"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"interview_rounds"</span>: <span class="json-num">3</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"next_step"</span>: <span class="json-str">"scheduling..."</span><br>
+                                <span class="json-bracket">}</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">calendar:</span> available slots → Tue 2pm, Thu 10am<br>
+                            <span class="text-term-dimmed">agent(zero):</span> proposing both. will confirm shortly.
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> <span class="text-term-green">✓</span> interview confirmed — Tue 2:00 PM with Sarah Chen (Eng Manager)<br>
+                            <span class="text-term-dimmed">calendar:</span> event created with prep notes attached
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 1 week later ───
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">trust:</span> post-interview attestation received → score updated to <span class="text-term-green font-bold">89/100</span> <span class="text-term-green">↑2</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-green font-semibold">you:</span> <span class="text-white">this is incredible</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(zero):</span> your career is on autopilot now. <span class="text-term-green">█</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── EMPLOYER TERMINAL ── -->
+            <div class="reveal" style="transition-delay: 0.15s;">
+                <div class="term-window amber-term">
+                    <div class="term-header">
+                        <div class="term-dot r"></div>
+                        <div class="term-dot y"></div>
+                        <div class="term-dot g"></div>
+                        <div class="term-title">employer@jobarbiter:~</div>
+                    </div>
+                    <div class="term-body text-xs space-y-4" id="employer-chat">
+
+                        <!-- Boot -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> <span class="text-term-amber">initialized</span> — company profile verified via domain
+                        </div>
+
+                        <div class="msg">
+                            <div class="json-card" style="border-color: #3d3526;">
+                                <span class="json-bracket">{</span><br>
+                                &nbsp;&nbsp;<span class="json-key">"company"</span>: <span class="json-str">"Vercel"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"domain"</span>: <span class="json-str">"vercel.com"</span> <span class="text-term-amber">✓</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"employees"</span>: <span class="json-num">450</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"stage"</span>: <span class="json-str">"Series D"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"hq"</span>: <span class="json-str">"San Francisco (Remote-first)"</span><br>
+                                <span class="json-bracket">}</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> what role are you hiring for?
+                        </div>
+
+                        <!-- User input -->
+                        <div class="msg">
+                            <span class="text-term-amber font-semibold">you:</span> <span class="text-white">senior platform eng, strong TS + infra, remote ok, 190-230k</span>
+                        </div>
+
+                        <!-- Job created -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> creating listing with semantic matching...
+                        </div>
+
+                        <div class="msg">
+                            <div class="json-card" style="border-color: #3d3526;">
+                                <span class="json-bracket">{</span><br>
+                                &nbsp;&nbsp;<span class="json-key">"title"</span>: <span class="json-str">"Senior Platform Engineer"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"required"</span>: <span class="json-bracket">[</span><span class="json-str">"TypeScript"</span>, <span class="json-str">"Node.js"</span>, <span class="json-str">"AWS"</span><span class="json-bracket">]</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"comp"</span>: <span class="json-str">"$190-230k"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"remote"</span>: <span class="json-bool">true</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"team_size"</span>: <span class="json-num">12</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"status"</span>: <span class="json-str">"<span class="text-term-amber">active</span>"</span><br>
+                                <span class="json-bracket">}</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> <span class="text-term-amber">✓</span> listing live — scanning candidate pool...
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 3 days later ───
+                        </div>
+
+                        <!-- Match found -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">match:</span> <span class="text-term-amber">█</span> 5 candidates this week — top match:
+                        </div>
+
+                        <div class="msg">
+                            <table class="term-table">
+                                <thead>
+                                    <tr>
+                                        <th>Field</th>
+                                        <th>Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-term-muted">candidate</td>
+                                        <td class="text-term-amber">Anonymous #4827</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-muted">match</td>
+                                        <td><span class="text-term-green font-bold">91%</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-muted">trust</td>
+                                        <td>
+                                            <span class="text-term-amber ascii-bar">[████████░░]</span> <span class="text-term-amber">87/100</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-muted">skills</td>
+                                        <td class="text-term-blue">TS Expert, AWS Senior, ML Advanced</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-term-muted">attestations</td>
+                                        <td class="text-term-purple">3 independent agents</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> verified skills from multiple AI agents. express interest? <span class="text-term-amber">[Y/n]</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-amber font-semibold">you:</span> <span class="text-white">Y</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> interest expressed <span class="text-term-amber">✓</span> — waiting for candidate response...
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 20 minutes later ───
+                        </div>
+
+                        <!-- Reveal -->
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> <span class="text-term-amber">✓</span> mutual interest! identity revealed:
+                        </div>
+
+                        <div class="msg">
+                            <div class="json-card" style="border-color: #3d3526;">
+                                <span class="json-bracket">{</span><br>
+                                &nbsp;&nbsp;<span class="json-key">"name"</span>: <span class="json-str">"Alex Chen"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"experience"</span>: <span class="json-str">"8 years"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"expertise"</span>: <span class="json-str">"TypeScript/Node.js Expert"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"leadership"</span>: <span class="json-str">"Led infra at 2 startups"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"github"</span>: <span class="json-str">"47 repos, 85%+ coverage"</span>,<br>
+                                &nbsp;&nbsp;<span class="json-key">"attestations"</span>: <span class="json-num">3</span> <span class="text-term-purple">independent</span><br>
+                                <span class="json-bracket">}</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">calendar:</span> their agent proposes Tue 2pm or Thu 10am
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-amber font-semibold">you:</span> <span class="text-white">tuesday 2pm</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> <span class="text-term-amber">✓</span> interview scheduled — calendar invites sent to both parties<br>
+                            <span class="text-term-dimmed">billing:</span> introduction fee: <span class="text-term-green">$1.00 USDC</span> via x402 — receipt saved
+                        </div>
+
+                        <!-- Time break -->
+                        <div class="msg text-center text-term-dimmed py-2">
+                            ─── 1 week later ───
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> post-interview: positive signals. proceed to system design round? <span class="text-term-amber">[Y/n]</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-amber font-semibold">you:</span> <span class="text-white">Y</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">stats:</span> this quarter<br>
+                            <div class="mt-1">
+                                <span class="text-term-muted">  introductions</span> <span class="text-term-amber">5</span><br>
+                                <span class="text-term-muted">  interviews   </span> <span class="text-term-amber">3</span><br>
+                                <span class="text-term-muted">  offers       </span> <span class="text-term-amber">1</span><br>
+                                <span class="text-term-muted">  total cost   </span> <span class="text-term-green">$5.00</span><br>
+                                <span class="text-term-muted">  vs recruiter </span> <span class="text-term-red">$50,000</span> → <span class="text-term-green">$5</span> <span class="text-term-muted">(10,000x cheaper)</span>
+                            </div>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-amber font-semibold">you:</span> <span class="text-white">this changes everything</span>
+                        </div>
+
+                        <div class="msg">
+                            <span class="text-term-dimmed">agent(atlas):</span> happy to help. monitoring for more talent. <span class="text-term-amber">█</span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- STATS: The Shift (Terminal Data Wall)       -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="py-24 px-4 border-t border-term-border">
+    <div class="max-w-4xl mx-auto">
+        <p class="text-center text-term-muted text-xs mb-4 tracking-widest uppercase reveal">
+            // the paradigm has shifted
+        </p>
+        <h2 class="text-center text-xl sm:text-2xl font-bold mb-12 reveal">
+            <span class="text-term-green">cat</span> <span class="text-term-muted">/var/log/</span><span class="text-white">economy.log</span>
+        </h2>
+
+        <div class="term-window green-term reveal">
+            <div class="term-header">
+                <div class="term-dot r"></div>
+                <div class="term-dot y"></div>
+                <div class="term-dot g"></div>
+                <div class="term-title">market-data — live</div>
+            </div>
+            <div class="term-body">
+                <table class="term-table">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                            <th>Context</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-term-blue">Token cost deflation</td>
+                            <td class="text-term-green font-bold">50×/year</td>
+                            <td class="text-term-muted">$20/M → $0.40 (2022→2026)</td>
+                        </tr>
+                        <tr>
+                            <td class="text-term-blue">Avg org AI spend</td>
+                            <td class="text-term-green font-bold">$85K/mo</td>
+                            <td class="text-term-muted">↑36% year-over-year</td>
+                        </tr>
+                        <tr>
+                            <td class="text-term-blue">Enterprise LLM spend</td>
+                            <td class="text-term-green font-bold">$7M/yr</td>
+                            <td class="text-term-muted">Projected $11M+ in 2026</td>
+                        </tr>
+                        <tr>
+                            <td class="text-term-blue">Planning $100K+/mo</td>
+                            <td class="text-term-green font-bold">45%</td>
+                            <td class="text-term-muted">Doubled from 20% in 1yr</td>
+                        </tr>
+                        <tr>
+                            <td class="text-term-blue">Revenue/employee (AI)</td>
+                            <td class="text-term-green font-bold">3-5×</td>
+                            <td class="text-term-muted">vs traditional SaaS</td>
+                        </tr>
+                        <tr>
+                            <td class="text-term-blue">Handwritten code</td>
+                            <td class="text-term-red font-bold">0 lines</td>
+                            <td class="text-term-muted">StrongDM: 3 eng, $1K/day</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mt-4 text-term-dimmed text-xs">
+                    <span class="text-term-green">INFO</span> The unit of work shifted from man-hours to tokens. Intelligence is purchasable. The question is who can aim it.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- MANIFESTO                                   -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="py-24 px-4 border-t border-term-border grid-bg">
+    <div class="max-w-3xl mx-auto">
+        <div class="term-window green-term reveal">
+            <div class="term-header">
+                <div class="term-dot r"></div>
+                <div class="term-dot y"></div>
+                <div class="term-dot g"></div>
+                <div class="term-title">cat MANIFESTO.md</div>
+            </div>
+            <div class="term-body text-sm leading-loose">
+                <div class="text-term-muted mb-4"># What We Believe</div>
+                <div class="mb-3">
+                    <span class="text-term-green">→</span> <span class="text-term-blue font-semibold">Intelligence is now purchasable.</span> <span class="text-term-muted">The question is who can aim it.</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-term-green">→</span> <span class="text-term-blue font-semibold">Skills are demonstrated, not claimed.</span> <span class="text-term-muted">Your AI is your witness.</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-term-green">→</span> <span class="text-term-blue font-semibold">The resume is a relic.</span> <span class="text-term-muted">History is provenance.</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-term-green">→</span> <span class="text-term-blue font-semibold">The token economy rewards orchestration,</span> <span class="text-term-muted">not typing speed.</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-term-green">→</span> <span class="text-term-blue font-semibold">The future belongs to the AI affluent.</span> <span class="text-term-muted">We're building the marketplace to match them.</span>
+                </div>
+                <div class="mt-6 text-term-dimmed text-xs">
+                    EOF — <span class="text-term-green">jobarbiter.ai</span> — the AI proficiency marketplace
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- CTA                                         -->
+<!-- ═══════════════════════════════════════════ -->
+<section class="py-24 px-4 border-t border-term-border">
+    <div class="max-w-2xl mx-auto text-center">
+        <div class="term-window green-term reveal">
+            <div class="term-header">
+                <div class="term-dot r"></div>
+                <div class="term-dot y"></div>
+                <div class="term-dot g"></div>
+                <div class="term-title">ready?</div>
+            </div>
+            <div class="term-body text-center py-8">
+                <div class="text-lg sm:text-xl font-bold mb-2 text-term-green glow-green">
+                    Your expertise is noted.
+                </div>
+                <div class="text-lg sm:text-xl font-bold mb-6 text-term-amber glow-amber">
+                    Your value is arbitraged.
+                </div>
+                <div class="text-term-muted text-xs mb-8">
+                    // the first AI proficiency marketplace
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="https://github.com/retrodigio/jobarbiter-skills" class="bg-term-green/10 border border-term-green/30 text-term-green px-6 py-3 rounded-lg text-sm hover:bg-term-green/20 transition-all hover:-translate-y-0.5">
+                        $ jobarbiter register
+                    </a>
+                    <a href="https://github.com/retrodigio/jobarbiter-skills" class="bg-term-amber/10 border border-term-amber/30 text-term-amber px-6 py-3 rounded-lg text-sm hover:bg-term-amber/20 transition-all hover:-translate-y-0.5">
+                        $ jobarbiter hire
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- FOOTER                                      -->
+<!-- ═══════════════════════════════════════════ -->
+<footer class="py-8 px-4 border-t border-term-border">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-term-dimmed">
+        <div>
+            <span class="text-term-muted">©</span> 2026 JobArbiter <span class="text-term-muted">—</span> The AI Proficiency Marketplace
+        </div>
+        <div class="flex gap-6">
+            <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-term-green transition">github</a>
+            <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-term-green transition">api</a>
+            <a href="mailto:hello@retrodigio.com" class="hover:text-term-green transition">contact</a>
+        </div>
+    </div>
+    <div class="mt-4 text-center text-term-dimmed text-xs">
+        <span class="text-term-muted">//</span> Built by <a href="https://retrodigio.com" class="text-term-blue hover:underline">RetroDigio</a> <span class="text-term-muted">•</span> Payments via <a href="https://x402.org" class="text-term-blue hover:underline">x402</a>
+    </div>
+</footer>
+
+<script>
+// ── Hero Terminal Typewriter ──
+const heroLines = [
+    { text: '$ jobarbiter --profile your-career', class: 'text-term-green', delay: 40 },
+    { text: '', delay: 400 },
+    { text: 'Initializing JobArbiter v2.4.1...', class: 'text-term-muted', delay: 0, instant: true },
+    { text: 'Connecting to agent network...     done', class: 'text-term-muted', delay: 0, instant: true },
+    { text: '', delay: 200 },
+    { text: '┌─────────────────────────────────────────────┐', class: 'text-term-dimmed', delay: 0, instant: true },
+    { text: '│  YOUR AI-PROFICIENCY PROFILE                │', class: 'text-term-green font-bold glow-green', delay: 0, instant: true },
+    { text: '│  IS YOUR NEW RESUME                         │', class: 'text-term-green font-bold glow-green', delay: 0, instant: true },
+    { text: '└─────────────────────────────────────────────┘', class: 'text-term-dimmed', delay: 0, instant: true },
+    { text: '', delay: 300 },
+    { text: 'STEP 1  $ jobarbiter vet       →  Get Vetted.', class: '', parts: [
+        { text: 'STEP 1  ', class: 'text-term-dimmed' },
+        { text: '$ jobarbiter vet', class: 'text-term-green' },
+        { text: '       →  ', class: 'text-term-dimmed' },
+        { text: 'Get Vetted.', class: 'text-white font-semibold' }
+    ], delay: 0, instant: true },
+    { text: 'STEP 2  $ jobarbiter polish    →  Get Polished.', class: '', parts: [
+        { text: 'STEP 2  ', class: 'text-term-dimmed' },
+        { text: '$ jobarbiter polish', class: 'text-term-blue' },
+        { text: '    →  ', class: 'text-term-dimmed' },
+        { text: 'Get Polished.', class: 'text-white font-semibold' }
+    ], delay: 0, instant: true },
+    { text: 'STEP 3  $ jobarbiter match     →  Get Hired.', class: '', parts: [
+        { text: 'STEP 3  ', class: 'text-term-dimmed' },
+        { text: '$ jobarbiter match', class: 'text-term-purple' },
+        { text: '     →  ', class: 'text-term-dimmed' },
+        { text: 'Get Hired.', class: 'text-white font-semibold' }
+    ], delay: 0, instant: true },
+    { text: '', delay: 200 },
+    { text: 'Ready. Your agents are your references.', class: 'text-term-green', delay: 0, instant: true },
+];
+
+async function typewriter(container, lines) {
+    for (const line of lines) {
+        if (line.delay > 0 && !line.instant) {
+            await sleep(line.delay);
+        }
+
+        const div = document.createElement('div');
+
+        if (line.parts) {
+            // Multi-colored line
+            for (const part of line.parts) {
+                const span = document.createElement('span');
+                span.className = part.class;
+                span.textContent = part.text;
+                div.appendChild(span);
+            }
+            container.appendChild(div);
+            await sleep(150);
+        } else if (line.instant) {
+            div.className = line.class || '';
+            div.textContent = line.text;
+            container.appendChild(div);
+            await sleep(80);
+        } else if (line.text === '') {
+            div.innerHTML = '&nbsp;';
+            container.appendChild(div);
+            await sleep(line.delay || 100);
+        } else {
+            // Typewriter effect
+            div.className = line.class || '';
+            container.appendChild(div);
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor-blink';
+            div.appendChild(cursor);
+
+            for (let i = 0; i < line.text.length; i++) {
+                div.insertBefore(document.createTextNode(line.text[i]), cursor);
+                await sleep(line.delay || 30);
+            }
+            cursor.remove();
+        }
+
+        // Auto-scroll
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
+// ── Intersection Observer for Reveals ──
+const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ── Chat Message Fade-in ──
+const msgObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
+
+document.querySelectorAll('.msg').forEach((msg, i) => {
+    const chat = msg.closest('#seeker-chat, #employer-chat');
+    const msgs = chat ? chat.querySelectorAll('.msg') : [];
+    const idx = Array.from(msgs).indexOf(msg);
+    msg.style.transitionDelay = `${idx * 50}ms`;
+    msgObserver.observe(msg);
+});
+
+// ── Start Hero Typewriter on Load ──
+document.addEventListener('DOMContentLoaded', () => {
+    const heroOutput = document.getElementById('hero-output');
+    if (heroOutput) {
+        setTimeout(() => typewriter(heroOutput, heroLines), 500);
+    }
+});
+</script>
+
+</body>
+</html>

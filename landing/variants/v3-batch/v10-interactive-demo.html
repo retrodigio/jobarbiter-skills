@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Your AI-Proficiency Profile Is Your New Resume</title>
+    <meta name="description" content="Get Vetted. Get Polished. Get Hired. Your AI-proficiency profile replaces the resume.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #09090b; color: #f4f4f5; overflow-x: hidden; }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* ── Gradient mesh background ── */
+        .mesh-bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 30%, rgba(99,102,241,.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 70%, rgba(219,39,119,.10) 0%, transparent 70%),
+                radial-gradient(ellipse 70% 40% at 50% 10%, rgba(139,92,246,.08) 0%, transparent 60%);
+        }
+        .mesh-bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(ellipse 50% 50% at var(--mx, 50%) var(--my, 50%), rgba(139,92,246,.06) 0%, transparent 70%);
+            transition: background .3s ease;
+        }
+
+        /* ── Hero gradient text ── */
+        .hero-gradient {
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 30%, #c084fc 60%, #e879f9 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .sub-gradient {
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        /* ── CTA button ── */
+        .cta-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            box-shadow: 0 0 40px rgba(139,92,246,.35), 0 0 80px rgba(139,92,246,.12);
+            transition: all .3s ease; position: relative; overflow: hidden;
+        }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(139,92,246,.5), 0 0 120px rgba(139,92,246,.2); }
+        .cta-btn:active { transform: scale(.97); }
+        .cta-btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.15) 50%, transparent 60%);
+            transform: translateX(-100%); transition: transform .6s;
+        }
+        .cta-btn:hover::after { transform: translateX(100%); }
+
+        /* ── Toggle tabs ── */
+        .tab-track {
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 14px; padding: 4px; display: inline-flex; position: relative;
+        }
+        .tab-btn {
+            padding: 10px 28px; border-radius: 10px; font-weight: 600; font-size: 14px;
+            cursor: pointer; transition: all .3s ease; position: relative; z-index: 1;
+            color: rgba(255,255,255,.5); user-select: none;
+        }
+        .tab-btn.active { color: #fff; }
+        .tab-slider {
+            position: absolute; top: 4px; height: calc(100% - 8px);
+            border-radius: 10px; transition: all .35s cubic-bezier(.4,0,.2,1);
+            background: linear-gradient(135deg, rgba(99,102,241,.6), rgba(168,85,247,.6));
+            box-shadow: 0 0 20px rgba(139,92,246,.3);
+        }
+
+        /* ── Progress steps ── */
+        .step-bar { display: flex; gap: 4px; align-items: center; }
+        .step-item {
+            display: flex; align-items: center; gap: 8px; padding: 8px 16px;
+            border-radius: 10px; cursor: pointer; transition: all .3s ease;
+            font-size: 13px; font-weight: 500; color: rgba(255,255,255,.35);
+            border: 1px solid transparent;
+        }
+        .step-item.active {
+            color: #fff; background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.3);
+        }
+        .step-item.completed { color: rgba(255,255,255,.6); }
+        .step-dot {
+            width: 24px; height: 24px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+            background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.12);
+            transition: all .3s ease; flex-shrink: 0;
+        }
+        .step-item.active .step-dot {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-color: rgba(139,92,246,.5); box-shadow: 0 0 12px rgba(139,92,246,.4);
+        }
+        .step-item.completed .step-dot {
+            background: rgba(34,197,94,.2); border-color: rgba(34,197,94,.4); color: #22c55e;
+        }
+        .step-connector {
+            width: 24px; height: 2px; background: rgba(255,255,255,.08);
+            border-radius: 1px; transition: background .3s;
+        }
+        .step-connector.filled { background: linear-gradient(90deg, #6366f1, #a855f7); }
+
+        /* ── Progress bar ── */
+        .progress-track {
+            height: 3px; background: rgba(255,255,255,.06); border-radius: 2px;
+            overflow: hidden; margin-top: 12px;
+        }
+        .progress-fill {
+            height: 100%; border-radius: 2px; transition: width .5s cubic-bezier(.4,0,.2,1);
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+        }
+
+        /* ── Chat window ── */
+        .chat-window {
+            background: #111113; border: 1px solid rgba(255,255,255,.06);
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,.5), 0 0 80px rgba(139,92,246,.06);
+            max-width: 560px; margin: 0 auto;
+        }
+        .chat-header-bar {
+            padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            background: linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+        }
+        .chat-avatar {
+            width: 40px; height: 40px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .worker-avatar { background: linear-gradient(135deg, #6366f1, #a855f7); }
+        .employer-avatar { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+
+        .chat-body {
+            padding: 20px; min-height: 420px; max-height: 480px; overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        .chat-body::-webkit-scrollbar { width: 4px; }
+        .chat-body::-webkit-scrollbar-track { background: transparent; }
+        .chat-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+        /* ── Chat bubbles ── */
+        .msg { margin-bottom: 12px; opacity: 0; transform: translateY(8px); transition: all .4s ease; }
+        .msg.show { opacity: 1; transform: translateY(0); }
+        .msg-row { display: flex; }
+        .msg-row.from-user { justify-content: flex-end; }
+        .bubble {
+            padding: 10px 14px; border-radius: 16px; font-size: 14px;
+            line-height: 1.55; max-width: 85%;
+        }
+        .bubble-agent {
+            background: rgba(255,255,255,.06); color: #e4e4e7;
+            border-bottom-left-radius: 4px;
+        }
+        .bubble-user {
+            color: #fff; border-bottom-right-radius: 4px;
+        }
+        .worker-chat .bubble-user { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+        .employer-chat .bubble-user { background: linear-gradient(135deg, #b45309, #dc2626); }
+
+        .msg-time { font-size: 11px; color: rgba(255,255,255,.25); margin-top: 4px; padding: 0 4px; }
+        .msg-row.from-user + .msg-time { text-align: right; }
+
+        .time-divider {
+            text-align: center; font-size: 11px; color: rgba(255,255,255,.2);
+            padding: 16px 0; display: flex; align-items: center; gap: 12px;
+        }
+        .time-divider::before, .time-divider::after {
+            content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.06);
+        }
+
+        /* ── Embedded cards in chat ── */
+        .info-card {
+            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 12px; padding: 14px; margin-top: 8px;
+        }
+        .info-row {
+            display: flex; padding: 6px 0; font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,.04);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: rgba(255,255,255,.4); width: 85px; flex-shrink: 0; }
+        .info-value { color: #e4e4e7; }
+        .skill-row {
+            display: flex; align-items: center; gap: 8px; padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px;
+        }
+        .skill-row:last-child { border-bottom: none; }
+        .skill-level { color: #22c55e; font-weight: 600; margin-left: auto; font-size: 12px; }
+        .trust-bar {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 8px; padding: 10px 14px; margin-top: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .match-badge {
+            background: #22c55e; color: #000; font-weight: 700;
+            font-size: 11px; padding: 3px 8px; border-radius: 6px;
+        }
+
+        /* ── Typing indicator ── */
+        .typing { display: flex; align-items: center; gap: 4px; padding: 12px 16px; }
+        .typing-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,.3); animation: typeBounce 1.4s ease-in-out infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: .2s; }
+        .typing-dot:nth-child(3) { animation-delay: .4s; }
+        @keyframes typeBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        /* ── Replay button ── */
+        .replay-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+            color: rgba(255,255,255,.5); cursor: pointer; transition: all .3s;
+        }
+        .replay-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+        /* ── Fade-in animation ── */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp .7s ease-out forwards; }
+        .fade-up-d1 { animation-delay: .1s; opacity: 0; }
+        .fade-up-d2 { animation-delay: .2s; opacity: 0; }
+        .fade-up-d3 { animation-delay: .35s; opacity: 0; }
+        .fade-up-d4 { animation-delay: .5s; opacity: 0; }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .step-bar { flex-wrap: wrap; justify-content: center; }
+            .step-connector { display: none; }
+            .step-item { padding: 6px 12px; font-size: 12px; }
+            .tab-btn { padding: 8px 18px; font-size: 13px; }
+            .chat-body { min-height: 360px; max-height: 420px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mesh-bg" id="meshBg"></div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- HERO SECTION                               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="hero" class="relative z-10 min-h-screen flex items-center justify-center px-6">
+        <div class="max-w-3xl mx-auto text-center">
+            <p class="text-sm font-medium tracking-widest uppercase text-indigo-400 mb-6 fade-up">
+                The resume is dead
+            </p>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05] mb-6 fade-up fade-up-d1">
+                Your <span class="hero-gradient">AI-Proficiency profile</span><br>is your new resume.
+            </h1>
+            <p class="text-lg sm:text-xl text-zinc-400 max-w-xl mx-auto mb-4 leading-relaxed fade-up fade-up-d2">
+                <span class="sub-gradient font-semibold">Get Vetted. Get Polished. Get Hired.</span>
+            </p>
+            <p class="text-base text-zinc-500 max-w-lg mx-auto mb-10 leading-relaxed fade-up fade-up-d2">
+                JobArbiter's AI agent discovers your real skills, builds a verified profile, and connects you with employers who value <em>demonstrated</em> ability — not bullet points.
+            </p>
+            <button id="ctaBtn" class="cta-btn px-10 py-4 rounded-xl text-white font-semibold text-base inline-flex items-center gap-3 fade-up fade-up-d3">
+                See How It Works
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+            <p class="text-xs text-zinc-600 mt-4 fade-up fade-up-d4">Interactive demo · No signup required</p>
+        </div>
+
+        <!-- Scroll hint -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce opacity-40">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 14l-7 7-7-7"/></svg>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- INTERACTIVE DEMO SECTION                   -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="demo" class="relative z-10 max-w-3xl mx-auto px-6 pb-32" style="display:none;">
+
+        <!-- Persona Toggle -->
+        <div class="flex justify-center mb-8">
+            <div class="tab-track" id="tabTrack">
+                <div class="tab-slider" id="tabSlider"></div>
+                <button class="tab-btn active" data-tab="worker" id="tabWorker">👤 I'm a Worker</button>
+                <button class="tab-btn" data-tab="employer" id="tabEmployer">🏢 I'm an Employer</button>
+            </div>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="flex justify-center mb-2">
+            <div class="step-bar" id="stepBar">
+                <div class="step-item active" data-step="1">
+                    <div class="step-dot">1</div>
+                    <span>Get Vetted</span>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-item" data-step="2">
+                    <div class="step-dot">2</div>
+                    <span>Get Polished</span>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step-item" data-step="3">
+                    <div class="step-dot">3</div>
+                    <span>Get Hired</span>
+                </div>
+            </div>
+        </div>
+        <div class="progress-track mb-8">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+
+        <!-- Chat Windows (only one visible at a time) -->
+        <div id="workerChat" class="chat-window worker-chat">
+            <div class="chat-header-bar">
+                <div class="chat-avatar worker-avatar">🤖</div>
+                <div class="flex-1">
+                    <div class="font-semibold text-sm text-white">Aria — Career Agent</div>
+                    <div class="flex items-center gap-1.5 text-xs text-zinc-400"><span class="online-dot"></span> online</div>
+                </div>
+                <button class="replay-btn" id="replayWorker">↻ Replay</button>
+            </div>
+            <div class="chat-body" id="workerBody"></div>
+        </div>
+
+        <div id="employerChat" class="chat-window employer-chat" style="display:none;">
+            <div class="chat-header-bar">
+                <div class="chat-avatar employer-avatar">🏢</div>
+                <div class="flex-1">
+                    <div class="font-semibold text-sm text-white">Atlas — Hiring Agent</div>
+                    <div class="flex items-center gap-1.5 text-xs text-zinc-400"><span class="online-dot"></span> online</div>
+                </div>
+                <button class="replay-btn" id="replayEmployer">↻ Replay</button>
+            </div>
+            <div class="chat-body" id="employerBody"></div>
+        </div>
+
+        <!-- Bottom CTA -->
+        <div class="text-center mt-12">
+            <a href="https://github.com/retrodigio/jobarbiter-skills" class="cta-btn px-8 py-3.5 rounded-xl text-white font-semibold text-sm inline-flex items-center gap-2">
+                Get Started — It's Free
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative z-10 py-12 border-t border-white/5">
+        <div class="max-w-3xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-zinc-600">
+            <span>© 2025 <a href="https://retrodigio.com" class="text-zinc-400 hover:text-white transition">RetroDigio</a></span>
+            <div class="flex gap-6">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="hover:text-white transition">GitHub</a>
+                <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="hover:text-white transition">API</a>
+                <a href="mailto:hello@retrodigio.com" class="hover:text-white transition">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CHAT MESSAGE DATA
+// ═══════════════════════════════════════════════════
+
+const WORKER_MESSAGES = [
+    // ── Step 1: Get Vetted ──
+    { step: 1, from: 'agent', text: `Hey there! 👋 I'm Aria, your career agent. I just got set up with JobArbiter — let's build your professional profile.`, delay: 800 },
+    { step: 1, from: 'agent', text: `The cool thing? I don't need you to fill out forms. I'll discover your real skills from your actual work. Give me a sec...`, delay: 1800 },
+    { step: 1, from: 'agent', text: `Found your GitHub — 47 repos, primary languages: TypeScript, Python, Go. Analyzing commit patterns, PR reviews, and code quality...`, delay: 2200 },
+    { step: 1, from: 'agent', text: `Also pulled your LinkedIn: 8 years experience, 3 companies. And I found 3 active local projects with CI/CD pipelines and 85%+ test coverage. 🔍`, delay: 2000 },
+    { step: 1, from: 'agent', html: `Here's your verified skill profile:
+        <div class="info-card">
+            <div class="skill-row"><span>🔧</span><span>TypeScript / Node.js</span><span class="skill-level">Expert · 12 projects</span></div>
+            <div class="skill-row"><span>🐍</span><span>Python</span><span class="skill-level">Advanced · ML pipelines</span></div>
+            <div class="skill-row"><span>☁️</span><span>AWS / Infrastructure</span><span class="skill-level">Senior · 3 years</span></div>
+            <div class="skill-row"><span>🤖</span><span>AI Tool Proficiency</span><span class="skill-level">High · daily usage</span></div>
+        </div>
+        <div class="trust-bar">
+            <span class="text-sm font-semibold">📊 Trust Score</span>
+            <span class="text-xl font-black">87 / 100</span>
+        </div>`, delay: 2400 },
+    { step: 1, from: 'agent', text: `Everything here is verified from observed behavior — not self-reported. That's what makes your profile stand out. ✓`, delay: 1800 },
+
+    // ── Step 2: Get Polished ──
+    { step: 2, from: 'agent', text: `Now let's polish this up. A couple quick questions to dial in your preferences — salary range and work style?`, delay: 1600 },
+    { step: 2, from: 'user', text: `180-220k, fully remote only`, delay: 1200 },
+    { step: 2, from: 'agent', text: `Perfect. I noticed you haven't updated your LinkedIn summary in 2 years — want me to draft something that highlights your AI proficiency? It'll help with visibility.`, delay: 2200 },
+    { step: 2, from: 'user', text: `Yeah that would be great actually`, delay: 1000 },
+    { step: 2, from: 'agent', text: `Done! I've drafted a summary that positions you as a senior engineer with verified AI-augmented workflow skills. I'll send it for your review.`, delay: 1800 },
+    { step: 2, from: 'agent', text: `Your profile is live and polished. I'll start monitoring for matches — you don't need to do anything else. 🎯`, delay: 1600 },
+
+    // ── Step 3: Get Hired ──
+    { step: 3, divider: '3 days later' },
+    { step: 3, from: 'agent', text: `🎯 Found 3 matches this week! Here's the best one:`, delay: 1400 },
+    { step: 3, from: 'agent', html: `<div class="info-card">
+        <div class="flex justify-between items-start mb-2">
+            <div><div class="font-bold text-white text-sm">Senior Platform Engineer</div><div class="text-zinc-500 text-xs">Vercel</div></div>
+            <div class="match-badge">91% match</div>
+        </div>
+        <div class="text-sm text-zinc-300">$190–230k · Fully remote</div>
+        <div class="text-xs text-zinc-500 mt-2"><strong class="text-zinc-300">Why you match:</strong> TypeScript + infrastructure + AI proficiency + open source</div>
+    </div>`, delay: 2000 },
+    { step: 3, from: 'agent', text: `They've already seen your verified profile and expressed interest. Want me to move forward?`, delay: 1600 },
+    { step: 3, from: 'user', text: `Definitely. Let's do it.`, delay: 1000 },
+    { step: 3, from: 'agent', text: `Mutual interest confirmed! 🤝 Here's the full introduction:`, delay: 1800 },
+    { step: 3, from: 'agent', html: `<div class="info-card">
+        <div class="info-row"><span class="info-label">Company</span><span class="info-value">Vercel — Next.js Platform</span></div>
+        <div class="info-row"><span class="info-label">Role</span><span class="info-value">Senior Platform Engineer</span></div>
+        <div class="info-row"><span class="info-label">Comp</span><span class="info-value">$210k base + equity</span></div>
+        <div class="info-row"><span class="info-label">Interview</span><span class="info-value">3 rounds, first is Tuesday 2pm</span></div>
+    </div>`, delay: 2200 },
+    { step: 3, from: 'agent', text: `I've already checked your calendar and proposed times. Calendar invite incoming with prep notes. Your career just went on autopilot. 🚀`, delay: 2000 },
+];
+
+const EMPLOYER_MESSAGES = [
+    // ── Step 1: Get Vetted ──
+    { step: 1, from: 'agent', text: `Good morning. 👋 I'm Atlas, your hiring agent. Let's get your role set up on JobArbiter.`, delay: 800 },
+    { step: 1, from: 'agent', text: `I've verified your domain — vercel.com ✓ — and pulled your company profile.`, delay: 1600 },
+    { step: 1, from: 'agent', html: `<div class="info-card">
+        <div class="font-bold text-white text-sm mb-2">Vercel</div>
+        <div class="text-xs text-zinc-400 space-y-1">
+            <div>Next.js & Frontend Cloud</div>
+            <div>450 employees · Series D · Remote-first</div>
+        </div>
+    </div>`, delay: 2000 },
+    { step: 1, from: 'agent', text: `What role are you looking to fill?`, delay: 1200 },
+    { step: 1, from: 'user', text: `Senior Platform Engineer. Strong TypeScript and infrastructure. Remote OK. Budget 190-230k.`, delay: 1400 },
+    { step: 1, from: 'agent', html: `Job listing created with semantic matching enabled:
+    <div class="info-card">
+        <div class="font-bold text-white text-sm mb-2">Senior Platform Engineer</div>
+        <div class="text-xs text-zinc-400 space-y-1">
+            <div>TypeScript, Node.js, AWS, distributed systems</div>
+            <div class="text-zinc-300">$190–230k · Remote · Full-time</div>
+        </div>
+    </div>`, delay: 2200 },
+    { step: 1, from: 'agent', text: `Job is live. I'm now matching against verified candidate profiles — not resumes. Only candidates with proven, observed skills will surface. ✓`, delay: 1800 },
+
+    // ── Step 2: Get Polished ──
+    { step: 2, divider: '3 days later' },
+    { step: 2, from: 'agent', text: `📊 Status update: Scanned 847 candidates. 5 have strong verified profiles. Here's your top match:`, delay: 1800 },
+    { step: 2, from: 'agent', html: `<div class="info-card">
+        <div class="flex justify-between items-start mb-2">
+            <div class="font-bold text-white text-sm">Anonymous Candidate #4827</div>
+            <div class="match-badge">91% match</div>
+        </div>
+        <div class="text-xs text-zinc-400 space-y-1">
+            <div>Expert: TypeScript, Node.js (12 verified projects)</div>
+            <div>Senior: AWS, Infrastructure (3 years observed)</div>
+            <div class="text-purple-400">Trust Score: 87/100 · 3 independent agent attestations</div>
+            <div class="text-zinc-500">AI Proficiency: High — uses AI tools daily in workflow</div>
+        </div>
+    </div>`, delay: 2400 },
+    { step: 2, from: 'agent', text: `This candidate's skills are verified from actual code, deployments, and peer attestations — not a resume. Express interest?`, delay: 1800 },
+    { step: 2, from: 'user', text: `Yes, that profile looks great.`, delay: 1000 },
+    { step: 2, from: 'agent', text: `Interest expressed ✓. Waiting for mutual confirmation...`, delay: 1400 },
+
+    // ── Step 3: Get Hired ──
+    { step: 3, divider: '20 minutes later' },
+    { step: 3, from: 'agent', text: `🤝 Mutual interest confirmed! Here's the full candidate profile:`, delay: 1400 },
+    { step: 3, from: 'agent', html: `<div class="info-card">
+        <div class="info-row"><span class="info-label">Name</span><span class="info-value">Alex Chen</span></div>
+        <div class="info-row"><span class="info-label">Experience</span><span class="info-value">8 years · led infra at 2 startups</span></div>
+        <div class="info-row"><span class="info-label">Expertise</span><span class="info-value">TypeScript/Node.js Expert</span></div>
+        <div class="info-row"><span class="info-label">GitHub</span><span class="info-value">47 repos, 85%+ test coverage</span></div>
+        <div class="info-row"><span class="info-label">Trust</span><span class="info-value" style="color:#a78bfa">3 independent agent attestations</span></div>
+    </div>`, delay: 2200 },
+    { step: 3, from: 'agent', text: `Their agent proposes Tuesday 2pm or Thursday 10am for the first interview. Which works for Sarah's calendar?`, delay: 1800 },
+    { step: 3, from: 'user', text: `Tuesday 2pm works.`, delay: 800 },
+    { step: 3, from: 'agent', text: `Confirmed ✓ Interview scheduled. Calendar invites sent to both sides with prep materials.`, delay: 1600 },
+    { step: 3, from: 'agent', text: `Introduction fee: $1.00 USDC via x402. That's about 60x cheaper than a traditional recruiter. 📊`, delay: 1800 },
+    { step: 3, from: 'agent', text: `I'll keep sourcing verified candidates. Your hiring pipeline is on autopilot. 🚀`, delay: 1600 },
+];
+
+// ═══════════════════════════════════════════════════
+// ENGINE
+// ═══════════════════════════════════════════════════
+
+let currentTab = 'worker';
+let playbackTimers = [];
+let workerIndex = 0;
+let employerIndex = 0;
+
+function getMessages() { return currentTab === 'worker' ? WORKER_MESSAGES : EMPLOYER_MESSAGES; }
+function getBody() { return document.getElementById(currentTab === 'worker' ? 'workerBody' : 'employerBody'); }
+function getIndex() { return currentTab === 'worker' ? workerIndex : employerIndex; }
+function setIndex(v) { if (currentTab === 'worker') workerIndex = v; else employerIndex = v; }
+
+// ── Render a single message ──
+function renderMsg(msg, body) {
+    if (msg.divider) {
+        const d = document.createElement('div');
+        d.className = 'time-divider msg show';
+        d.textContent = msg.divider;
+        body.appendChild(d);
+        return;
+    }
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg';
+    const row = document.createElement('div');
+    row.className = 'msg-row' + (msg.from === 'user' ? ' from-user' : '');
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble ' + (msg.from === 'user' ? 'bubble-user' : 'bubble-agent');
+    if (msg.html) bubble.innerHTML = msg.html;
+    else bubble.textContent = msg.text;
+    row.appendChild(bubble);
+    wrapper.appendChild(row);
+    body.appendChild(wrapper);
+    // trigger animation
+    requestAnimationFrame(() => requestAnimationFrame(() => wrapper.classList.add('show')));
+    body.scrollTop = body.scrollHeight;
+}
+
+// ── Show typing indicator ──
+function showTyping(body) {
+    const t = document.createElement('div');
+    t.className = 'msg show';
+    t.id = 'typingIndicator';
+    t.innerHTML = `<div class="msg-row"><div class="bubble bubble-agent typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    body.appendChild(t);
+    body.scrollTop = body.scrollHeight;
+}
+function hideTyping() {
+    const t = document.getElementById('typingIndicator');
+    if (t) t.remove();
+}
+
+// ── Update progress UI ──
+function updateProgress(step, messages) {
+    const steps = document.querySelectorAll('.step-item');
+    const connectors = document.querySelectorAll('.step-connector');
+    steps.forEach((s, i) => {
+        const sn = parseInt(s.dataset.step);
+        s.classList.toggle('active', sn === step);
+        s.classList.toggle('completed', sn < step);
+    });
+    connectors.forEach((c, i) => c.classList.toggle('filled', i < step - 1));
+
+    // Calc progress: how far through the messages are we
+    const idx = getIndex();
+    const total = messages.length;
+    const pct = Math.min(100, Math.round((idx / total) * 100));
+    document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ── Playback engine ──
+function clearTimers() { playbackTimers.forEach(t => clearTimeout(t)); playbackTimers = []; }
+
+function playFrom(startIdx) {
+    clearTimers();
+    const messages = getMessages();
+    const body = getBody();
+    let elapsed = 0;
+
+    for (let i = startIdx; i < messages.length; i++) {
+        const msg = messages[i];
+        const delay = msg.delay || 600;
+
+        // If it's a divider, shorter pause
+        if (msg.divider) {
+            elapsed += 400;
+            const capturedI = i;
+            playbackTimers.push(setTimeout(() => {
+                setIndex(capturedI + 1);
+                renderMsg(msg, body);
+                updateProgress(msg.step, messages);
+            }, elapsed));
+            continue;
+        }
+
+        // Typing indicator for agent messages
+        if (msg.from === 'agent') {
+            const typingStart = elapsed + 300;
+            playbackTimers.push(setTimeout(() => showTyping(body), typingStart));
+            elapsed += delay;
+            const capturedI = i;
+            playbackTimers.push(setTimeout(() => {
+                hideTyping();
+                setIndex(capturedI + 1);
+                renderMsg(msg, body);
+                updateProgress(msg.step, messages);
+            }, elapsed));
+        } else {
+            elapsed += delay;
+            const capturedI = i;
+            playbackTimers.push(setTimeout(() => {
+                setIndex(capturedI + 1);
+                renderMsg(msg, body);
+                updateProgress(msg.step, messages);
+            }, elapsed));
+        }
+    }
+
+    // Final progress fill
+    playbackTimers.push(setTimeout(() => {
+        document.getElementById('progressFill').style.width = '100%';
+        const steps = document.querySelectorAll('.step-item');
+        steps.forEach(s => { s.classList.remove('active'); s.classList.add('completed'); });
+        document.querySelectorAll('.step-connector').forEach(c => c.classList.add('filled'));
+    }, elapsed + 400));
+}
+
+function resetChat(tab) {
+    clearTimers();
+    const bodyId = tab === 'worker' ? 'workerBody' : 'employerBody';
+    document.getElementById(bodyId).innerHTML = '';
+    if (tab === 'worker') workerIndex = 0; else employerIndex = 0;
+}
+
+// ── Jump to step ──
+function jumpToStep(step) {
+    const messages = getMessages();
+    const body = getBody();
+    clearTimers();
+    body.innerHTML = '';
+    setIndex(0);
+
+    // Render all messages before this step instantly
+    let startIdx = 0;
+    for (let i = 0; i < messages.length; i++) {
+        if (messages[i].step >= step) { startIdx = i; break; }
+        renderMsg(messages[i], body);
+        setIndex(i + 1);
+    }
+    updateProgress(step, messages);
+    // Play from this step
+    playFrom(startIdx);
+}
+
+// ═══════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+    const demo = document.getElementById('demo');
+    const hero = document.getElementById('hero');
+
+    // Slider positioning
+    function positionSlider() {
+        const track = document.getElementById('tabTrack');
+        const slider = document.getElementById('tabSlider');
+        const activeBtn = track.querySelector('.tab-btn.active');
+        if (!activeBtn) return;
+        slider.style.left = activeBtn.offsetLeft + 'px';
+        slider.style.width = activeBtn.offsetWidth + 'px';
+    }
+
+    // CTA click → show demo
+    document.getElementById('ctaBtn').addEventListener('click', () => {
+        hero.style.minHeight = 'auto';
+        hero.style.paddingBottom = '0';
+        demo.style.display = 'block';
+        demo.style.opacity = '0';
+        requestAnimationFrame(() => {
+            demo.style.transition = 'opacity .5s ease';
+            demo.style.opacity = '1';
+        });
+        positionSlider();
+        setTimeout(() => {
+            demo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            playFrom(0);
+            updateProgress(1, getMessages());
+        }, 300);
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            if (tab === currentTab) return;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            positionSlider();
+            currentTab = tab;
+            document.getElementById('workerChat').style.display = tab === 'worker' ? 'block' : 'none';
+            document.getElementById('employerChat').style.display = tab === 'employer' ? 'block' : 'none';
+
+            const idx = getIndex();
+            updateProgress(getMessages()[Math.min(idx, getMessages().length - 1)]?.step || 1, getMessages());
+            if (idx === 0) {
+                playFrom(0);
+                updateProgress(1, getMessages());
+            }
+        });
+    });
+
+    // Step clicks
+    document.querySelectorAll('.step-item').forEach(item => {
+        item.addEventListener('click', () => jumpToStep(parseInt(item.dataset.step)));
+    });
+
+    // Replay buttons
+    document.getElementById('replayWorker').addEventListener('click', () => { resetChat('worker'); playFrom(0); updateProgress(1, WORKER_MESSAGES); });
+    document.getElementById('replayEmployer').addEventListener('click', () => { resetChat('employer'); playFrom(0); updateProgress(1, EMPLOYER_MESSAGES); });
+
+    // Animated mesh follow cursor
+    document.addEventListener('mousemove', e => {
+        const bg = document.getElementById('meshBg');
+        bg.style.setProperty('--mx', (e.clientX / window.innerWidth * 100) + '%');
+        bg.style.setProperty('--my', (e.clientY / window.innerHeight * 100) + '%');
+    });
+
+    positionSlider();
+    window.addEventListener('resize', positionSlider);
+});
+</script>
+</body>
+</html>

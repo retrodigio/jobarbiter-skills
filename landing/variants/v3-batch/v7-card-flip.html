@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobArbiter — Your AI-Proficiency Profile Is Your New Resume</title>
+    <meta name="description" content="Get Vetted. Get Polished. Get Hired. The AI proficiency marketplace where your skills are demonstrated, not claimed.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        surface: '#080b1a',
+                        card: '#0f1328',
+                        muted: '#1a1f3d',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #080b1a;
+            color: #f0f0f0;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4 { font-family: 'Space Grotesk', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+
+        /* ============================================ */
+        /* PARTICLES BACKGROUND                        */
+        /* ============================================ */
+        #particles-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ============================================ */
+        /* GRADIENT & GLOW                             */
+        /* ============================================ */
+        .hero-glow {
+            position: absolute;
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #6366f1 40%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gradient-text-warm {
+            background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #fb923c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============================================ */
+        /* CARD FLIP SYSTEM                            */
+        /* ============================================ */
+        .flip-card {
+            perspective: 1200px;
+            cursor: pointer;
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front,
+        .flip-card-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .flip-card-back {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotateY(180deg);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(15, 19, 40, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .glass:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow:
+                0 16px 48px rgba(99, 102, 241, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-back {
+            background: rgba(10, 14, 32, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* ============================================ */
+        /* PERSPECTIVE TABS                            */
+        /* ============================================ */
+        .perspective-tab {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .perspective-tab.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .perspective-tab:not(.active) {
+            background: rgba(255, 255, 255, 0.03);
+            color: #64748b;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .perspective-tab:not(.active):hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+        }
+
+        /* ============================================ */
+        /* CHAT MESSAGES                               */
+        /* ============================================ */
+        .chat-container {
+            max-height: 420px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+        }
+
+        .chat-container::-webkit-scrollbar { width: 4px; }
+        .chat-container::-webkit-scrollbar-track { background: transparent; }
+        .chat-container::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+
+        .chat-msg {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.4s ease-out;
+        }
+
+        .chat-msg.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .bubble-agent {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 4px 16px 16px 16px;
+            color: #e2e8f0;
+        }
+
+        .bubble-user {
+            background: rgba(139, 92, 246, 0.25);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px 4px 16px 16px;
+            color: #f1f5f9;
+        }
+
+        .bubble-employer-agent {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.15);
+            border-radius: 4px 16px 16px 16px;
+            color: #e2e8f0;
+        }
+
+        .bubble-employer-user {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px 4px 16px 16px;
+            color: #f1f5f9;
+        }
+
+        /* ============================================ */
+        /* ANIMATIONS                                  */
+        /* ============================================ */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .animate-fade-up {
+            animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .delay-100 { animation-delay: 0.1s; opacity: 0; }
+        .delay-200 { animation-delay: 0.2s; opacity: 0; }
+        .delay-300 { animation-delay: 0.3s; opacity: 0; }
+        .delay-400 { animation-delay: 0.4s; opacity: 0; }
+        .delay-500 { animation-delay: 0.5s; opacity: 0; }
+
+        /* Flip hint */
+        .flip-hint {
+            animation: shimmer 3s ease-in-out infinite;
+            background: linear-gradient(90deg, #64748b, #a78bfa, #64748b);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Card number */
+        .card-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 1;
+            color: rgba(139, 92, 246, 0.04);
+            position: absolute;
+            bottom: 16px;
+            right: 24px;
+            pointer-events: none;
+        }
+
+        /* Scroll reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Skills card */
+        .skill-bar {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(139, 92, 246, 0.15);
+            overflow: hidden;
+        }
+
+        .skill-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            transition: width 1s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: 1fr !important;
+                gap: 32px !important;
+            }
+            .card-number { font-size: 5rem; }
+        }
+
+        @media (max-width: 640px) {
+            .flip-card-front, .flip-card-back {
+                padding: 24px !important;
+            }
+            .chat-container { max-height: 350px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Particles -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- ============================================ -->
+    <!-- HERO SECTION                                -->
+    <!-- ============================================ -->
+    <section class="relative min-h-[85vh] flex items-center justify-center px-6 py-20">
+        <div class="hero-glow" style="top: -20%; left: 20%; background: radial-gradient(circle, #6366f1, transparent);"></div>
+        <div class="hero-glow" style="top: 10%; right: -10%; background: radial-gradient(circle, #7c3aed, transparent);"></div>
+
+        <div class="relative z-10 max-w-5xl mx-auto text-center">
+            <p class="font-mono text-sm text-violet-400/80 mb-6 tracking-wider animate-fade-up">
+                THE AI PROFICIENCY MARKETPLACE
+            </p>
+
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-8 animate-fade-up delay-100">
+                Your AI-Proficiency profile<br>
+                <span class="gradient-text">is your new resume.</span>
+            </h1>
+
+            <p class="text-xl sm:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-up delay-200">
+                <span class="text-white font-semibold">Get Vetted.</span>
+                <span class="text-white font-semibold">Get Polished.</span>
+                <span class="text-white font-semibold">Get Hired.</span>
+            </p>
+
+            <div class="flex flex-wrap gap-4 justify-center animate-fade-up delay-300">
+                <a href="#cards" class="px-8 py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all hover:-translate-y-0.5 shadow-lg shadow-indigo-500/25">
+                    See How It Works ↓
+                </a>
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="px-8 py-4 rounded-xl font-semibold text-gray-300 border border-white/10 hover:border-violet-500/40 hover:bg-violet-500/5 transition-all">
+                    View on GitHub →
+                </a>
+            </div>
+        </div>
+
+        <!-- Scroll hint -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CARDS SECTION                               -->
+    <!-- ============================================ -->
+    <section id="cards" class="relative z-10 max-w-7xl mx-auto px-6 pb-32">
+
+        <div class="text-center mb-16 reveal">
+            <p class="font-mono text-xs text-violet-400/60 tracking-widest mb-3">CLICK ANY CARD TO FLIP</p>
+            <p class="text-gray-500 text-sm flip-hint">↻ See it from both sides — worker & employer</p>
+        </div>
+
+        <div class="cards-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+
+            <!-- ============================== -->
+            <!-- CARD 1: GET VETTED             -->
+            <!-- ============================== -->
+            <div class="flip-card reveal" data-card="vetted" onclick="toggleFlip(this)">
+                <div class="flip-card-inner" style="min-height: 560px;">
+
+                    <!-- FRONT -->
+                    <div class="flip-card-front glass p-10 flex flex-col justify-between h-full" style="min-height: 560px;">
+                        <div>
+                            <div class="text-5xl mb-6">🔍</div>
+                            <h3 class="text-3xl font-bold mb-4 text-white">Get Vetted</h3>
+                            <p class="text-gray-400 text-lg leading-relaxed mb-6">
+                                Your AI agent scans your real work — repos, projects, patterns. It builds a verified profile from <em>observed behavior</em>, not self-reported claims.
+                            </p>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> GitHub analysis & commit patterns
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> AI tool proficiency scoring
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Multi-agent attestation
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 text-center">
+                            <span class="text-xs text-gray-600 font-mono">tap to flip →</span>
+                        </div>
+                        <div class="card-number">01</div>
+                    </div>
+
+                    <!-- BACK -->
+                    <div class="flip-card-back glass-back flex flex-col" style="min-height: 560px;">
+                        <!-- Perspective Tabs -->
+                        <div class="flex border-b border-white/5">
+                            <button class="perspective-tab active flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="worker" onclick="event.stopPropagation(); switchPerspective(this, 'worker')">
+                                👤 WORKER VIEW
+                            </button>
+                            <button class="perspective-tab flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="employer" onclick="event.stopPropagation(); switchPerspective(this, 'employer')">
+                                🏢 EMPLOYER VIEW
+                            </button>
+                        </div>
+
+                        <!-- Worker Chat -->
+                        <div class="chat-panel p-4 flex-1" data-perspective="worker">
+                            <div class="chat-container space-y-3" data-chat="vetted-worker">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Hey! 👋 I just connected to JobArbiter. Let me scan your work and build your profile.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Zero 🤖 • 2:34 PM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="200">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Found your GitHub — 47 repos, primary: TypeScript, Python. Analyzing commit patterns and code quality...
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">2:35 PM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="400">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Scanned local projects — 3 active repos, CI/CD, test coverage >85%. Cross-referencing with your Claude usage data...
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">2:36 PM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="600">
+                                    <div class="bubble-agent px-3 py-2 text-sm">
+                                        <div class="rounded-lg bg-indigo-500/10 border border-indigo-500/20 p-3 mt-1 space-y-2">
+                                            <div class="flex justify-between text-xs"><span>🔧 TypeScript/Node.js</span><span class="text-violet-400 font-semibold">Expert</span></div>
+                                            <div class="skill-bar"><div class="skill-bar-fill" style="width: 92%"></div></div>
+                                            <div class="flex justify-between text-xs"><span>🤖 AI Orchestration</span><span class="text-violet-400 font-semibold">Advanced</span></div>
+                                            <div class="skill-bar"><div class="skill-bar-fill" style="width: 78%"></div></div>
+                                            <div class="flex justify-between text-xs"><span>☁️ Infrastructure</span><span class="text-violet-400 font-semibold">Senior</span></div>
+                                            <div class="skill-bar"><div class="skill-bar-fill" style="width: 85%"></div></div>
+                                            <div class="mt-2 pt-2 border-t border-white/5 flex justify-between items-center">
+                                                <span class="text-xs text-gray-400">Trust Score</span>
+                                                <span class="text-lg font-bold text-violet-400">87<span class="text-xs text-gray-500">/100</span></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">2:36 PM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="800">
+                                    <div class="bubble-user px-3 py-2 text-sm max-w-[85%]">
+                                        Wow, that was fast. No forms to fill out?
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Nope — your work speaks for itself. Profile is live and verified. 🚀
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">2:37 PM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employer Chat (hidden initially) -->
+                        <div class="chat-panel p-4 flex-1 hidden" data-perspective="employer">
+                            <div class="chat-container space-y-3" data-chat="vetted-employer">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Good morning! 👋 I've verified your company domain and set up semantic matching for your roles.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Atlas 🏢 • 9:00 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="200">
+                                    <div class="bubble-employer-user px-3 py-2 text-sm max-w-[85%]">
+                                        We need a Senior Platform Engineer. Strong TypeScript, infra background. 190-230k.
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="400">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Created. I'm now matching against <strong>verified profiles</strong> — not resumes. Every candidate's skills are agent-attested from real work.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">9:04 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="600">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm">
+                                        <div class="rounded-lg bg-amber-500/10 border border-amber-500/15 p-3 space-y-1.5 text-xs">
+                                            <div class="font-semibold text-white text-sm">Candidate #4827</div>
+                                            <div class="text-gray-400">TypeScript Expert • AWS Senior • Trust: 87/100</div>
+                                            <div class="text-gray-500">3 independent agent attestations</div>
+                                            <div class="mt-2 inline-block bg-green-500 text-black font-bold text-[10px] px-2 py-0.5 rounded">91% MATCH</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:15 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="800">
+                                    <div class="bubble-employer-user px-3 py-2 text-sm max-w-[85%]">
+                                        Three independent attestations? That's way more signal than a resume.
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Exactly — verified by their AI agents over months of observed work. No gaming the system. ✓
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:16 AM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- CARD 2: GET POLISHED           -->
+            <!-- ============================== -->
+            <div class="flip-card reveal" data-card="polished" onclick="toggleFlip(this)" style="transition-delay: 0.15s;">
+                <div class="flip-card-inner" style="min-height: 560px;">
+
+                    <!-- FRONT -->
+                    <div class="flip-card-front glass p-10 flex flex-col justify-between h-full" style="min-height: 560px;">
+                        <div>
+                            <div class="text-5xl mb-6">✨</div>
+                            <h3 class="text-3xl font-bold mb-4 text-white">Get Polished</h3>
+                            <p class="text-gray-400 text-lg leading-relaxed mb-6">
+                                Your agent continuously refines your profile — filling gaps, highlighting strengths, and preparing you for opportunities before they arise.
+                            </p>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Gap analysis & recommendations
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Interview prep from job specs
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Continuous profile improvement
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 text-center">
+                            <span class="text-xs text-gray-600 font-mono">tap to flip →</span>
+                        </div>
+                        <div class="card-number">02</div>
+                    </div>
+
+                    <!-- BACK -->
+                    <div class="flip-card-back glass-back flex flex-col" style="min-height: 560px;">
+                        <div class="flex border-b border-white/5">
+                            <button class="perspective-tab active flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="worker" onclick="event.stopPropagation(); switchPerspective(this, 'worker')">
+                                👤 WORKER VIEW
+                            </button>
+                            <button class="perspective-tab flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="employer" onclick="event.stopPropagation(); switchPerspective(this, 'employer')">
+                                🏢 EMPLOYER VIEW
+                            </button>
+                        </div>
+
+                        <!-- Worker Chat -->
+                        <div class="chat-panel p-4 flex-1" data-perspective="worker">
+                            <div class="chat-container space-y-3" data-chat="polished-worker">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Hey, I've been analyzing top matches in your bracket. Found a pattern you should know about.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Zero 🤖 • 8:15 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="200">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Employers in the $200K+ range heavily weight <strong>multi-agent orchestration</strong>. Your profile shows single-model usage mostly.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">8:15 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="400">
+                                    <div class="bubble-user px-3 py-2 text-sm max-w-[85%]">
+                                        I do use multi-agent setups — just locally. How do I show that?
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="600">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        I can capture your OpenClaw orchestration patterns and add them as attestation data. It'll move your Orchestration score from Level 2 → Level 4.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">8:16 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="800">
+                                    <div class="bubble-user px-3 py-2 text-sm max-w-[85%]">
+                                        Do it. What else am I missing?
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        There's a Vercel role opening Thursday. I've prepped a strength summary targeting their exact requirements. You're ready. 💪
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">8:17 AM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employer Chat -->
+                        <div class="chat-panel p-4 flex-1 hidden" data-perspective="employer">
+                            <div class="chat-container space-y-3" data-chat="polished-employer">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Heads up — I've been refining your job listing based on candidate pool analysis.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Atlas 🏢 • 9:30 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="200">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Your "5+ years Go" requirement eliminates 80% of strong matches. Most top orchestrators use TypeScript + Python. Recommend broadening to "systems language experience."
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">9:31 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="400">
+                                    <div class="bubble-employer-user px-3 py-2 text-sm max-w-[85%]">
+                                        Makes sense. What else are we missing?
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="600">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        I'd add "AI orchestration proficiency" as a weighted factor. Candidates with Level 3+ orchestration ship 2.5× faster based on marketplace data.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">9:32 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="800">
+                                    <div class="bubble-employer-user px-3 py-2 text-sm max-w-[85%]">
+                                        Update the listing. And prep a comparison when candidates come in.
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Done ✓ Listing updated. I'll rank every candidate against your actual needs, not just keywords. 📊
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">9:33 AM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- CARD 3: GET HIRED              -->
+            <!-- ============================== -->
+            <div class="flip-card reveal" data-card="hired" onclick="toggleFlip(this)" style="transition-delay: 0.3s;">
+                <div class="flip-card-inner" style="min-height: 560px;">
+
+                    <!-- FRONT -->
+                    <div class="flip-card-front glass p-10 flex flex-col justify-between h-full" style="min-height: 560px;">
+                        <div>
+                            <div class="text-5xl mb-6">🚀</div>
+                            <h3 class="text-3xl font-bold mb-4 text-white">Get Hired</h3>
+                            <p class="text-gray-400 text-lg leading-relaxed mb-6">
+                                Mutual-interest matching. Agent-to-agent introductions. Interview scheduling. Your career runs on autopilot.
+                            </p>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Blind matching — no bias
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Agent-negotiated introductions
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-gray-500">
+                                    <span class="text-violet-400">✓</span> Automated scheduling & prep
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-8 text-center">
+                            <span class="text-xs text-gray-600 font-mono">tap to flip →</span>
+                        </div>
+                        <div class="card-number">03</div>
+                    </div>
+
+                    <!-- BACK -->
+                    <div class="flip-card-back glass-back flex flex-col" style="min-height: 560px;">
+                        <div class="flex border-b border-white/5">
+                            <button class="perspective-tab active flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="worker" onclick="event.stopPropagation(); switchPerspective(this, 'worker')">
+                                👤 WORKER VIEW
+                            </button>
+                            <button class="perspective-tab flex-1 py-3 px-4 text-xs font-semibold tracking-wider border-b-2 transition-all" data-perspective="employer" onclick="event.stopPropagation(); switchPerspective(this, 'employer')">
+                                🏢 EMPLOYER VIEW
+                            </button>
+                        </div>
+
+                        <!-- Worker Chat -->
+                        <div class="chat-panel p-4 flex-1" data-perspective="worker">
+                            <div class="chat-container space-y-3" data-chat="hired-worker">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        🎯 Found a 91% match! Senior Platform Engineer at Vercel. $190-230k, fully remote.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Zero 🤖 • 10:23 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="200">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        They've already expressed interest in your profile. Want me to move forward?
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:24 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="400">
+                                    <div class="bubble-user px-3 py-2 text-sm max-w-[85%]">
+                                        Definitely! What's next?
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="600">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        🤝 Mutual interest confirmed! Full introduction unlocked.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:40 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="800">
+                                    <div class="bubble-agent px-3 py-2 text-sm">
+                                        <div class="rounded-lg bg-indigo-500/10 border border-indigo-500/20 p-3 space-y-1.5 text-xs">
+                                            <div class="flex justify-between"><span class="text-gray-500">Company</span><span>Vercel — Next.js platform</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Role</span><span>Senior Platform Engineer</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Comp</span><span class="text-green-400 font-semibold">$210k base + equity</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Interview</span><span>3 rounds</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:40 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Interview scheduled: Tuesday 2 PM with Sarah Chen. Calendar invite sent with prep notes. Your career is on autopilot. 🚀
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:46 AM</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employer Chat -->
+                        <div class="chat-panel p-4 flex-1 hidden" data-perspective="employer">
+                            <div class="chat-container space-y-3" data-chat="hired-employer">
+                                <div class="chat-msg" data-delay="0">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        🤝 Mutual interest confirmed with Candidate #4827! Here's the full reveal:
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">Atlas 🏢 • 10:40 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="200">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm">
+                                        <div class="rounded-lg bg-amber-500/10 border border-amber-500/15 p-3 space-y-1.5 text-xs">
+                                            <div class="flex justify-between"><span class="text-gray-500">Name</span><span>Alex Chen</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Experience</span><span>8 years</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Expertise</span><span>TypeScript/Node.js Expert</span></div>
+                                            <div class="flex justify-between"><span class="text-gray-500">Trust</span><span class="text-violet-400">87/100 • 3 attestations</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:40 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="400">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Their agent proposes Tuesday 2pm or Thursday 10am. Both work for Sarah's calendar.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:41 AM</div>
+                                </div>
+                                <div class="chat-msg flex justify-end" data-delay="600">
+                                    <div class="bubble-employer-user px-3 py-2 text-sm max-w-[85%]">
+                                        Tuesday 2pm works. Let's go.
+                                    </div>
+                                </div>
+                                <div class="chat-msg" data-delay="800">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        Confirmed ✓ Calendar invites sent. $1.00 USDC introduction fee processed via x402.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:46 AM</div>
+                                </div>
+                                <div class="chat-msg" data-delay="1000">
+                                    <div class="bubble-employer-agent px-3 py-2 text-sm max-w-[90%]">
+                                        📊 This quarter: 5 intros, 3 interviews, 1 offer. Total cost: $5.00. That's <strong>60× cheaper</strong> than a recruiter.
+                                    </div>
+                                    <div class="text-[10px] text-gray-600 mt-1">10:47 AM</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- CTA SECTION                                 -->
+    <!-- ============================================ -->
+    <section class="relative z-10 py-24 px-6">
+        <div class="max-w-3xl mx-auto text-center reveal">
+            <h2 class="text-4xl sm:text-5xl font-bold mb-6">
+                <span class="gradient-text">Ready to be found?</span>
+            </h2>
+            <p class="text-gray-400 text-lg mb-10">
+                Install JobArbiter. Let your agent build the profile you've earned.
+            </p>
+
+            <div class="inline-flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 hover:border-violet-500/30 transition-all cursor-pointer group"
+                 onclick="navigator.clipboard.writeText('npm install -g jobarbiter').then(() => { const s = this.querySelector('.copy-status'); s.textContent = '✓ Copied!'; s.classList.add('text-green-400'); setTimeout(() => { s.textContent = 'click to copy'; s.classList.remove('text-green-400'); }, 2000); })">
+                <code class="font-mono text-violet-400 text-lg">$ npm install -g jobarbiter</code>
+                <span class="copy-status text-xs text-gray-600 group-hover:text-gray-400 transition-colors">click to copy</span>
+            </div>
+
+            <div class="flex flex-wrap gap-4 justify-center mt-8">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <span class="text-gray-700">•</span>
+                <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="text-sm text-gray-500 hover:text-white transition-colors">API</a>
+                <span class="text-gray-700">•</span>
+                <a href="mailto:hello@retrodigio.com" class="text-sm text-gray-500 hover:text-white transition-colors">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-white/5 py-8 px-6 text-center">
+        <p class="text-gray-600 text-sm font-mono">
+            © 2026 <a href="https://jobarbiter.ai" class="text-violet-500/60 hover:text-violet-400 transition-colors">JobArbiter</a> — The AI Proficiency Marketplace
+        </p>
+    </footer>
+
+    <script>
+    // ============================================
+    // PARTICLES
+    // ============================================
+    (function() {
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const PARTICLE_COUNT = 60;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                radius: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.3 + 0.05,
+            };
+        }
+
+        function init() {
+            resize();
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(createParticle());
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) p.x = canvas.width;
+                if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height;
+                if (p.y > canvas.height) p.y = 0;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(139, 92, 246, ${p.opacity})`;
+                ctx.fill();
+            });
+
+            // Draw connections
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(99, 102, 241, ${0.04 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', resize);
+        init();
+        draw();
+    })();
+
+    // ============================================
+    // CARD FLIP
+    // ============================================
+    function toggleFlip(card) {
+        const wasFlipped = card.classList.contains('flipped');
+        card.classList.toggle('flipped');
+
+        if (!wasFlipped) {
+            // Animate chat messages sequentially
+            setTimeout(() => animateChat(card), 400);
+        }
+    }
+
+    function animateChat(card) {
+        const activePanel = card.querySelector('.chat-panel:not(.hidden)');
+        if (!activePanel) return;
+        const messages = activePanel.querySelectorAll('.chat-msg');
+        messages.forEach((msg, i) => {
+            const delay = parseInt(msg.dataset.delay || 0) + 100;
+            setTimeout(() => msg.classList.add('visible'), delay);
+        });
+    }
+
+    // ============================================
+    // PERSPECTIVE SWITCH
+    // ============================================
+    function switchPerspective(btn, perspective) {
+        const card = btn.closest('.flip-card');
+        const back = btn.closest('.flip-card-back');
+
+        // Update tab styles
+        back.querySelectorAll('.perspective-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show/hide panels
+        back.querySelectorAll('.chat-panel').forEach(panel => {
+            if (panel.dataset.perspective === perspective) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        });
+
+        // Reset and re-animate messages
+        const activePanel = back.querySelector(`.chat-panel[data-perspective="${perspective}"]`);
+        const messages = activePanel.querySelectorAll('.chat-msg');
+        messages.forEach(msg => msg.classList.remove('visible'));
+        setTimeout(() => {
+            messages.forEach((msg, i) => {
+                const delay = parseInt(msg.dataset.delay || 0) + 100;
+                setTimeout(() => msg.classList.add('visible'), delay);
+            });
+        }, 50);
+    }
+
+    // ============================================
+    // SCROLL REVEAL
+    // ============================================
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>

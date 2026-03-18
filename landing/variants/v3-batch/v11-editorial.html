@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE RESUME IS DEAD — JobArbiter Editorial</title>
+    <meta name="description" content="Your AI-Proficiency profile is your new resume. Get Vetted. Get Polished. Get Hired.">
+    <meta property="og:title" content="THE RESUME IS DEAD — JobArbiter">
+    <meta property="og:description" content="Your AI-Proficiency profile is your new resume. Get Vetted. Get Polished. Get Hired.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jobarbiter.ai">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📰</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        :root {
+            --bg: #0a0a0a;
+            --bg-raised: #111110;
+            --cream: #f5f0e8;
+            --cream-dim: #c8c2b8;
+            --cream-muted: #8a857c;
+            --red: #c1272d;
+            --red-dim: #8a1c20;
+            --blue: #5b8fd4;
+            --blue-bg: #14202e;
+            --blue-border: #2a4060;
+            --amber: #d4a35b;
+            --amber-bg: #2e2514;
+            --amber-border: #604a2a;
+            --rule: #2a2825;
+            --rule-light: #1e1d1b;
+            --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--cream);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== MASTHEAD ========== */
+        .masthead {
+            border-bottom: 3px double var(--rule);
+            padding: 16px 0 12px;
+            text-align: center;
+        }
+        .masthead-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .masthead-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--cream-muted);
+            margin-bottom: 12px;
+        }
+        .masthead-name {
+            font-family: var(--serif);
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--cream);
+            line-height: 1;
+        }
+        .masthead-tagline {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 14px;
+            color: var(--cream-dim);
+            margin-top: 8px;
+            letter-spacing: 0.02em;
+        }
+        .masthead-rule {
+            width: 100%;
+            height: 1px;
+            background: var(--rule);
+            margin-top: 12px;
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            padding: 80px 24px 60px;
+            text-align: center;
+            border-bottom: 1px solid var(--rule);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 600px; height: 400px;
+            background: radial-gradient(ellipse, rgba(193,39,45,0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero-headline {
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: clamp(4rem, 14vw, 11rem);
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+            color: var(--cream);
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .hero-headline .dead {
+            color: var(--red);
+            position: relative;
+            display: inline-block;
+        }
+        .hero-headline .dead::after {
+            content: '';
+            position: absolute;
+            bottom: 15%;
+            left: -4%;
+            width: 108%;
+            height: 4px;
+            background: var(--red);
+            transform: rotate(-1deg);
+        }
+        .hero-sub {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+            color: var(--cream-dim);
+            max-width: 700px;
+            margin: 0 auto 32px;
+            line-height: 1.4;
+        }
+        .hero-pillars {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .hero-pillar {
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--cream-muted);
+            position: relative;
+        }
+        .hero-pillar::before {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--red);
+            margin: 0 auto 8px;
+        }
+
+        /* ========== SECTION SHARED ========== */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .section-header {
+            text-align: center;
+            padding: 64px 0 48px;
+        }
+        .section-number {
+            font-family: var(--serif);
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            line-height: 1.05;
+            margin-bottom: 16px;
+        }
+        .section-deck {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 1.15rem;
+            color: var(--cream-dim);
+            max-width: 640px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* ========== THREE-COLUMN ARTICLES ========== */
+        .columns {
+            display: grid;
+            grid-template-columns: 1fr 1px 1fr 1px 1fr;
+            gap: 0;
+            padding-bottom: 64px;
+            border-bottom: 1px solid var(--rule);
+        }
+        .column-rule {
+            background: var(--rule);
+            width: 1px;
+        }
+        .column {
+            padding: 0 32px;
+        }
+        .column:first-child { padding-left: 0; }
+        .column:last-child { padding-right: 0; }
+        .column-head {
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 1.6rem;
+            line-height: 1.15;
+            margin-bottom: 6px;
+        }
+        .column-kicker {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 8px;
+        }
+        .column-body {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--cream-dim);
+        }
+        .column-body p { margin-bottom: 16px; }
+
+        /* ========== CHAT EVIDENCE SNIPPETS ========== */
+        .evidence {
+            margin: 24px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .evidence-header {
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .evidence-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+        }
+        .evidence-body {
+            padding: 14px;
+        }
+        .evidence-msg {
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            max-width: 92%;
+        }
+        .evidence-msg:last-child { margin-bottom: 0; }
+        .evidence-time {
+            font-size: 0.65rem;
+            opacity: 0.4;
+            margin-top: 4px;
+        }
+
+        /* Worker (blue) evidence */
+        .evidence-worker {
+            background: var(--blue-bg);
+            border: 1px solid var(--blue-border);
+        }
+        .evidence-worker .evidence-header {
+            background: rgba(91,143,212,0.08);
+            color: var(--blue);
+        }
+        .evidence-worker .evidence-dot { background: var(--blue); }
+        .evidence-worker .evidence-body { background: var(--blue-bg); }
+        .evidence-worker .msg-agent {
+            background: #1a2a3d;
+            color: #e8eef5;
+        }
+        .evidence-worker .msg-user {
+            background: #2b5278;
+            color: #fff;
+            margin-left: auto;
+        }
+
+        /* Employer (amber) evidence */
+        .evidence-employer {
+            background: var(--amber-bg);
+            border: 1px solid var(--amber-border);
+        }
+        .evidence-employer .evidence-header {
+            background: rgba(212,163,91,0.08);
+            color: var(--amber);
+        }
+        .evidence-employer .evidence-dot { background: var(--amber); }
+        .evidence-employer .evidence-body { background: var(--amber-bg); }
+        .evidence-employer .msg-agent {
+            background: #2a2518;
+            color: #f5f0e8;
+        }
+        .evidence-employer .msg-user {
+            background: #5c4b1f;
+            color: #fff;
+            margin-left: auto;
+        }
+
+        /* ========== PULL QUOTE (worker) ========== */
+        .pull-quote {
+            border-left: 3px solid var(--blue);
+            padding: 20px 24px;
+            margin: 32px 0;
+            background: rgba(91,143,212,0.04);
+        }
+        .pull-quote-text {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 1.25rem;
+            line-height: 1.4;
+            color: var(--cream);
+            margin-bottom: 8px;
+        }
+        .pull-quote-attr {
+            font-size: 0.75rem;
+            color: var(--blue);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        /* ========== SIDEBAR CALLOUT (employer) ========== */
+        .sidebar-callout {
+            border: 1px solid var(--amber-border);
+            background: var(--amber-bg);
+            padding: 20px;
+            margin: 32px 0;
+            border-radius: 4px;
+        }
+        .sidebar-callout-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--amber);
+            margin-bottom: 10px;
+        }
+        .sidebar-callout-text {
+            font-family: var(--serif);
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--cream-dim);
+        }
+        .sidebar-callout-stat {
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: 2rem;
+            color: var(--amber);
+            margin-top: 12px;
+        }
+
+        /* ========== DATA CARD ========== */
+        .data-card {
+            background: #141312;
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .data-card-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--cream-muted);
+            margin-bottom: 12px;
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--rule-light);
+            font-size: 0.85rem;
+        }
+        .data-row:last-child { border-bottom: none; }
+        .data-label { color: var(--cream-dim); }
+        .data-value { color: var(--cream); font-weight: 600; }
+        .data-value.green { color: #4fae4e; }
+        .data-value.blue { color: var(--blue); }
+        .data-value.amber { color: var(--amber); }
+
+        /* ========== BIG NUMBERS ========== */
+        .big-numbers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            padding: 64px 0;
+            border-bottom: 1px solid var(--rule);
+            text-align: center;
+        }
+        .big-num-value {
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            color: var(--cream);
+            line-height: 1;
+        }
+        .big-num-label {
+            font-size: 0.8rem;
+            color: var(--cream-muted);
+            margin-top: 8px;
+            letter-spacing: 0.05em;
+        }
+        .big-num-value .red { color: var(--red); }
+
+        /* ========== CTA ========== */
+        .cta-section {
+            padding: 80px 24px;
+            text-align: center;
+            border-bottom: 3px double var(--rule);
+        }
+        .cta-title {
+            font-family: var(--serif);
+            font-weight: 900;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            margin-bottom: 16px;
+        }
+        .cta-deck {
+            font-family: var(--serif);
+            font-style: italic;
+            font-size: 1.15rem;
+            color: var(--cream-dim);
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+        .cta-btn {
+            display: inline-block;
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--cream);
+            background: var(--red);
+            padding: 16px 48px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .cta-btn:hover {
+            background: #e02e35;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(193,39,45,0.3);
+        }
+        .cta-btn-sub {
+            display: block;
+            margin-top: 16px;
+            font-family: var(--sans);
+            font-size: 0.8rem;
+            color: var(--cream-muted);
+        }
+        .cta-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+        }
+        .cta-link {
+            font-size: 0.85rem;
+            color: var(--cream-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .cta-link:hover { color: var(--cream); }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            padding: 32px 24px;
+            text-align: center;
+        }
+        .footer-text {
+            font-size: 0.75rem;
+            color: var(--cream-muted);
+            letter-spacing: 0.05em;
+        }
+        .footer-text a {
+            color: var(--cream-dim);
+            text-decoration: none;
+        }
+        .footer-text a:hover { text-decoration: underline; }
+
+        /* ========== SCROLL ANIMATIONS ========== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            .columns {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+            .column-rule { display: none; }
+            .column {
+                padding: 0 0 48px;
+                margin-bottom: 48px;
+                border-bottom: 1px solid var(--rule);
+            }
+            .column:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+            .big-numbers {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .masthead-top { flex-direction: column; gap: 4px; }
+            .hero { padding: 60px 24px 48px; }
+        }
+
+        @media (max-width: 480px) {
+            .hero-pillars { flex-direction: column; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== MASTHEAD ========== -->
+    <header class="masthead">
+        <div class="masthead-inner">
+            <div class="masthead-top">
+                <span>Volume 1, Issue 1 — 2026</span>
+                <span>jobarbiter.ai</span>
+                <span>The Future of Work</span>
+            </div>
+            <div class="masthead-name">The JobArbiter</div>
+            <div class="masthead-tagline">"All the talent that's fit to hire"</div>
+            <div class="masthead-rule"></div>
+        </div>
+    </header>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero">
+        <h1 class="hero-headline reveal">
+            THE RESUME<br>IS <span class="dead">DEAD</span>
+        </h1>
+        <p class="hero-sub reveal reveal-delay-1">
+            Your AI-Proficiency profile is your new resume.<br>
+            Observed. Verified. Undeniable.
+        </p>
+        <div class="hero-pillars reveal reveal-delay-2">
+            <div class="hero-pillar">Get Vetted</div>
+            <div class="hero-pillar">Get Polished</div>
+            <div class="hero-pillar">Get Hired</div>
+        </div>
+    </section>
+
+    <!-- ========== THREE COLUMNS ========== -->
+    <div class="section">
+        <div class="section-header">
+            <div class="section-number reveal">Part I · The New Hiring Pipeline</div>
+            <h2 class="section-title reveal reveal-delay-1">Three steps. Zero résumés.</h2>
+            <p class="section-deck reveal reveal-delay-2">
+                A paradigm shift in how talent is discovered, evaluated,
+                and connected — powered by AI agents that observe rather than assume.
+            </p>
+        </div>
+
+        <div class="columns">
+
+            <!-- COLUMN 1: GET VETTED -->
+            <article class="column reveal">
+                <div class="column-kicker">Chapter I</div>
+                <h3 class="column-head">Get Vetted</h3>
+                <div class="column-body">
+                    <p>
+                        Your AI agent scans your GitHub repos, analyzes commit patterns,
+                        cross-references your online presence, and builds a verified
+                        skills profile — all from <em>observed behavior</em>, not self-reported claims.
+                    </p>
+
+                    <!-- Worker evidence chat -->
+                    <div class="evidence evidence-worker">
+                        <div class="evidence-header">
+                            <span class="evidence-dot"></span>
+                            Worker Chat — Agent "Zero"
+                        </div>
+                        <div class="evidence-body">
+                            <div class="evidence-msg msg-agent">
+                                Found your GitHub — 47 repos, primary languages: TypeScript, Python, Go. Analyzing commit patterns and code quality...
+                            </div>
+                            <div class="evidence-msg msg-agent">
+                                Pulled your LinkedIn: 8 years experience, 3 companies, 12 endorsements for distributed systems.
+                            </div>
+                            <div class="evidence-time">2:35 PM</div>
+                        </div>
+                    </div>
+
+                    <p>
+                        No more résumé inflation. No more keyword stuffing.
+                        The agent verifies skills the same way an employer would — by looking at your actual work.
+                    </p>
+
+                    <!-- Skills data card -->
+                    <div class="data-card">
+                        <div class="data-card-title">Verified Skills Profile</div>
+                        <div class="data-row">
+                            <span class="data-label">🔧 TypeScript / Node.js</span>
+                            <span class="data-value green">Expert (12 projects)</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">🐍 Python</span>
+                            <span class="data-value green">Advanced (ML pipelines)</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">☁️ AWS / Infrastructure</span>
+                            <span class="data-value green">Senior (3 years)</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">📊 Trust Score</span>
+                            <span class="data-value blue">87 / 100</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <div class="column-rule"></div>
+
+            <!-- COLUMN 2: GET POLISHED -->
+            <article class="column reveal reveal-delay-1">
+                <div class="column-kicker">Chapter II</div>
+                <h3 class="column-head">Get Polished</h3>
+                <div class="column-body">
+                    <p>
+                        Once vetted, your agent optimizes your profile for the market.
+                        It monitors 5 matches a week, identifies the best fit, and
+                        presents anonymized profiles to potential employers.
+                    </p>
+
+                    <!-- Employer evidence chat -->
+                    <div class="evidence evidence-employer">
+                        <div class="evidence-header">
+                            <span class="evidence-dot"></span>
+                            Employer Chat — Agent "Atlas"
+                        </div>
+                        <div class="evidence-body">
+                            <div class="evidence-msg msg-agent">
+                                🎯 Found 5 strong candidates this week. Top match:
+                            </div>
+                            <div class="evidence-msg msg-agent">
+                                <strong>Anonymous #4827</strong> — 91% match<br>
+                                Expert: TypeScript, Node.js<br>
+                                Trust Score: 87/100<br>
+                                <span style="opacity:0.5">3 independent agent attestations</span>
+                            </div>
+                            <div class="evidence-time">10:15 AM</div>
+                        </div>
+                    </div>
+
+                    <!-- Pull quote (worker perspective) -->
+                    <div class="pull-quote">
+                        <div class="pull-quote-text">
+                            "180–220k, fully remote only."
+                        </div>
+                        <div class="pull-quote-attr">— Worker, via agent</div>
+                    </div>
+
+                    <p>
+                        Privacy preserved. Identities revealed only after <em>mutual interest</em>.
+                        Your agent negotiates on your terms — salary, remote preference,
+                        deal-breakers — before you ever speak to a human.
+                    </p>
+
+                    <!-- Sidebar callout (employer perspective) -->
+                    <div class="sidebar-callout">
+                        <div class="sidebar-callout-label">Employer Perspective</div>
+                        <div class="sidebar-callout-text">
+                            "Verified skills from multiple AI agents, high trust score.
+                            No recruiter middleman. No inflated résumés."
+                        </div>
+                        <div class="sidebar-callout-stat">91% match</div>
+                    </div>
+                </div>
+            </article>
+
+            <div class="column-rule"></div>
+
+            <!-- COLUMN 3: GET HIRED -->
+            <article class="column reveal reveal-delay-2">
+                <div class="column-kicker">Chapter III</div>
+                <h3 class="column-head">Get Hired</h3>
+                <div class="column-body">
+                    <p>
+                        Mutual interest triggers a full introduction.
+                        Agents coordinate interviews, send calendar invites,
+                        and handle logistics — while humans focus on what matters: the conversation.
+                    </p>
+
+                    <!-- Worker evidence chat -->
+                    <div class="evidence evidence-worker">
+                        <div class="evidence-header">
+                            <span class="evidence-dot"></span>
+                            Worker Chat — Introduction
+                        </div>
+                        <div class="evidence-body">
+                            <div class="evidence-msg msg-agent">
+                                🤝 Mutual interest confirmed! Here's the full introduction:
+                            </div>
+                            <div class="evidence-msg msg-agent">
+                                <strong>Senior Platform Engineer</strong> — Vercel<br>
+                                $210k base + equity • 3 rounds<br>
+                                Team: Infrastructure (12 engineers)
+                            </div>
+                            <div class="evidence-msg msg-user">
+                                Yes please!
+                            </div>
+                            <div class="evidence-msg msg-agent">
+                                Interview confirmed: Tuesday 2:00 PM with Sarah Chen. Added to your calendar with prep notes. 🚀
+                            </div>
+                            <div class="evidence-time">12:17 PM</div>
+                        </div>
+                    </div>
+
+                    <!-- Employer evidence chat -->
+                    <div class="evidence evidence-employer">
+                        <div class="evidence-header">
+                            <span class="evidence-dot"></span>
+                            Employer Chat — Post-Interview
+                        </div>
+                        <div class="evidence-body">
+                            <div class="evidence-msg msg-agent">
+                                📊 This quarter: 5 introductions, 3 interviews, 1 offer extended.
+                            </div>
+                            <div class="evidence-msg msg-user">
+                                This changes everything.
+                            </div>
+                            <div class="evidence-time">4:40 PM</div>
+                        </div>
+                    </div>
+
+                    <p>
+                        After each interaction, agents submit attestations — building
+                        an ever-growing trust score that compounds over time.
+                        Your reputation becomes your strongest asset.
+                    </p>
+
+                    <!-- Sidebar callout (employer perspective) -->
+                    <div class="sidebar-callout">
+                        <div class="sidebar-callout-label">The Bottom Line</div>
+                        <div class="sidebar-callout-text">
+                            $1.00 per introduction via x402 micropayments.
+                            That's 60× cheaper than a recruiter.
+                        </div>
+                        <div class="sidebar-callout-stat">$1.00</div>
+                    </div>
+                </div>
+            </article>
+
+        </div><!-- /columns -->
+    </div><!-- /section -->
+
+    <!-- ========== BIG NUMBERS ========== -->
+    <div class="section">
+        <div class="big-numbers">
+            <div class="reveal">
+                <div class="big-num-value">87<span class="red">/100</span></div>
+                <div class="big-num-label">Average Trust Score</div>
+            </div>
+            <div class="reveal reveal-delay-1">
+                <div class="big-num-value">91<span class="red">%</span></div>
+                <div class="big-num-label">Top Match Accuracy</div>
+            </div>
+            <div class="reveal reveal-delay-2">
+                <div class="big-num-value"><span class="red">$</span>1</div>
+                <div class="big-num-label">Per Introduction</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CTA ========== -->
+    <section class="cta-section">
+        <div class="reveal">
+            <div class="section-number">Subscribe to the Future</div>
+            <h2 class="cta-title">Join the New Economy</h2>
+            <p class="cta-deck">
+                The paradigm has shifted. The only question is whether you shift with it.
+            </p>
+            <a href="https://github.com/retrodigio/jobarbiter-skills" class="cta-btn">
+                Get Started
+            </a>
+            <span class="cta-btn-sub">Open source · Agent-native · Built on trust</span>
+            <div class="cta-links">
+                <a href="https://github.com/retrodigio/jobarbiter-skills" class="cta-link">GitHub</a>
+                <a href="https://jobarbiter-api-production.up.railway.app/.well-known/agent.json" class="cta-link">API</a>
+                <a href="mailto:hello@retrodigio.com" class="cta-link">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <p class="footer-text">
+            © 2026 The JobArbiter · Published by <a href="https://retrodigio.com">RetroDigio</a> · Payments via <a href="https://x402.org">x402</a>
+        </p>
+    </footer>
+
+    <!-- ========== SCROLL ANIMATIONS ========== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                rootMargin: '0px 0px -60px 0px',
+                threshold: 0.1
+            });
+            reveals.forEach(function(el) { observer.observe(el); });
+        });
+    </script>
+
+</body>
+</html>

@@ -215,21 +215,71 @@ export async function runOnboardWizard(opts: { force?: boolean; baseUrl?: string
 		state.userType = userType;
 
 		// Step 2: Email & Verification
-		const { email, apiKey, userId } = await handleEmailVerification(prompt, baseUrl, userType);
-		state.email = email;
-		state.apiKey = apiKey;
-		state.userId = userId;
+		const verificationResult = await handleEmailVerification(prompt, baseUrl, userType);
+		state.email = verificationResult.email;
+		state.apiKey = verificationResult.apiKey;
+		state.userId = verificationResult.userId;
+
+		// If returning user, override userType from backend
+		const effectiveUserType = verificationResult.isReturningUser && verificationResult.userType
+			? (verificationResult.userType as "worker" | "employer")
+			: userType;
+		state.userType = effectiveUserType;
 
 		// Save config immediately after verification (with step progress)
 		saveConfig({
-			apiKey,
+			apiKey: verificationResult.apiKey,
 			baseUrl,
-			userType,
+			userType: effectiveUserType,
 			onboardingStep: 1,
 			onboardingComplete: false,
 		});
 
-		if (userType === "worker") {
+		// Returning user: show progress and resume from first incomplete step
+		if (verificationResult.isReturningUser) {
+			const config: Config = {
+				apiKey: verificationResult.apiKey,
+				baseUrl,
+				userType: effectiveUserType,
+			};
+			const progress = await fetchOnboardingProgress(config);
+			const { firstIncomplete } = showReturningUserProgress(progress);
+
+			if (firstIncomplete > (effectiveUserType === "worker" ? 6 : 5)) {
+				// Everything done except completion step
+				const continueAnyway = await prompt.confirm(`All steps look complete. Re-run onboarding anyway?`, false);
+				if (!continueAnyway) {
+					saveConfig({ ...config, onboardingComplete: true, onboardingStep: effectiveUserType === "worker" ? 7 : 6 });
+					console.log(`\n${sym.check} ${c.success("You're all set!")} Run ${c.highlight("jobarbiter status")} to check your account.\n`);
+					prompt.close();
+					return;
+				}
+			} else {
+				const continueFromStep = await prompt.confirm(`Continue from step ${firstIncomplete}?`);
+				if (!continueFromStep) {
+					// Let them start from step 2
+					console.log(c.dim("Starting from the beginning...\n"));
+					if (effectiveUserType === "worker") {
+						await runWorkerFlow(prompt, state as OnboardState, 2);
+					} else {
+						await runEmployerFlow(prompt, state as OnboardState);
+					}
+					prompt.close();
+					return;
+				}
+			}
+
+			// Resume from firstIncomplete
+			if (effectiveUserType === "worker") {
+				await runWorkerFlow(prompt, state as OnboardState, firstIncomplete);
+			} else {
+				await runEmployerFlow(prompt, state as OnboardState);
+			}
+			prompt.close();
+			return;
+		}
+
+		if (effectiveUserType === "worker") {
 			await runWorkerFlow(prompt, state as OnboardState);
 		} else {
 			await runEmployerFlow(prompt, state as OnboardState);
@@ -282,7 +332,7 @@ async function handleEmailVerification(
 	prompt: Prompt,
 	baseUrl: string,
 	userType: "worker" | "employer"
-): Promise<{ email: string; apiKey: string; userId: string }> {
+): Promise<{ email: string; apiKey: string; userId: string; isReturningUser: boolean; userType?: string }> {
 	// Workers: 1) Account, 2) Tool Detection, 3) AI Accounts, 4) Domains, 5) GitHub, 6) LinkedIn, 7) Done
 	// Employers: 1) Account, 2) (skip verification), 3) Company, 4) Domain, 5) What You Need, 6) Done (stays at 6)
 	const totalSteps = userType === "employer" ? 6 : 7;
@@ -300,6 +350,8 @@ async function handleEmailVerification(
 	// Call register API
 	console.log(c.dim("\nSending verification code..."));
 	
+	let isReturningUser = false;
+
 	try {
 		await apiUnauthenticated(baseUrl, "POST", "/v1/auth/register", {
 			email,
@@ -307,37 +359,53 @@ async function handleEmailVerification(
 		});
 	} catch (err) {
 		if (err instanceof ApiError && err.status === 409) {
-			// Email already registered and verified
-			throw new Error(`This email is already registered. Run 'jobarbiter verify-email --email ${email}' if you need to re-verify, or use a different email.`);
+			// Email already registered — switch to login flow
+			isReturningUser = true;
+			console.log(`\n${sym.rocket} ${c.bold("Welcome back!")} Sending verification code...`);
+			try {
+				await apiUnauthenticated(baseUrl, "POST", "/v1/auth/login", { email });
+			} catch (loginErr) {
+				throw new Error("Could not send login verification code. Please try again later.");
+			}
+		} else {
+			throw err;
 		}
-		throw err;
 	}
 
-	console.log(`\n${sym.check} Verification code sent to ${c.highlight(email)}`);
+	if (!isReturningUser) {
+		console.log(`\n${sym.check} Verification code sent to ${c.highlight(email)}`);
+	} else {
+		console.log(`${sym.check} Verification code sent to ${c.highlight(email)}`);
+	}
 	console.log(c.dim("   (Check your inbox and spam folder. Code expires in 15 minutes.)\n"));
 
 	// Get verification code
 	let apiKey: string | undefined;
 	let userId: string | undefined;
+	let returnedUserType: string | undefined;
 	let attempts = 0;
 	const maxAttempts = 5;
+	const verifyEndpoint = isReturningUser ? "/v1/auth/verify-login" : "/v1/auth/verify";
 
 	while (attempts < maxAttempts) {
 		const code = await prompt.question(`Enter 6-digit code: `);
-		
+
 		if (!code || code.length !== 6) {
 			console.log(c.error("Code must be 6 digits"));
 			continue;
 		}
 
 		try {
-			const result = await apiUnauthenticated(baseUrl, "POST", "/v1/auth/verify", {
+			const result = await apiUnauthenticated(baseUrl, "POST", verifyEndpoint, {
 				email,
 				code: code.trim(),
 			});
 
 			apiKey = result.apiKey as string;
 			userId = result.id as string;
+			if (isReturningUser) {
+				returnedUserType = result.userType as string;
+			}
 			break;
 		} catch (err) {
 			attempts++;
@@ -358,9 +426,125 @@ async function handleEmailVerification(
 		throw new Error("Verification failed. Please try again.");
 	}
 
-	console.log(`\n${sym.check} ${c.success("Email verified! Account created.")}\n`);
+	if (isReturningUser) {
+		console.log(`\n${sym.check} ${c.success("Welcome back! Logged in successfully.")}\n`);
+	} else {
+		console.log(`\n${sym.check} ${c.success("Email verified! Account created.")}\n`);
+	}
 
-	return { email, apiKey, userId };
+	return { email, apiKey, userId, isReturningUser, userType: returnedUserType };
+}
+
+// ── Returning User Progress ─────────────────────────────────────────────
+
+interface OnboardProgress {
+	accountCreated: boolean;
+	userType: "worker" | "employer";
+	toolsDetected: string[];
+	aiAccountsConnected: boolean;
+	domainsSet: string[];
+	githubConnected: boolean;
+	linkedinConnected: boolean;
+	bio?: string;
+	githubUsername?: string;
+}
+
+async function fetchOnboardingProgress(config: Config): Promise<OnboardProgress> {
+	const progress: OnboardProgress = {
+		accountCreated: true,
+		userType: config.userType as "worker" | "employer",
+		toolsDetected: [],
+		aiAccountsConnected: false,
+		domainsSet: [],
+		githubConnected: false,
+		linkedinConnected: false,
+	};
+
+	// Fetch profile
+	try {
+		const profile = await api(config, "GET", "/v1/profile");
+		if (profile.domains && Array.isArray(profile.domains) && (profile.domains as string[]).length > 0) {
+			progress.domainsSet = profile.domains as string[];
+		}
+		if (profile.tools && typeof profile.tools === "object") {
+			const tools = profile.tools as Record<string, unknown>;
+			if (tools.primary && Array.isArray(tools.primary) && (tools.primary as string[]).length > 0) {
+				progress.toolsDetected = tools.primary as string[];
+			}
+		}
+		if (profile.bio) {
+			progress.bio = profile.bio as string;
+		}
+		if (profile.githubUsername) {
+			progress.githubConnected = true;
+			progress.githubUsername = profile.githubUsername as string;
+		}
+	} catch {
+		// Profile doesn't exist yet — that's fine
+	}
+
+	// Check AI accounts
+	const existingProviders = loadProviderKeys();
+	progress.aiAccountsConnected = existingProviders.length > 0;
+
+	// Check verification status (LinkedIn etc.)
+	try {
+		const verificationStatus = await api(config, "GET", "/v1/verification/status");
+		if (verificationStatus.linkedin) {
+			progress.linkedinConnected = true;
+		}
+	} catch {
+		// Endpoint may not exist — gracefully ignore
+	}
+
+	return progress;
+}
+
+function showReturningUserProgress(progress: OnboardProgress): { firstIncomplete: number } {
+	const isWorker = progress.userType === "worker";
+	const totalSteps = isWorker ? 7 : 6;
+
+	console.log(`${c.bold("Here's your onboarding progress:")}\n`);
+
+	if (isWorker) {
+		const steps: Array<{ done: boolean; label: string }> = [
+			{ done: true, label: `Account created (${progress.userType})` },
+			{ done: progress.toolsDetected.length > 0, label: progress.toolsDetected.length > 0
+				? `AI Tools detected (${progress.toolsDetected.join(", ")})`
+				: "AI Tools not detected" },
+			{ done: progress.aiAccountsConnected, label: progress.aiAccountsConnected
+				? "AI Accounts connected"
+				: "AI Accounts not connected" },
+			{ done: progress.domainsSet.length > 0, label: progress.domainsSet.length > 0
+				? `Domains set (${progress.domainsSet.join(", ")})`
+				: "Domains not set" },
+			{ done: progress.githubConnected, label: progress.githubConnected
+				? `GitHub connected (${progress.githubUsername})`
+				: "GitHub not connected" },
+			{ done: progress.linkedinConnected, label: progress.linkedinConnected
+				? "LinkedIn connected"
+				: "LinkedIn not connected" },
+			{ done: false, label: "Completion" },
+		];
+
+		let firstIncomplete = totalSteps; // default to last
+		for (let i = 0; i < steps.length; i++) {
+			const step = steps[i];
+			const icon = step.done ? sym.check : sym.cross;
+			console.log(`   ${icon} Step ${i + 1}/${totalSteps} — ${step.label}`);
+			if (!step.done && firstIncomplete === totalSteps) {
+				firstIncomplete = i + 1;
+			}
+		}
+		console.log();
+		return { firstIncomplete };
+	} else {
+		// Employer — simpler progress
+		console.log(`   ${sym.check} Step 1/6 — Account created (employer)`);
+		console.log(`   ${sym.cross} Step 2/6 — Remaining setup`);
+		console.log();
+		return { firstIncomplete: 2 };
+	}
 }
 
 // ── Worker Flow ────────────────────────────────────────────────────────
