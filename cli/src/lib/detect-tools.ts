@@ -17,6 +17,8 @@ import { execSync } from "node:child_process";
 
 export type ToolCategory = "ai-agent" | "chat" | "orchestration" | "api-provider";
 
+export type ObservationMethod = "hook" | "extension" | "poller" | "both" | "none";
+
 export interface DetectedTool {
 	id: string;
 	name: string;
@@ -26,6 +28,7 @@ export interface DetectedTool {
 	configDir?: string;
 	observerAvailable: boolean;
 	observerActive: boolean;
+	observationMethod: ObservationMethod;
 }
 
 interface ToolDefinition {
@@ -41,6 +44,7 @@ interface ToolDefinition {
 	npmPackage?: string;
 	envVars?: string[];
 	observerAvailable: boolean;
+	observationMethod: ObservationMethod;
 }
 
 // ── Tool Definitions ───────────────────────────────────────────────────
@@ -54,6 +58,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "claude",
 		configDir: join(homedir(), ".claude"),
 		observerAvailable: true,
+		observationMethod: "hook",
 	},
 	{
 		id: "cursor",
@@ -63,6 +68,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		configDir: join(homedir(), ".cursor"),
 		macApp: "/Applications/Cursor.app",
 		observerAvailable: true,
+		observationMethod: "hook",
 	},
 	{
 		id: "github-copilot",
@@ -72,6 +78,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		vscodeExtension: "github.copilot",
 		cursorExtension: "github.copilot",
 		observerAvailable: false,
+		observationMethod: "extension",
 	},
 	{
 		id: "codex",
@@ -80,6 +87,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "codex",
 		configDir: join(homedir(), ".codex"),
 		observerAvailable: true,
+		observationMethod: "hook",
 	},
 	{
 		id: "opencode",
@@ -88,6 +96,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "opencode",
 		configDir: join(homedir(), ".config", "opencode"),
 		observerAvailable: true,
+		observationMethod: "hook",
 	},
 	{
 		id: "aider",
@@ -97,6 +106,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		configDir: join(homedir(), ".aider"),
 		pipPackage: "aider-chat",
 		observerAvailable: false,
+		observationMethod: "poller",
 	},
 	{
 		id: "continue",
@@ -105,6 +115,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		vscodeExtension: "continue.continue",
 		cursorExtension: "continue.continue",
 		observerAvailable: false,
+		observationMethod: "extension",
 	},
 	{
 		id: "cline",
@@ -113,6 +124,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		vscodeExtension: "saoudrizwan.claude-dev",
 		cursorExtension: "saoudrizwan.claude-dev",
 		observerAvailable: false,
+		observationMethod: "extension",
 	},
 	{
 		id: "windsurf",
@@ -121,6 +133,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "windsurf",
 		macApp: "/Applications/Windsurf.app",
 		observerAvailable: false,
+		observationMethod: "extension",
 	},
 	{
 		id: "copilot-chat",
@@ -129,6 +142,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		vscodeExtension: "github.copilot-chat",
 		cursorExtension: "github.copilot-chat",
 		observerAvailable: false,
+		observationMethod: "extension",
 	},
 	{
 		id: "zed-ai",
@@ -137,6 +151,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		macApp: "/Applications/Zed.app",
 		configDir: join(homedir(), platform() === "darwin" ? "Library/Application Support/Zed" : ".config/zed"),
 		observerAvailable: false,
+		observationMethod: "poller",
 	},
 	{
 		id: "amazon-q",
@@ -145,6 +160,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "q",
 		configDir: join(homedir(), ".aws", "amazonq"),
 		observerAvailable: false,
+		observationMethod: "poller",
 	},
 	{
 		id: "warp-ai",
@@ -153,6 +169,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		macApp: "/Applications/Warp.app",
 		configDir: join(homedir(), "Library", "Application Support", "dev.warp.Warp-Stable"),
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "letta",
@@ -162,6 +179,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		configDir: join(homedir(), ".letta"),
 		pipPackage: "letta",
 		observerAvailable: false,
+		observationMethod: "poller",
 	},
 	{
 		id: "goose",
@@ -170,6 +188,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "goose",
 		configDir: join(homedir(), ".config", "goose"),
 		observerAvailable: false,
+		observationMethod: "poller",
 	},
 	{
 		id: "idx",
@@ -178,6 +197,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		// IDX is cloud-based; no local binary. Detect via config dir if any local cache exists.
 		configDir: join(homedir(), ".idx"),
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "gemini",
@@ -186,6 +206,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "gemini",
 		configDir: join(homedir(), ".gemini"),
 		observerAvailable: true,
+		observationMethod: "hook",
 	},
 
 	// AI Chat/Desktop
@@ -195,6 +216,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "chat",
 		macApp: "/Applications/ChatGPT.app",
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "claude-desktop",
@@ -202,6 +224,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "chat",
 		macApp: "/Applications/Claude.app",
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "ollama",
@@ -210,6 +233,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "ollama",
 		configDir: join(homedir(), ".ollama"),
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 
 	// AI Orchestration
@@ -220,6 +244,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "openclaw",
 		configDir: join(homedir(), ".openclaw"),
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "langchain",
@@ -227,6 +252,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "orchestration",
 		pipPackage: "langchain",
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "crewai",
@@ -234,6 +260,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "orchestration",
 		pipPackage: "crewai",
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 
 	// API Providers (detected via env vars)
@@ -243,6 +270,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "api-provider",
 		envVars: ["ANTHROPIC_API_KEY"],
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "openai-api",
@@ -250,6 +278,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "api-provider",
 		envVars: ["OPENAI_API_KEY"],
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "google-api",
@@ -257,6 +286,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "api-provider",
 		envVars: ["GOOGLE_API_KEY", "GEMINI_API_KEY"],
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "groq-api",
@@ -264,6 +294,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "api-provider",
 		envVars: ["GROQ_API_KEY"],
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 	{
 		id: "mistral-api",
@@ -271,6 +302,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		category: "api-provider",
 		envVars: ["MISTRAL_API_KEY"],
 		observerAvailable: false,
+		observationMethod: "none",
 	},
 ];
 
@@ -526,6 +558,7 @@ export function detectAllTools(): DetectedTool[] {
 			configDir: installed ? configDir : undefined,
 			observerAvailable: def.observerAvailable,
 			observerActive,
+			observationMethod: def.observationMethod,
 		});
 	}
 

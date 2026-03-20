@@ -21,6 +21,7 @@ import {
 	type DetectedTool,
 	type ToolCategory,
 } from "./detect-tools.js";
+import { installDaemon } from "./launchd.js";
 import {
 	loadProviderKeys,
 	saveProviderKey,
@@ -764,6 +765,24 @@ async function runToolDetectionStep(
 
 			if (result.installed.length > 0) {
 				console.log(`\n  ${sym.check} ${c.success(`${result.installed.length} observer${result.installed.length > 1 ? "s" : ""} installed!`)}`);
+
+				// Install background polling daemon
+				try {
+					installDaemon(7200);
+					console.log(`  ${sym.check} ${c.success("Background poller installed (every 2 hours)")}`);
+				} catch {
+					console.log(`  ${c.dim("Background poller skipped (install later: jobarbiter observe daemon install)")}`);
+				}
+
+				// Show poller-observable tools
+				const pollerTools = allTools.filter((t) => t.installed && t.observationMethod === "poller");
+				if (pollerTools.length > 0) {
+					console.log(`\n  ${c.bold("Poller will also scan these tools:")}`);
+					for (const t of pollerTools) {
+						console.log(`    ${sym.bullet} ${formatToolDisplay(t)}`);
+					}
+				}
+
 				console.log(`\n  ${c.bold("What happens now?")}`);
 			console.log(`  Observers activate each time you use your AI tools.`);
 			console.log(`  Just work normally — every session builds your profile.\n`);
@@ -772,6 +791,8 @@ async function runToolDetectionStep(
 			console.log(`  a work report to JobArbiter. Our agents interpret these reports`);
 			console.log(`  to build and evolve your narrative profile over time.`);
 			console.log(`  Raw session data never leaves your machine.\n`);
+
+			console.log(`  ${c.dim("Manage observers: jobarbiter observe --help")}`);
 			}
 		} else {
 			console.log(c.dim("\n  Skipped — you can install observers later with 'jobarbiter observe install'.\n"));

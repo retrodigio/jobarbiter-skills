@@ -125,9 +125,29 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const OBSERVATIONS_FILE = path.join(
-  os.homedir(), ".config", "jobarbiter", "observer", "observations.json"
-);
+const OBSERVER_DIR = path.join(os.homedir(), ".config", "jobarbiter", "observer");
+const OBSERVATIONS_FILE = path.join(OBSERVER_DIR, "observations.json");
+const PAUSED_FILE = path.join(OBSERVER_DIR, "PAUSED");
+
+// Check PAUSED sentinel FIRST — if paused, exit immediately
+try {
+  if (fs.existsSync(PAUSED_FILE)) {
+    const raw = fs.readFileSync(PAUSED_FILE, "utf-8");
+    const pauseData = JSON.parse(raw);
+    if (pauseData.expiresAt) {
+      const expiresAt = new Date(pauseData.expiresAt).getTime();
+      if (Date.now() < expiresAt) {
+        process.exit(0); // Still paused
+      }
+      // Expired — clean up and continue
+      fs.unlinkSync(PAUSED_FILE);
+    } else {
+      process.exit(0); // Paused indefinitely
+    }
+  }
+} catch {
+  // If PAUSED file is corrupted, continue
+}
 
 // Read stdin
 let input = "";
@@ -283,8 +303,14 @@ function appendObservation(obs) {
   // Fire-and-forget: trigger analysis pipeline via CLI
   // Spawns detached process so the AI tool is never blocked
   try {
-    const { spawn } = require("child_process");
-    // Try npx jobarbiter first, fall back to direct node invocation
+    const { spawn, execSync } = require("child_process");
+    // Self-healing: verify jobarbiter binary exists before spawning
+    try {
+      execSync("command -v jobarbiter", { stdio: "ignore", timeout: 3000 });
+    } catch {
+      // jobarbiter CLI not found — exit silently
+      return;
+    }
     const child = spawn("jobarbiter", ["analyze", "--auto"], {
       detached: true,
       stdio: "ignore",
