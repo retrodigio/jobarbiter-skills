@@ -1,6 +1,6 @@
 {
   "name": "jobarbiter",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "CLI for JobArbiter — the first AI Proficiency Marketplace",
   "type": "module",
   "bin": {
