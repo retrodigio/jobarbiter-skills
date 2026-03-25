@@ -1420,6 +1420,7 @@ program
 	.command("update")
 	.description("Check for and install CLI updates")
 	.option("--check", "Just check for updates, don't install")
+	.option("--no-reinstall-observers", "Skip automatic observer reinstall on major/minor bump")
 	.action(async (opts) => {
 		try {
 			console.log(`\nCurrent version: v${CLI_VERSION}`);
@@ -1471,9 +1472,31 @@ program
 				pa[0] !== pb[0] || pa[1] !== pb[1];
 
 			if (majorMinorChanged) {
-				console.log("\n⚠️  Major/minor version changed. You may want to reinstall observers:");
-				console.log("   jobarbiter observe remove --all");
-				console.log("   jobarbiter observe install --all\n");
+				if (opts.reinstallObservers) {
+					console.log("\nReinstalling observers for new version...");
+					try {
+						const agents = await detectAgents();
+						const installedIds = agents.filter(a => a.installed).map(a => a.id);
+						if (installedIds.length === 0) {
+							console.log("  No observers installed — nothing to reinstall.\n");
+						} else {
+							await removeObservers(installedIds);
+							console.log(`  ✔ Removed observers for: ${installedIds.join(", ")}`);
+							await installObservers(installedIds);
+							success(`Reinstalled observers for: ${installedIds.join(", ")}`);
+						}
+					} catch (reinstallErr) {
+						error(`Failed to reinstall observers: ${reinstallErr instanceof Error ? reinstallErr.message : String(reinstallErr)}`);
+						console.log("  You can manually reinstall with:");
+						console.log("   jobarbiter observe remove --all");
+						console.log("   jobarbiter observe install --all\n");
+					}
+				} else {
+					console.log("\n⚠️  Major/minor version changed. Skipped observer reinstall (--no-reinstall-observers).");
+					console.log("   To reinstall manually:");
+					console.log("   jobarbiter observe remove --all");
+					console.log("   jobarbiter observe install --all\n");
+				}
 			}
 		} catch (e) {
 			handleError(e);
