@@ -1,20 +1,17 @@
 /**
  * JobArbiter Observer — OpenClaw Plugin
  *
- * Real-time proficiency signal extraction via OpenClaw lifecycle hooks.
- * Replaces the 2-hour transcript poller with immediate event capture.
+ * Single-hook observer: fires on `session_end`, reads the session
+ * transcript, extracts proficiency signals, writes to observations.json.
  *
- * Hooks used:
- *   - session_start / session_end — session lifecycle tracking
- *   - agent_end — final message list after agent completes a turn
- *   - after_tool_call — real-time tool usage signals
- *   - message_received — inbound user message tracking
- *   - message_sent — outbound response tracking
- *   - before_compaction / after_compaction — context management signals
+ * Consistent with how every other observer works:
+ *   - Claude Code → Stop hook → read transcript
+ *   - Codex → agent-turn-complete → read session data
+ *   - Gemini → SessionEnd → read session data
+ *   - OpenClaw → session_end → read transcript (this plugin)
  *
- * All handlers are async fire-and-forget. Errors are caught and logged
- * to ~/.config/jobarbiter/observer/errors.log — never thrown back to
- * OpenClaw. Session performance is unaffected.
+ * Async fire-and-forget. Errors logged, never thrown. Zero impact on
+ * session performance.
  *
  * Writes to ~/.config/jobarbiter/observer/observations.json (same format
  * as the CLI hook observers for Claude Code, Cursor, Codex, etc.)
@@ -25,10 +22,12 @@ import {
   existsSync,
   readFileSync,
   writeFileSync,
+  readdirSync,
+  statSync,
   mkdirSync,
   appendFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, extname } from "node:path";
 import { homedir } from "node:os";
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -38,43 +37,12 @@ const OBSERVATIONS_FILE = join(OBSERVER_DIR, "observations.json");
 const PAUSED_FILE = join(OBSERVER_DIR, "PAUSED");
 const ERROR_LOG = join(OBSERVER_DIR, "errors.log");
 const MAX_SESSION_BUFFER = 500;
-const FLUSH_INTERVAL_MS = 30_000; // 30s default
 
-// ── In-Memory Accumulator ──────────────────────────────────────────────
-
-interface SessionAccumulator {
-  sessionId: string;
-  sessionKey: string;
-  startedAt: string;
-  toolsUsed: string[];
-  toolCallCount: number;
-  fileExtensions: string[];
-  messageCount: number;
-  userMessageCount: number;
-  assistantMessageCount: number;
-  thinkingBlocks: number;
-  tokenUsage: { input: number; output: number; total: number };
-  modelsUsed: Set<string>;
-  subAgentSpawns: number;
-  compactionCount: number;
-  /** Longest chain of sequential tool calls without user intervention */
-  maxToolChainLength: number;
-  /** Current tool chain being tracked */
-  currentToolChain: number;
-  /** Unique tool sequences observed (for orchestration complexity) */
-  toolSequences: string[][];
-  /** Current tool sequence being built */
-  currentSequence: string[];
-}
-
-/** Active sessions being observed */
-const activeSessions = new Map<string, SessionAccumulator>();
-
-/** Pending observations to flush to disk */
-let pendingObservations: Array<Record<string, unknown>> = [];
-
-/** Flush timer handle */
-let flushTimer: ReturnType<typeof setInterval> | null = null;
+// OpenClaw transcript directories (same as transcript-reader.ts)
+const TRANSCRIPT_DIRS = [
+  join(homedir(), ".openclaw", "transcripts"),
+  join(homedir(), ".clawdbot", "transcripts"),
+];
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -86,7 +54,7 @@ function isPaused(): boolean {
     if (data.expiresAt) {
       return Date.now() < new Date(data.expiresAt).getTime();
     }
-    return true; // paused indefinitely
+    return true;
   } catch {
     return false;
   }
@@ -127,83 +95,286 @@ function ensureObserverDir(): void {
   }
 }
 
-function getOrCreateSession(event: Record<string, unknown>): SessionAccumulator {
-  const key =
-    (event.sessionKey as string) ||
-    (event.sessionId as string) ||
-    (event.session_id as string) ||
-    "unknown";
+// ── Transcript Discovery ───────────────────────────────────────────────
 
-  let session = activeSessions.get(key);
-  if (!session) {
-    session = {
-      sessionId: (event.sessionId as string) || key,
-      sessionKey: key,
-      startedAt: new Date().toISOString(),
-      toolsUsed: [],
-      toolCallCount: 0,
-      fileExtensions: [],
-      messageCount: 0,
-      userMessageCount: 0,
-      assistantMessageCount: 0,
-      thinkingBlocks: 0,
-      tokenUsage: { input: 0, output: 0, total: 0 },
-      modelsUsed: new Set(),
-      subAgentSpawns: 0,
-      compactionCount: 0,
-      maxToolChainLength: 0,
-      currentToolChain: 0,
-      toolSequences: [],
-      currentSequence: [],
+/**
+ * Find the most recently modified transcript file for a given session.
+ * OpenClaw transcripts are JSONL files in ~/.openclaw/transcripts/.
+ * If we have a sessionKey from the event, try to match it to a filename.
+ * Otherwise, grab the most recently modified file.
+ */
+function findTranscriptFile(sessionKey?: string): string | null {
+  for (const dir of TRANSCRIPT_DIRS) {
+    if (!existsSync(dir)) continue;
+
+    try {
+      const files = readdirSync(dir)
+        .filter((f) => f.endsWith(".jsonl"))
+        .map((f) => ({
+          name: f,
+          path: join(dir, f),
+          mtime: statSync(join(dir, f)).mtimeMs,
+        }))
+        .sort((a, b) => b.mtime - a.mtime);
+
+      if (files.length === 0) continue;
+
+      // If we have a sessionKey, try to find a matching file
+      if (sessionKey) {
+        const match = files.find(
+          (f) =>
+            f.name.includes(sessionKey) ||
+            f.name.replace(extname(f.name), "") === sessionKey,
+        );
+        if (match) return match.path;
+      }
+
+      // Fall back to most recently modified file
+      // Only if it was modified in the last 5 minutes (likely the active session)
+      const recent = files[0];
+      if (recent && Date.now() - recent.mtime < 5 * 60 * 1000) {
+        return recent.path;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+// ── Transcript Parsing & Signal Extraction ─────────────────────────────
+
+interface ExtractedSignals {
+  toolsUsed: string[];
+  toolCallCount: number;
+  fileExtensions: string[];
+  messageCount: number;
+  userMessageCount: number;
+  assistantMessageCount: number;
+  thinkingBlocks: number;
+  tokenUsage: { input: number; output: number; total: number } | null;
+  modelsUsed: string[];
+  orchestration: {
+    subAgentSpawns: number;
+    maxToolChainLength: number;
+    toolSequenceCount: number;
+    avgSequenceLength: number;
+    compactionCount: number;
+  };
+}
+
+function extractSignalsFromTranscript(filePath: string): ExtractedSignals | null {
+  try {
+    const content = readFileSync(filePath, "utf-8");
+    const lines = content.split("\n").filter((l) => l.trim());
+
+    if (lines.length === 0) return null;
+
+    const toolsUsed: string[] = [];
+    const fileExtensions: string[] = [];
+    const modelsUsed = new Set<string>();
+    let toolCallCount = 0;
+    let messageCount = 0;
+    let userMessageCount = 0;
+    let assistantMessageCount = 0;
+    let thinkingBlocks = 0;
+    let tokenInput = 0;
+    let tokenOutput = 0;
+    let tokenTotal = 0;
+    let subAgentSpawns = 0;
+    let compactionCount = 0;
+
+    // Tool chain tracking
+    let currentChain = 0;
+    let maxChain = 0;
+    const toolSequences: string[][] = [];
+    let currentSequence: string[] = [];
+    let lastRole = "";
+
+    for (const line of lines) {
+      try {
+        const obj = JSON.parse(line);
+        const role = obj.role || obj.type || "";
+
+        // Count messages by role
+        if (role === "user" || role === "human") {
+          messageCount++;
+          userMessageCount++;
+          // User message breaks tool chains
+          if (currentChain > maxChain) maxChain = currentChain;
+          if (currentSequence.length > 0) {
+            toolSequences.push([...currentSequence]);
+            currentSequence = [];
+          }
+          currentChain = 0;
+          lastRole = "user";
+        } else if (role === "assistant" || role === "bot" || role === "ai") {
+          messageCount++;
+          assistantMessageCount++;
+          lastRole = "assistant";
+        }
+
+        // Tool calls (various formats OpenClaw uses)
+        const toolName =
+          obj.toolName || obj.tool_name || obj.function_name || null;
+        if (toolName) {
+          toolsUsed.push(toolName);
+          toolCallCount++;
+          currentChain++;
+          currentSequence.push(toolName);
+
+          // Detect sub-agent spawns
+          if (
+            toolName === "sessions_spawn" ||
+            toolName === "subagents" ||
+            toolName === "sessions_send"
+          ) {
+            subAgentSpawns++;
+          }
+        }
+
+        // Tool calls in content blocks
+        if (Array.isArray(obj.content)) {
+          for (const block of obj.content) {
+            if (block.type === "tool_use" && block.name) {
+              toolsUsed.push(block.name);
+              toolCallCount++;
+              currentChain++;
+              currentSequence.push(block.name);
+              if (
+                ["sessions_spawn", "subagents", "sessions_send"].includes(
+                  block.name,
+                )
+              ) {
+                subAgentSpawns++;
+              }
+            }
+            if (block.type === "thinking") {
+              thinkingBlocks++;
+            }
+          }
+        }
+
+        // File extensions from tool args
+        const args =
+          obj.toolInput || obj.tool_input || obj.args || obj.input || {};
+        if (args && typeof args === "object") {
+          const fp =
+            (args as Record<string, string>).file_path ||
+            (args as Record<string, string>).filePath ||
+            (args as Record<string, string>).path ||
+            (args as Record<string, string>).filename ||
+            "";
+          if (fp) {
+            const match = fp.match(/\.([a-zA-Z0-9]+)$/);
+            if (match) fileExtensions.push(`.${match[1].toLowerCase()}`);
+          }
+        }
+
+        // Token usage
+        const usage = obj.usage || obj.tokenUsage;
+        if (usage) {
+          tokenInput +=
+            usage.input_tokens || usage.input || usage.promptTokens || 0;
+          tokenOutput +=
+            usage.output_tokens || usage.output || usage.completionTokens || 0;
+          tokenTotal +=
+            usage.total_tokens || usage.total || usage.totalTokens || 0;
+        }
+
+        // Model
+        if (obj.model) modelsUsed.add(obj.model);
+
+        // Compaction markers
+        if (
+          obj.type === "compaction" ||
+          obj.event === "compaction" ||
+          (typeof obj.text === "string" &&
+            obj.text.includes("context compaction"))
+        ) {
+          compactionCount++;
+        }
+      } catch {
+        // Skip malformed lines
+      }
+    }
+
+    // Finalize last chain
+    if (currentChain > maxChain) maxChain = currentChain;
+    if (currentSequence.length > 0) {
+      toolSequences.push([...currentSequence]);
+    }
+
+    // Skip empty sessions
+    if (toolCallCount === 0 && messageCount === 0 && tokenTotal === 0) {
+      return null;
+    }
+
+    return {
+      toolsUsed: [...new Set(toolsUsed)],
+      toolCallCount,
+      fileExtensions: [...new Set(fileExtensions)],
+      messageCount,
+      userMessageCount,
+      assistantMessageCount,
+      thinkingBlocks,
+      tokenUsage:
+        tokenTotal > 0
+          ? { input: tokenInput, output: tokenOutput, total: tokenTotal }
+          : null,
+      modelsUsed: [...modelsUsed],
+      orchestration: {
+        subAgentSpawns,
+        maxToolChainLength: maxChain,
+        toolSequenceCount: toolSequences.length,
+        avgSequenceLength:
+          toolSequences.length > 0
+            ? toolSequences.reduce((s, seq) => s + seq.length, 0) /
+              toolSequences.length
+            : 0,
+        compactionCount,
+      },
     };
-    activeSessions.set(key, session);
+  } catch (err) {
+    logError(
+      `Transcript parse failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    return null;
   }
-  return session;
 }
 
-function extractFileExtension(args: Record<string, unknown>): string | null {
-  const filePath =
-    (args.file_path as string) ||
-    (args.filePath as string) ||
-    (args.path as string) ||
-    (args.filename as string) ||
-    "";
-  if (!filePath) return null;
-  const match = filePath.match(/\.([a-zA-Z0-9]+)$/);
-  return match ? `.${match[1].toLowerCase()}` : null;
-}
+// ── Write Observation ──────────────────────────────────────────────────
 
-// ── Flush to Disk ──────────────────────────────────────────────────────
-
-function flushToDisk(): void {
-  if (pendingObservations.length === 0) return;
-  if (isPaused()) {
-    pendingObservations = [];
-    return;
-  }
-
+function appendObservation(
+  signals: ExtractedSignals,
+  sessionId: string,
+  sessionKey: string,
+  transcriptPath: string,
+): void {
   try {
     ensureObserverDir();
     const raw = readFileSync(OBSERVATIONS_FILE, "utf-8");
     const data = JSON.parse(raw);
 
-    for (const obs of pendingObservations) {
-      data.sessions.push(obs);
-      data.accumulated.totalSessions++;
+    const observation = {
+      timestamp: new Date().toISOString(),
+      agent: "openclaw",
+      sessionId,
+      sessionKey,
+      transcriptPath,
+      source: "hook" as const,
+      signals,
+    };
 
-      const tools = (obs.signals as Record<string, unknown>)?.toolsUsed;
-      if (Array.isArray(tools)) {
-        for (const tool of tools) {
-          data.accumulated.toolCounts[tool] =
-            (data.accumulated.toolCounts[tool] || 0) + 1;
-        }
-      }
+    data.sessions.push(observation);
+    data.accumulated.totalSessions++;
 
-      const tokenUsage = (obs.signals as Record<string, unknown>)?.tokenUsage;
-      if (tokenUsage && typeof tokenUsage === "object") {
-        data.accumulated.totalTokens +=
-          (tokenUsage as Record<string, number>).total || 0;
-      }
+    for (const tool of signals.toolsUsed) {
+      data.accumulated.toolCounts[tool] =
+        (data.accumulated.toolCounts[tool] || 0) + 1;
+    }
+    if (signals.tokenUsage) {
+      data.accumulated.totalTokens += signals.tokenUsage.total || 0;
     }
 
     // Rolling window
@@ -212,65 +383,11 @@ function flushToDisk(): void {
     }
 
     writeFileSync(OBSERVATIONS_FILE, JSON.stringify(data, null, 2) + "\n");
-    pendingObservations = [];
   } catch (err) {
-    logError(`Flush failed: ${err instanceof Error ? err.message : String(err)}`);
+    logError(
+      `Write observation failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
-}
-
-function finalizeSession(key: string): void {
-  const session = activeSessions.get(key);
-  if (!session) return;
-
-  // Finalize the current tool sequence if any
-  if (session.currentSequence.length > 0) {
-    session.toolSequences.push([...session.currentSequence]);
-  }
-
-  const observation = {
-    timestamp: new Date().toISOString(),
-    agent: "openclaw",
-    sessionId: session.sessionId,
-    sessionKey: session.sessionKey,
-    startedAt: session.startedAt,
-    source: "hook" as const, // distinguishes from poller-sourced data
-    signals: {
-      toolsUsed: [...new Set(session.toolsUsed)],
-      toolCallCount: session.toolCallCount,
-      fileExtensions: [...new Set(session.fileExtensions)],
-      messageCount: session.messageCount,
-      userMessageCount: session.userMessageCount,
-      assistantMessageCount: session.assistantMessageCount,
-      thinkingBlocks: session.thinkingBlocks,
-      tokenUsage:
-        session.tokenUsage.total > 0 ? session.tokenUsage : null,
-      modelsUsed: [...session.modelsUsed],
-      // OpenClaw-specific orchestration signals
-      orchestration: {
-        subAgentSpawns: session.subAgentSpawns,
-        compactionCount: session.compactionCount,
-        maxToolChainLength: session.maxToolChainLength,
-        toolSequenceCount: session.toolSequences.length,
-        // Average tools per sequence (orchestration complexity proxy)
-        avgSequenceLength:
-          session.toolSequences.length > 0
-            ? session.toolSequences.reduce((s, seq) => s + seq.length, 0) /
-              session.toolSequences.length
-            : 0,
-      },
-    },
-  };
-
-  // Only record if we have meaningful data
-  if (
-    session.toolCallCount > 0 ||
-    session.messageCount > 0 ||
-    session.tokenUsage.total > 0
-  ) {
-    pendingObservations.push(observation);
-  }
-
-  activeSessions.delete(key);
 }
 
 // ── Plugin Entry ───────────────────────────────────────────────────────
@@ -279,178 +396,37 @@ export default definePluginEntry({
   id: "jobarbiter-observer",
   name: "JobArbiter Observer",
   description:
-    "Real-time proficiency signal observer for JobArbiter AI Proficiency Marketplace",
+    "Proficiency signal observer for JobArbiter — fires on session_end, reads transcript, extracts signals",
 
   register(api) {
-    // Start flush timer
-    flushTimer = setInterval(flushToDisk, FLUSH_INTERVAL_MS);
-    // Don't let the timer keep the process alive
-    if (flushTimer.unref) flushTimer.unref();
-
-    // ── session_start ────────────────────────────────────────────────
-    api.on("session_start" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        getOrCreateSession(event);
-      } catch (err) {
-        logError(`session_start: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── session_end ──────────────────────────────────────────────────
+    // Single hook: session_end
+    // When a session ends, find its transcript, parse it, extract signals.
     api.on("session_end" as never, async (event: Record<string, unknown>) => {
       try {
         if (isPaused()) return;
-        const key =
+
+        const sessionKey =
           (event.sessionKey as string) ||
           (event.sessionId as string) ||
+          (event.session_id as string) ||
           "unknown";
-        finalizeSession(key);
-        // Flush immediately on session end (don't wait for timer)
-        flushToDisk();
+        const sessionId =
+          (event.sessionId as string) || sessionKey;
+
+        // Find the transcript file for this session
+        const transcriptPath = findTranscriptFile(sessionKey);
+        if (!transcriptPath) return; // No transcript found, nothing to observe
+
+        // Parse transcript and extract signals
+        const signals = extractSignalsFromTranscript(transcriptPath);
+        if (!signals) return; // Empty or unparseable
+
+        // Write observation
+        appendObservation(signals, sessionId, sessionKey, transcriptPath);
       } catch (err) {
-        logError(`session_end: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── agent_end ────────────────────────────────────────────────────
-    // Fires after agent completes a turn — gives us the final message
-    // list and token usage for that turn.
-    api.on("agent_end" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        const session = getOrCreateSession(event);
-
-        // Extract token usage from the event
-        const usage = event.usage as Record<string, number> | undefined;
-        if (usage) {
-          session.tokenUsage.input += usage.input_tokens || usage.input || usage.promptTokens || 0;
-          session.tokenUsage.output += usage.output_tokens || usage.output || usage.completionTokens || 0;
-          session.tokenUsage.total += usage.total_tokens || usage.total || usage.totalTokens || 0;
-        }
-
-        // Extract model info
-        const model = event.model as string | undefined;
-        if (model) session.modelsUsed.add(model);
-
-        // Reset current tool chain (user interaction boundary)
-        if (session.currentToolChain > session.maxToolChainLength) {
-          session.maxToolChainLength = session.currentToolChain;
-        }
-        if (session.currentSequence.length > 0) {
-          session.toolSequences.push([...session.currentSequence]);
-          session.currentSequence = [];
-        }
-        session.currentToolChain = 0;
-      } catch (err) {
-        logError(`agent_end: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── after_tool_call ──────────────────────────────────────────────
-    // Real-time tool usage tracking — the richest signal source.
-    api.on("after_tool_call" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        const session = getOrCreateSession(event);
-
-        const toolName =
-          (event.toolName as string) ||
-          (event.tool_name as string) ||
-          (event.name as string) ||
-          "unknown";
-
-        session.toolsUsed.push(toolName);
-        session.toolCallCount++;
-        session.currentToolChain++;
-        session.currentSequence.push(toolName);
-
-        // Extract file extensions from tool args
-        const args =
-          (event.toolInput as Record<string, unknown>) ||
-          (event.input as Record<string, unknown>) ||
-          (event.params as Record<string, unknown>) ||
-          {};
-        const ext = extractFileExtension(args);
-        if (ext) session.fileExtensions.push(ext);
-
-        // Detect sub-agent spawns (orchestration complexity)
-        if (
-          toolName === "sessions_spawn" ||
-          toolName === "subagents" ||
-          toolName === "sessions_send"
-        ) {
-          session.subAgentSpawns++;
-        }
-      } catch (err) {
-        logError(`after_tool_call: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── message_received ─────────────────────────────────────────────
-    api.on("message_received" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        const session = getOrCreateSession(event);
-        session.messageCount++;
-        session.userMessageCount++;
-
-        // User message breaks tool chains
-        if (session.currentToolChain > session.maxToolChainLength) {
-          session.maxToolChainLength = session.currentToolChain;
-        }
-        if (session.currentSequence.length > 0) {
-          session.toolSequences.push([...session.currentSequence]);
-          session.currentSequence = [];
-        }
-        session.currentToolChain = 0;
-      } catch (err) {
-        logError(`message_received: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── message_sent ─────────────────────────────────────────────────
-    api.on("message_sent" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        const session = getOrCreateSession(event);
-        session.messageCount++;
-        session.assistantMessageCount++;
-      } catch (err) {
-        logError(`message_sent: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── before_compaction / after_compaction ──────────────────────────
-    // Compaction events tell us about context management — a user who
-    // hits compaction frequently is doing longer, more complex sessions.
-    api.on("after_compaction" as never, async (event: Record<string, unknown>) => {
-      try {
-        if (isPaused()) return;
-        const session = getOrCreateSession(event);
-        session.compactionCount++;
-      } catch (err) {
-        logError(`after_compaction: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    });
-
-    // ── gateway_stop ─────────────────────────────────────────────────
-    // Final flush when gateway shuts down — finalize all active sessions.
-    api.on("gateway_stop" as never, async () => {
-      try {
-        // Finalize all active sessions
-        for (const key of [...activeSessions.keys()]) {
-          finalizeSession(key);
-        }
-        flushToDisk();
-
-        // Clean up timer
-        if (flushTimer) {
-          clearInterval(flushTimer);
-          flushTimer = null;
-        }
-      } catch (err) {
-        logError(`gateway_stop: ${err instanceof Error ? err.message : String(err)}`);
+        logError(
+          `session_end handler: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
     });
   },

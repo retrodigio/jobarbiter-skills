@@ -616,117 +616,98 @@ function getOpenClawPluginSource(): string {
 		// Fall through to inline
 	}
 
-	// Inline minimal version
+	// Inline minimal version — single session_end hook, reads transcript
 	return `/**
  * JobArbiter Observer — OpenClaw Plugin (inline install)
- * Real-time proficiency signal extraction via OpenClaw lifecycle hooks.
+ * Single-hook observer: session_end → read transcript → extract signals.
  */
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
+import { join, extname } from "node:path";
 import { homedir } from "node:os";
 
-const OBSERVER_DIR = join(homedir(), ".config", "jobarbiter", "observer");
-const OBSERVATIONS_FILE = join(OBSERVER_DIR, "observations.json");
+const home = homedir();
+const OBSERVER_DIR = join(home, ".config", "jobarbiter", "observer");
+const OBS_FILE = join(OBSERVER_DIR, "observations.json");
 const PAUSED_FILE = join(OBSERVER_DIR, "PAUSED");
-const ERROR_LOG = join(OBSERVER_DIR, "errors.log");
-
-const activeSessions = new Map();
-let pendingObservations = [];
-let flushTimer = null;
+const ERR_LOG = join(OBSERVER_DIR, "errors.log");
+const TX_DIRS = [join(home, ".openclaw", "transcripts"), join(home, ".clawdbot", "transcripts")];
 
 function isPaused() {
   try {
     if (!existsSync(PAUSED_FILE)) return false;
-    const data = JSON.parse(readFileSync(PAUSED_FILE, "utf-8"));
-    if (data.expiresAt) return Date.now() < new Date(data.expiresAt).getTime();
+    const d = JSON.parse(readFileSync(PAUSED_FILE, "utf-8"));
+    if (d.expiresAt) return Date.now() < new Date(d.expiresAt).getTime();
     return true;
   } catch { return false; }
 }
-
-function logError(msg) {
-  try { mkdirSync(OBSERVER_DIR, { recursive: true }); appendFileSync(ERROR_LOG, \`[\${new Date().toISOString()}] \${msg}\\n\`); } catch {}
-}
-
+function logErr(m) { try { mkdirSync(OBSERVER_DIR, { recursive: true }); appendFileSync(ERR_LOG, \`[\${new Date().toISOString()}] \${m}\\n\`); } catch {} }
 function ensureDir() {
   mkdirSync(OBSERVER_DIR, { recursive: true });
-  if (!existsSync(OBSERVATIONS_FILE)) {
-    writeFileSync(OBSERVATIONS_FILE, JSON.stringify({ version: 1, installedAt: new Date().toISOString(), agents: {}, sessions: [], accumulated: { totalSessions: 0, totalTokens: 0, toolCounts: {}, domainSignals: [], lastSubmitted: null } }, null, 2) + "\\n");
-  }
+  if (!existsSync(OBS_FILE)) writeFileSync(OBS_FILE, JSON.stringify({ version:1, installedAt:new Date().toISOString(), agents:{}, sessions:[], accumulated:{ totalSessions:0, totalTokens:0, toolCounts:{}, domainSignals:[], lastSubmitted:null }},null,2)+"\\n");
 }
 
-function getSession(event) {
-  const key = event.sessionKey || event.sessionId || "unknown";
-  if (!activeSessions.has(key)) {
-    activeSessions.set(key, {
-      sessionId: event.sessionId || key, sessionKey: key, startedAt: new Date().toISOString(),
-      toolsUsed: [], toolCallCount: 0, fileExtensions: [], messageCount: 0,
-      userMessageCount: 0, assistantMessageCount: 0, thinkingBlocks: 0,
-      tokenUsage: { input: 0, output: 0, total: 0 }, modelsUsed: new Set(),
-      subAgentSpawns: 0, compactionCount: 0, maxToolChainLength: 0,
-      currentToolChain: 0, toolSequences: [], currentSequence: [],
-    });
+function findTranscript(sessionKey) {
+  for (const dir of TX_DIRS) {
+    if (!existsSync(dir)) continue;
+    try {
+      const files = readdirSync(dir).filter(f=>f.endsWith(".jsonl")).map(f=>({name:f,path:join(dir,f),mt:statSync(join(dir,f)).mtimeMs})).sort((a,b)=>b.mt-a.mt);
+      if (!files.length) continue;
+      if (sessionKey) { const m = files.find(f=>f.name.includes(sessionKey)||f.name.replace(extname(f.name),"")=== sessionKey); if (m) return m.path; }
+      if (files[0] && Date.now()-files[0].mt < 300000) return files[0].path;
+    } catch { continue; }
   }
-  return activeSessions.get(key);
+  return null;
 }
 
-function flushToDisk() {
-  if (pendingObservations.length === 0) return;
-  if (isPaused()) { pendingObservations = []; return; }
-  try {
-    ensureDir();
-    const data = JSON.parse(readFileSync(OBSERVATIONS_FILE, "utf-8"));
-    for (const obs of pendingObservations) {
-      data.sessions.push(obs);
-      data.accumulated.totalSessions++;
-      for (const tool of obs.signals?.toolsUsed || []) data.accumulated.toolCounts[tool] = (data.accumulated.toolCounts[tool] || 0) + 1;
-      if (obs.signals?.tokenUsage) data.accumulated.totalTokens += obs.signals.tokenUsage.total || 0;
-    }
-    if (data.sessions.length > 500) data.sessions = data.sessions.slice(-500);
-    writeFileSync(OBSERVATIONS_FILE, JSON.stringify(data, null, 2) + "\\n");
-    pendingObservations = [];
-  } catch (err) { logError("Flush: " + (err?.message || err)); }
-}
-
-function finalizeSession(key) {
-  const s = activeSessions.get(key);
-  if (!s) return;
-  if (s.currentSequence.length > 0) s.toolSequences.push([...s.currentSequence]);
-  if (s.toolCallCount > 0 || s.messageCount > 0 || s.tokenUsage.total > 0) {
-    pendingObservations.push({
-      timestamp: new Date().toISOString(), agent: "openclaw", sessionId: s.sessionId,
-      sessionKey: s.sessionKey, startedAt: s.startedAt, source: "hook",
-      signals: {
-        toolsUsed: [...new Set(s.toolsUsed)], toolCallCount: s.toolCallCount,
-        fileExtensions: [...new Set(s.fileExtensions)], messageCount: s.messageCount,
-        userMessageCount: s.userMessageCount, assistantMessageCount: s.assistantMessageCount,
-        thinkingBlocks: s.thinkingBlocks, tokenUsage: s.tokenUsage.total > 0 ? s.tokenUsage : null,
-        modelsUsed: [...s.modelsUsed],
-        orchestration: { subAgentSpawns: s.subAgentSpawns, compactionCount: s.compactionCount,
-          maxToolChainLength: s.maxToolChainLength, toolSequenceCount: s.toolSequences.length,
-          avgSequenceLength: s.toolSequences.length > 0 ? s.toolSequences.reduce((a, b) => a + b.length, 0) / s.toolSequences.length : 0 },
-      },
-    });
+function extractSignals(fp) {
+  const lines = readFileSync(fp,"utf-8").split("\\n").filter(l=>l.trim());
+  if (!lines.length) return null;
+  const tools=[], exts=[], models=new Set(); let tc=0,mc=0,umc=0,amc=0,th=0,ti=0,to2=0,tt=0,sas=0,cc=0,curChain=0,maxChain=0;
+  const seqs=[]; let curSeq=[];
+  for (const line of lines) {
+    try {
+      const o=JSON.parse(line), role=o.role||o.type||"";
+      if (role==="user"||role==="human"){mc++;umc++;if(curChain>maxChain)maxChain=curChain;if(curSeq.length)seqs.push([...curSeq]);curSeq=[];curChain=0;}
+      else if(role==="assistant"||role==="bot"||role==="ai"){mc++;amc++;}
+      const tn=o.toolName||o.tool_name||o.function_name;
+      if(tn){tools.push(tn);tc++;curChain++;curSeq.push(tn);if(["sessions_spawn","subagents","sessions_send"].includes(tn))sas++;}
+      if(Array.isArray(o.content))for(const b of o.content){if(b.type==="tool_use"&&b.name){tools.push(b.name);tc++;curChain++;curSeq.push(b.name);if(["sessions_spawn","subagents","sessions_send"].includes(b.name))sas++;}if(b.type==="thinking")th++;}
+      const args=o.toolInput||o.tool_input||o.args||o.input||{};
+      if(args&&typeof args==="object"){const fp2=args.file_path||args.filePath||args.path||args.filename||"";const m2=fp2.match?.(/\\.([a-zA-Z0-9]+)$/);if(m2)exts.push("."+m2[1].toLowerCase());}
+      const u=o.usage||o.tokenUsage;if(u){ti+=u.input_tokens||u.input||u.promptTokens||0;to2+=u.output_tokens||u.output||u.completionTokens||0;tt+=u.total_tokens||u.total||u.totalTokens||0;}
+      if(o.model)models.add(o.model);
+      if(o.type==="compaction"||o.event==="compaction")cc++;
+    } catch {}
   }
-  activeSessions.delete(key);
+  if(curChain>maxChain)maxChain=curChain;if(curSeq.length)seqs.push([...curSeq]);
+  if(!tc&&!mc&&!tt)return null;
+  return {toolsUsed:[...new Set(tools)],toolCallCount:tc,fileExtensions:[...new Set(exts)],messageCount:mc,userMessageCount:umc,assistantMessageCount:amc,thinkingBlocks:th,tokenUsage:tt>0?{input:ti,output:to2,total:tt}:null,modelsUsed:[...models],orchestration:{subAgentSpawns:sas,maxToolChainLength:maxChain,toolSequenceCount:seqs.length,avgSequenceLength:seqs.length?seqs.reduce((a,b)=>a+b.length,0)/seqs.length:0,compactionCount:cc}};
 }
 
 export default definePluginEntry({
   id: "jobarbiter-observer",
   name: "JobArbiter Observer",
-  description: "Real-time proficiency signal observer for JobArbiter",
+  description: "Proficiency signal observer — session_end hook, reads transcript",
   register(api) {
-    flushTimer = setInterval(flushToDisk, 30000);
-    if (flushTimer.unref) flushTimer.unref();
-
-    api.on("session_start", async (e) => { try { if (!isPaused()) getSession(e); } catch (err) { logError("session_start: " + err?.message); } });
-    api.on("session_end", async (e) => { try { if (!isPaused()) { finalizeSession(e.sessionKey || e.sessionId || "unknown"); flushToDisk(); } } catch (err) { logError("session_end: " + err?.message); } });
-    api.on("agent_end", async (e) => { try { if (isPaused()) return; const s = getSession(e); if (e.usage) { s.tokenUsage.input += e.usage.input_tokens || e.usage.input || 0; s.tokenUsage.output += e.usage.output_tokens || e.usage.output || 0; s.tokenUsage.total += e.usage.total_tokens || e.usage.total || 0; } if (e.model) s.modelsUsed.add(e.model); if (s.currentToolChain > s.maxToolChainLength) s.maxToolChainLength = s.currentToolChain; if (s.currentSequence.length > 0) { s.toolSequences.push([...s.currentSequence]); s.currentSequence = []; } s.currentToolChain = 0; } catch (err) { logError("agent_end: " + err?.message); } });
-    api.on("after_tool_call", async (e) => { try { if (isPaused()) return; const s = getSession(e); const name = e.toolName || e.tool_name || e.name || "unknown"; s.toolsUsed.push(name); s.toolCallCount++; s.currentToolChain++; s.currentSequence.push(name); const args = e.toolInput || e.input || e.params || {}; const fp = args.file_path || args.filePath || args.path || args.filename || ""; const m = fp.match?.(/\\.([a-zA-Z0-9]+)$/); if (m) s.fileExtensions.push("." + m[1].toLowerCase()); if (["sessions_spawn","subagents","sessions_send"].includes(name)) s.subAgentSpawns++; } catch (err) { logError("after_tool_call: " + err?.message); } });
-    api.on("message_received", async (e) => { try { if (isPaused()) return; const s = getSession(e); s.messageCount++; s.userMessageCount++; if (s.currentToolChain > s.maxToolChainLength) s.maxToolChainLength = s.currentToolChain; if (s.currentSequence.length > 0) { s.toolSequences.push([...s.currentSequence]); s.currentSequence = []; } s.currentToolChain = 0; } catch (err) { logError("message_received: " + err?.message); } });
-    api.on("message_sent", async (e) => { try { if (isPaused()) return; const s = getSession(e); s.messageCount++; s.assistantMessageCount++; } catch (err) { logError("message_sent: " + err?.message); } });
-    api.on("after_compaction", async (e) => { try { if (!isPaused()) getSession(e).compactionCount++; } catch (err) { logError("after_compaction: " + err?.message); } });
-    api.on("gateway_stop", async () => { try { for (const key of [...activeSessions.keys()]) finalizeSession(key); flushToDisk(); if (flushTimer) { clearInterval(flushTimer); flushTimer = null; } } catch (err) { logError("gateway_stop: " + err?.message); } });
+    api.on("session_end", async (e) => {
+      try {
+        if (isPaused()) return;
+        const sk = e.sessionKey||e.sessionId||e.session_id||"unknown";
+        const tp = findTranscript(sk);
+        if (!tp) return;
+        const signals = extractSignals(tp);
+        if (!signals) return;
+        ensureDir();
+        const data = JSON.parse(readFileSync(OBS_FILE,"utf-8"));
+        data.sessions.push({timestamp:new Date().toISOString(),agent:"openclaw",sessionId:e.sessionId||sk,sessionKey:sk,transcriptPath:tp,source:"hook",signals});
+        data.accumulated.totalSessions++;
+        for(const t of signals.toolsUsed)data.accumulated.toolCounts[t]=(data.accumulated.toolCounts[t]||0)+1;
+        if(signals.tokenUsage)data.accumulated.totalTokens+=signals.tokenUsage.total||0;
+        if(data.sessions.length>500)data.sessions=data.sessions.slice(-500);
+        writeFileSync(OBS_FILE,JSON.stringify(data,null,2)+"\\n");
+      } catch(err) { logErr("session_end: "+(err?.message||err)); }
+    });
   },
 });
 `;
