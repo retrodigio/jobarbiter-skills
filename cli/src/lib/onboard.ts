@@ -702,7 +702,16 @@ async function runToolDetectionStep(
 		console.log(`    ${sym.check} ${formatToolDisplay(tool)} ${c.dim("(detected)")}`);
 	}
 	for (const tool of orchestration) {
-		console.log(`    ${sym.check} ${formatToolDisplay(tool)} ${c.dim("(detected)")}`);
+		const display = formatToolDisplay(tool);
+		if (tool.observerAvailable) {
+			if (tool.observerActive) {
+				console.log(`    ${sym.check} ${display} ${c.dim("(observer active)")}`);
+			} else {
+				console.log(`    ${sym.check} ${display} ${c.success("(observer available)")}`);
+			}
+		} else {
+			console.log(`    ${sym.check} ${display} ${c.dim("(detected)")}`);
+		}
 	}
 	for (const tool of apiProviders) {
 		console.log(`    ${sym.check} ${tool.name} ${c.dim("configured")}`);
@@ -723,7 +732,9 @@ async function runToolDetectionStep(
 	const toolNames = installed.map((t) => t.name);
 
 	// Observer installation for AI agents
-	const needsObserver = codingAgents.filter((t) => t.observerAvailable && !t.observerActive);
+	// Include both AI agents and orchestration tools (e.g. OpenClaw) that support observers
+	const observableTools = [...codingAgents, ...orchestration];
+	const needsObserver = observableTools.filter((t) => t.observerAvailable && !t.observerActive);
 
 	if (needsObserver.length > 0) {
 		console.log(`\n  ${c.bold("Observers — How You Use AI, Not Just How Much")}`);
@@ -797,8 +808,8 @@ async function runToolDetectionStep(
 		} else {
 			console.log(c.dim("\n  Skipped — you can install observers later with 'jobarbiter observe install'.\n"));
 		}
-	} else if (codingAgents.length > 0) {
-		const hasActiveObservers = codingAgents.some((t) => t.observerActive);
+	} else if (observableTools.length > 0) {
+		const hasActiveObservers = observableTools.some((t) => t.observerActive);
 		if (hasActiveObservers) {
 			console.log(`\n  ${c.dim("All detected agents already have observers installed.")}\n`);
 		} else {

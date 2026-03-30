@@ -915,7 +915,7 @@ observe
 observe
 	.command("install")
 	.description("Install observers for detected AI agents")
-	.option("--agent <id>", "Install for specific agent (claude-code, cursor, opencode, codex, gemini)")
+	.option("--agent <id>", "Install for specific agent (claude-code, cursor, opencode, codex, gemini, openclaw)")
 	.option("--all", "Install for all detected agents")
 	.action(async (opts) => {
 		try {
@@ -924,7 +924,7 @@ observe
 
 			if (detected.length === 0) {
 				error("No AI agents detected on this system.");
-				console.log("  Supported: Claude Code, Cursor, OpenCode, Codex CLI, Gemini CLI");
+				console.log("  Supported: Claude Code, Cursor, OpenCode, Codex CLI, Gemini CLI, OpenClaw");
 				process.exit(1);
 			}
 
