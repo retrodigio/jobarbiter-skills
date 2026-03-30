@@ -1,0 +1,11 @@
+{
+  "name": "@jobarbiter/openclaw-observer",
+  "version": "1.0.0",
+  "description": "Real-time proficiency signal observer for OpenClaw sessions",
+  "type": "module",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
+  "keywords": ["openclaw", "plugin", "jobarbiter", "proficiency", "observer"],
+  "license": "MIT"
+}

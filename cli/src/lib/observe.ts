@@ -16,7 +16,7 @@ export interface DetectedAgent {
 	id: string;
 	name: string;
 	configDir: string;
-	hookFormat: "claude" | "cursor" | "opencode" | "codex" | "gemini";
+	hookFormat: "claude" | "cursor" | "opencode" | "codex" | "gemini" | "openclaw";
 	installed: boolean;
 	hookInstalled: boolean;
 }
@@ -33,14 +33,16 @@ const AGENT_CONFIG_DIRS: Record<string, string> = {
 	"opencode": join(homedir(), ".config", "opencode"),
 	"codex": join(homedir(), ".codex"),
 	"gemini": join(homedir(), ".gemini"),
+	"openclaw": join(homedir(), ".openclaw"),
 };
 
-const AGENT_HOOK_FORMATS: Record<string, "claude" | "cursor" | "opencode" | "codex" | "gemini"> = {
+const AGENT_HOOK_FORMATS: Record<string, "claude" | "cursor" | "opencode" | "codex" | "gemini" | "openclaw"> = {
 	"claude-code": "claude",
 	"cursor": "cursor",
 	"opencode": "opencode",
 	"codex": "codex",
 	"gemini": "gemini",
+	"openclaw": "openclaw",
 };
 
 /**
@@ -547,6 +549,189 @@ function installGeminiHook(configDir: string, scriptPath: string): void {
 	writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
 }
 
+/**
+ * Install native OpenClaw plugin for real-time observation.
+ * Links the plugin into ~/.openclaw/extensions/ so OpenClaw discovers it.
+ * Falls back to copying if the plugin source isn't available.
+ */
+function installOpenClawPlugin(configDir: string): void {
+	const extensionsDir = join(configDir, "extensions", "jobarbiter-observer");
+	mkdirSync(extensionsDir, { recursive: true });
+
+	// Write the plugin manifest
+	writeFileSync(
+		join(extensionsDir, "openclaw.plugin.json"),
+		JSON.stringify(
+			{
+				id: "jobarbiter-observer",
+				name: "JobArbiter Observer",
+				description: "Real-time proficiency signal observer for JobArbiter",
+				configSchema: {
+					type: "object",
+					properties: {
+						enabled: { type: "boolean", default: true },
+					},
+					additionalProperties: false,
+				},
+			},
+			null,
+			2,
+		) + "\n",
+	);
+
+	// Write package.json
+	writeFileSync(
+		join(extensionsDir, "package.json"),
+		JSON.stringify(
+			{
+				name: "@jobarbiter/openclaw-observer",
+				version: "1.0.0",
+				type: "module",
+				openclaw: { extensions: ["./index.ts"] },
+			},
+			null,
+			2,
+		) + "\n",
+	);
+
+	// Write the plugin entry point (self-contained, no external deps)
+	writeFileSync(
+		join(extensionsDir, "index.ts"),
+		getOpenClawPluginSource(),
+	);
+}
+
+/**
+ * Returns the full OpenClaw plugin source code as a string.
+ * Self-contained — only uses node:fs, node:path, node:os.
+ */
+function getOpenClawPluginSource(): string {
+	// Read from the published plugin if available, otherwise use inline
+	const pluginSourcePath = join(__dirname, "..", "..", "openclaw-plugin", "index.ts");
+	try {
+		if (existsSync(pluginSourcePath)) {
+			return readFileSync(pluginSourcePath, "utf-8");
+		}
+	} catch {
+		// Fall through to inline
+	}
+
+	// Inline minimal version
+	return `/**
+ * JobArbiter Observer — OpenClaw Plugin (inline install)
+ * Real-time proficiency signal extraction via OpenClaw lifecycle hooks.
+ */
+import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync } from "node:fs";
+import { join } from "node:path";
+import { homedir } from "node:os";
+
+const OBSERVER_DIR = join(homedir(), ".config", "jobarbiter", "observer");
+const OBSERVATIONS_FILE = join(OBSERVER_DIR, "observations.json");
+const PAUSED_FILE = join(OBSERVER_DIR, "PAUSED");
+const ERROR_LOG = join(OBSERVER_DIR, "errors.log");
+
+const activeSessions = new Map();
+let pendingObservations = [];
+let flushTimer = null;
+
+function isPaused() {
+  try {
+    if (!existsSync(PAUSED_FILE)) return false;
+    const data = JSON.parse(readFileSync(PAUSED_FILE, "utf-8"));
+    if (data.expiresAt) return Date.now() < new Date(data.expiresAt).getTime();
+    return true;
+  } catch { return false; }
+}
+
+function logError(msg) {
+  try { mkdirSync(OBSERVER_DIR, { recursive: true }); appendFileSync(ERROR_LOG, \`[\${new Date().toISOString()}] \${msg}\\n\`); } catch {}
+}
+
+function ensureDir() {
+  mkdirSync(OBSERVER_DIR, { recursive: true });
+  if (!existsSync(OBSERVATIONS_FILE)) {
+    writeFileSync(OBSERVATIONS_FILE, JSON.stringify({ version: 1, installedAt: new Date().toISOString(), agents: {}, sessions: [], accumulated: { totalSessions: 0, totalTokens: 0, toolCounts: {}, domainSignals: [], lastSubmitted: null } }, null, 2) + "\\n");
+  }
+}
+
+function getSession(event) {
+  const key = event.sessionKey || event.sessionId || "unknown";
+  if (!activeSessions.has(key)) {
+    activeSessions.set(key, {
+      sessionId: event.sessionId || key, sessionKey: key, startedAt: new Date().toISOString(),
+      toolsUsed: [], toolCallCount: 0, fileExtensions: [], messageCount: 0,
+      userMessageCount: 0, assistantMessageCount: 0, thinkingBlocks: 0,
+      tokenUsage: { input: 0, output: 0, total: 0 }, modelsUsed: new Set(),
+      subAgentSpawns: 0, compactionCount: 0, maxToolChainLength: 0,
+      currentToolChain: 0, toolSequences: [], currentSequence: [],
+    });
+  }
+  return activeSessions.get(key);
+}
+
+function flushToDisk() {
+  if (pendingObservations.length === 0) return;
+  if (isPaused()) { pendingObservations = []; return; }
+  try {
+    ensureDir();
+    const data = JSON.parse(readFileSync(OBSERVATIONS_FILE, "utf-8"));
+    for (const obs of pendingObservations) {
+      data.sessions.push(obs);
+      data.accumulated.totalSessions++;
+      for (const tool of obs.signals?.toolsUsed || []) data.accumulated.toolCounts[tool] = (data.accumulated.toolCounts[tool] || 0) + 1;
+      if (obs.signals?.tokenUsage) data.accumulated.totalTokens += obs.signals.tokenUsage.total || 0;
+    }
+    if (data.sessions.length > 500) data.sessions = data.sessions.slice(-500);
+    writeFileSync(OBSERVATIONS_FILE, JSON.stringify(data, null, 2) + "\\n");
+    pendingObservations = [];
+  } catch (err) { logError("Flush: " + (err?.message || err)); }
+}
+
+function finalizeSession(key) {
+  const s = activeSessions.get(key);
+  if (!s) return;
+  if (s.currentSequence.length > 0) s.toolSequences.push([...s.currentSequence]);
+  if (s.toolCallCount > 0 || s.messageCount > 0 || s.tokenUsage.total > 0) {
+    pendingObservations.push({
+      timestamp: new Date().toISOString(), agent: "openclaw", sessionId: s.sessionId,
+      sessionKey: s.sessionKey, startedAt: s.startedAt, source: "hook",
+      signals: {
+        toolsUsed: [...new Set(s.toolsUsed)], toolCallCount: s.toolCallCount,
+        fileExtensions: [...new Set(s.fileExtensions)], messageCount: s.messageCount,
+        userMessageCount: s.userMessageCount, assistantMessageCount: s.assistantMessageCount,
+        thinkingBlocks: s.thinkingBlocks, tokenUsage: s.tokenUsage.total > 0 ? s.tokenUsage : null,
+        modelsUsed: [...s.modelsUsed],
+        orchestration: { subAgentSpawns: s.subAgentSpawns, compactionCount: s.compactionCount,
+          maxToolChainLength: s.maxToolChainLength, toolSequenceCount: s.toolSequences.length,
+          avgSequenceLength: s.toolSequences.length > 0 ? s.toolSequences.reduce((a, b) => a + b.length, 0) / s.toolSequences.length : 0 },
+      },
+    });
+  }
+  activeSessions.delete(key);
+}
+
+export default definePluginEntry({
+  id: "jobarbiter-observer",
+  name: "JobArbiter Observer",
+  description: "Real-time proficiency signal observer for JobArbiter",
+  register(api) {
+    flushTimer = setInterval(flushToDisk, 30000);
+    if (flushTimer.unref) flushTimer.unref();
+
+    api.on("session_start", async (e) => { try { if (!isPaused()) getSession(e); } catch (err) { logError("session_start: " + err?.message); } });
+    api.on("session_end", async (e) => { try { if (!isPaused()) { finalizeSession(e.sessionKey || e.sessionId || "unknown"); flushToDisk(); } } catch (err) { logError("session_end: " + err?.message); } });
+    api.on("agent_end", async (e) => { try { if (isPaused()) return; const s = getSession(e); if (e.usage) { s.tokenUsage.input += e.usage.input_tokens || e.usage.input || 0; s.tokenUsage.output += e.usage.output_tokens || e.usage.output || 0; s.tokenUsage.total += e.usage.total_tokens || e.usage.total || 0; } if (e.model) s.modelsUsed.add(e.model); if (s.currentToolChain > s.maxToolChainLength) s.maxToolChainLength = s.currentToolChain; if (s.currentSequence.length > 0) { s.toolSequences.push([...s.currentSequence]); s.currentSequence = []; } s.currentToolChain = 0; } catch (err) { logError("agent_end: " + err?.message); } });
+    api.on("after_tool_call", async (e) => { try { if (isPaused()) return; const s = getSession(e); const name = e.toolName || e.tool_name || e.name || "unknown"; s.toolsUsed.push(name); s.toolCallCount++; s.currentToolChain++; s.currentSequence.push(name); const args = e.toolInput || e.input || e.params || {}; const fp = args.file_path || args.filePath || args.path || args.filename || ""; const m = fp.match?.(/\\.([a-zA-Z0-9]+)$/); if (m) s.fileExtensions.push("." + m[1].toLowerCase()); if (["sessions_spawn","subagents","sessions_send"].includes(name)) s.subAgentSpawns++; } catch (err) { logError("after_tool_call: " + err?.message); } });
+    api.on("message_received", async (e) => { try { if (isPaused()) return; const s = getSession(e); s.messageCount++; s.userMessageCount++; if (s.currentToolChain > s.maxToolChainLength) s.maxToolChainLength = s.currentToolChain; if (s.currentSequence.length > 0) { s.toolSequences.push([...s.currentSequence]); s.currentSequence = []; } s.currentToolChain = 0; } catch (err) { logError("message_received: " + err?.message); } });
+    api.on("message_sent", async (e) => { try { if (isPaused()) return; const s = getSession(e); s.messageCount++; s.assistantMessageCount++; } catch (err) { logError("message_sent: " + err?.message); } });
+    api.on("after_compaction", async (e) => { try { if (!isPaused()) getSession(e).compactionCount++; } catch (err) { logError("after_compaction: " + err?.message); } });
+    api.on("gateway_stop", async () => { try { for (const key of [...activeSessions.keys()]) finalizeSession(key); flushToDisk(); if (flushTimer) { clearInterval(flushTimer); flushTimer = null; } } catch (err) { logError("gateway_stop: " + err?.message); } });
+  },
+});
+`;
+}
+
 // ── Public API ─────────────────────────────────────────────────────────
 
 // ── Agent Name Mapping ─────────────────────────────────────────────────
@@ -557,6 +742,7 @@ const AGENT_NAMES: Record<string, string> = {
 	"opencode": "OpenCode",
 	"codex": "Codex CLI",
 	"gemini": "Gemini CLI",
+	"openclaw": "OpenClaw",
 };
 
 /**
@@ -587,6 +773,10 @@ function isHookInstalled(agentId: string, configDir: string, format: string): bo
 				if (!existsSync(settingsFile)) return false;
 				const content = readFileSync(settingsFile, "utf-8");
 				return content.includes("jobarbiter");
+			}
+			case "openclaw": {
+				const extensionDir = join(configDir, "extensions", "jobarbiter-observer");
+				return existsSync(join(extensionDir, "index.ts"));
 			}
 			default:
 				return false;
@@ -642,6 +832,9 @@ export function installObservers(
 					break;
 				case "gemini":
 					installGeminiHook(configDir, scriptPath);
+					break;
+				case "openclaw":
+					installOpenClawPlugin(configDir);
 					break;
 			}
 			result.installed.push(agentName);
@@ -730,6 +923,18 @@ export function removeObservers(agentIds: string[]): { removed: string[]; notFou
 							}
 						}
 						writeFileSync(settingsFile, JSON.stringify(settings, null, 2) + "\n");
+						result.removed.push(agentName);
+					} else {
+						result.notFound.push(agentName);
+					}
+					break;
+				}
+				case "openclaw": {
+					const extensionDir = join(configDir, "extensions", "jobarbiter-observer");
+					if (existsSync(extensionDir)) {
+						// Remove the entire plugin directory
+						const { rmSync } = require("node:fs");
+						rmSync(extensionDir, { recursive: true, force: true });
 						result.removed.push(agentName);
 					} else {
 						result.notFound.push(agentName);

@@ -246,7 +246,7 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
 		binary: "openclaw",
 		configDir: join(homedir(), ".openclaw"),
 		observerAvailable: true,
-		observationMethod: "poller",
+		observationMethod: "both", // hook (plugin) + poller (transcript reader)
 	},
 	{
 		id: "langchain",
@@ -467,6 +467,25 @@ function isObserverInstalled(toolId: string, configDir?: string): boolean {
 				const { readFileSync } = require("node:fs");
 				const content = readFileSync(settingsFile, "utf-8");
 				return content.includes("jobarbiter");
+			}
+			case "openclaw": {
+				// Check for the native OpenClaw plugin
+				// Installed via: openclaw plugins install @jobarbiter/openclaw-observer
+				// Or linked at: ~/.openclaw/extensions/jobarbiter-observer/
+				const extensionDir = join(configDir, "extensions", "jobarbiter-observer");
+				if (existsSync(extensionDir)) return true;
+				// Also check openclaw.json for plugin entry
+				const openclawConfig = join(configDir, "openclaw.json");
+				if (existsSync(openclawConfig)) {
+					const { readFileSync } = require("node:fs");
+					try {
+						const content = readFileSync(openclawConfig, "utf-8");
+						return content.includes("jobarbiter-observer");
+					} catch {
+						return false;
+					}
+				}
+				return false;
 			}
 			default:
 				return false;

@@ -1,0 +1,26 @@
+{
+  "id": "jobarbiter-observer",
+  "name": "JobArbiter Observer",
+  "description": "Real-time proficiency signal observer — extracts orchestration complexity, tool fluency, and token throughput from OpenClaw sessions",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true,
+        "description": "Enable/disable observation"
+      },
+      "flushIntervalMs": {
+        "type": "number",
+        "default": 30000,
+        "description": "How often to flush accumulated signals to disk (ms)"
+      },
+      "maxSessionBuffer": {
+        "type": "number",
+        "default": 500,
+        "description": "Max sessions to keep in rolling window"
+      }
+    },
+    "additionalProperties": false
+  }
+}
